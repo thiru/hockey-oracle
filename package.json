@@ -1,0 +1,22 @@
+{
+  "author": "Thiru <thiru0130@gmail.com>",
+  "description": "Generates two randomly selected teams from a pool of players",
+  "main": "app.js",
+  "name": "team-gen",
+  "version": "0.0.1",
+
+  "dependencies":
+  {
+    "colors": "0.6.x",
+    "express": "3.4.x",
+    "jade": "1.1.x"
+  },
+
+  "license": "GPLv2",
+  "keywords": [ "team", "generator", "hockey" ],
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/thiru/break-time.git"
+  }
+}
