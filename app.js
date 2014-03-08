@@ -2,7 +2,10 @@ var colors = require('colors');
 var express = require('express');
 var http = require('http');
 var path = require('path');
-var routes = require('./routes');
+var routes = {};
+routes.index = require('./routes/index');
+routes.players = require('./routes/players');
+routes.teams = require('./routes/teams');
 
 var defaultPort = 8080;
 
@@ -33,10 +36,9 @@ function initExpress()
   }
 
   // Routes
-  app.get('/', routes.players);
+  app.get('/', routes.index);
   app.get('/players', routes.players);
   app.get('/teams', routes.teams);
-  app.get('/about', routes.about);
 
   console.log('[END] '.green + 'Express configuration');
   return app;

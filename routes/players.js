@@ -1,7 +1,7 @@
 var players = require('../lib/players');
 
 /*
- * GET home page.
+ * GET players page.
  */
 module.exports = function(req, res)
 {
@@ -9,7 +9,7 @@ module.exports = function(req, res)
   (
     function(playerList)
     {
-      res.render('index', {pretty: true, players: playerList});
+      res.render('players', {pretty: true, players: playerList});
     }
   );
 };
