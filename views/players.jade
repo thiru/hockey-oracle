@@ -1,10 +1,11 @@
 extends layout
 
 block title
-  title= settings.title
+  title= "Players - " + settings.title
 
 block content
-  p This page lists all players
+  p This page lists all registered players.  Checked players are considered
+    | active for the day, and are included in the random team generation.
   ul
     each player in players
       li= player

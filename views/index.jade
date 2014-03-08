@@ -5,6 +5,14 @@ block title
 
 block content
   p How about these teams?
-  ul
-    each player in players
-      li= player
+  div
+    p Team Black
+    ul
+      each player in teams.black
+        li= player
+  div V.S.
+  div
+    p Team White
+    ul
+      each player in teams.white
+        li= player
