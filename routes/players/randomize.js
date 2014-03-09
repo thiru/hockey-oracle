@@ -5,9 +5,8 @@ var players = require('../../lib/players');
  */
 module.exports = function(req, res)
 {
-  players.getRandomTeams
+  players.getTwoRandomTeams
   (
-    // TODO: Pass two objects, black and white
     function(teams)
     {
       res.render('players/randomize', {pretty: true, teams: teams});
