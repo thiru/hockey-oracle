@@ -5,11 +5,5 @@ var players = require('../lib/players');
  */
 module.exports = function(req, res)
 {
-  players.getRandomTeams
-  (
-    function(teams)
-    {
-      res.render('index', {pretty: true, teams: teams});
-    }
-  );
+  res.render('index', {pretty: true});
 };

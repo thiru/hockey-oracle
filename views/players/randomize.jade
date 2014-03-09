@@ -1,0 +1,19 @@
+extends ../layout
+
+block title
+  title= "Random Players - " + settings.title
+
+block content
+  p How about these teams?
+  div
+    p Team Black
+    ul
+      each player in teams.black
+        li= player
+  div V.S.
+  div
+    p Team White
+    ul
+      each player in teams.white
+        li= player
+  // Try again button

@@ -2,10 +2,15 @@ var colors = require('colors');
 var express = require('express');
 var http = require('http');
 var path = require('path');
+
 var routes = {};
 routes.index = require('./routes/index');
-routes.players = require('./routes/players');
-routes.teams = require('./routes/teams');
+routes.players = {};
+routes.players.index = require('./routes/players/index');
+routes.players.randomize = require('./routes/players/randomize');
+routes.teams = {};
+routes.teams.index = require('./routes/teams/index');
+routes.teams.randomize = require('./routes/teams/randomize');
 
 var defaultPort = 8080;
 
@@ -37,8 +42,10 @@ function initExpress()
 
   // Routes
   app.get('/', routes.index);
-  app.get('/players', routes.players);
-  app.get('/teams', routes.teams);
+  app.get('/players', routes.players.index);
+  app.get('/players/randomize', routes.players.randomize);
+  app.get('/teams', routes.teams.index);
+  app.get('/teams/randomize', routes.teams.randomize);
 
   console.log('[END] '.green + 'Express configuration');
   return app;

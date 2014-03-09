@@ -4,15 +4,7 @@ block title
   title= settings.title
 
 block content
-  p How about these teams?
-  div
-    p Team Black
-    ul
-      each player in teams.black
-        li= player
-  div V.S.
-  div
-    p Team White
-    ul
-      each player in teams.white
-        li= player
+  p What would you like to do?
+  ul
+    li: a(href='./players/randomize') Randomize all players into two teams
+    li: a(href='./teams/randomize') Select two random teams by theme
