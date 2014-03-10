@@ -7,6 +7,7 @@ var routes = {};
 routes.index = require('./routes/index');
 routes.players = {};
 routes.players.index = require('./routes/players/index');
+routes.players.save = require('./routes/players/save');
 routes.players.randomize = require('./routes/players/randomize');
 routes.teams = {};
 routes.teams.index = require('./routes/teams/index');
@@ -43,6 +44,7 @@ function initExpress()
   // Routes
   app.get('/', routes.index);
   app.get('/players', routes.players.index);
+  app.post('/players', routes.players.save);
   app.get('/players/randomize', routes.players.randomize);
   app.get('/teams', routes.teams.index);
   app.get('/teams/randomize', routes.teams.randomize);

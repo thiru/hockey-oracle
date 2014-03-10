@@ -6,9 +6,11 @@ block title
 block content
   p This page lists all known players.  Checked players are considered
     | active for the day, and are included when generating random teams.
-  ul
-    each player in players
-      li
-        label
-          input(checked name='active-player' type='checkbox' value=player.id)
-          = player.name
+  form(method='post')
+    ul
+      each player in players
+        li
+          label
+            input(checked=player.isActive name='activePlayers' type='checkbox' value=player.name)
+            = player.name
+      input(type='submit' value='Save & Generate Teams')
