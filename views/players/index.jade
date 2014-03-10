@@ -8,4 +8,7 @@ block content
     | active for the day, and are included when generating random teams.
   ul
     each player in players
-      li= player
+      li
+        label
+          input(checked name='active-player' type='checkbox' value=player.id)
+          = player.name
