@@ -5,6 +5,7 @@ var path = require('path');
 
 var routes = {};
 routes.index = require('./routes/index');
+routes.error = require('./routes/error');
 routes.players = {};
 routes.players.index = require('./routes/players/index');
 routes.players.save = require('./routes/players/save');
@@ -36,13 +37,16 @@ function initExpress()
   app.use(express.methodOverride());
   app.use(app.router);
   app.use(express.static('public'));
+  //app.use(routes.error); // TODO: not working for some reason.
 
   if ('development' == app.get('env')) {
+    console.log('Running in DEV mode.');
     app.use(express.errorHandler());
   }
 
   // Routes
   app.get('/', routes.index);
+  app.get('/error', routes.error);
   app.get('/players', routes.players.index);
   app.post('/players', routes.players.save);
   app.get('/players/randomize', routes.players.randomize);

@@ -10,10 +10,25 @@ module.exports = function(req, res)
     function(playerList)
     {
       var activePlayers = req.body.activePlayers;
-      console.log(activePlayers);
+      var activePlayerCount = 0;
       for (var i = 0; i < playerList.length; i++)
-        playerList[i].isActive = activePlayers.indexOf(playerList[i].name) >= 0;
+      {
+        if (activePlayers.indexOf(playerList[i].name) >= 0)
+        {
+          activePlayerCount++;
+          playerList[i].isActive = true;
+        }
+        else
+        {
+          playerList[i].isActive = false;
+        }
+      }
 
+      if (activePlayerCount < 3)
+      {
+        res.redirect('/error');
+        return;
+      }
       players.save(playerList);
       res.redirect('/players/randomize');
     }
