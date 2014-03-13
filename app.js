@@ -14,7 +14,7 @@ routes.teams = {};
 routes.teams.index = require('./routes/teams/index');
 routes.teams.randomize = require('./routes/teams/randomize');
 
-var defaultPort = 8080;
+var defaultPort = 80;
 
 console.log('[START] '.yellow + 'Team Generator start-up');
 
