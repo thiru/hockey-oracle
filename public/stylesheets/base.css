@@ -5,6 +5,11 @@
   font-family: Helvetica, Arial, sans-serif;
 }
 
+body
+{
+  width: 90%;
+}
+
 a
 {
   text-decoration: none;
