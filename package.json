@@ -3,7 +3,7 @@
   "description": "Generates two randomly selected teams from a pool of players",
   "main": "app.js",
   "name": "team-gen",
-  "version": "0.0.1",
+  "version": "1.0.0",
 
   "dependencies":
   {
