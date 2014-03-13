@@ -15,6 +15,19 @@ a
   text-decoration: none;
 }
 
+ul
+{
+  list-style: none;
+  list-style-image: url('/images/bullet.png');
+  padding-left: 1em;
+}
+
+ul.no-bullet
+{
+  list-style: none;
+  padding-left: 0;	
+}
+
 nav *
 {
   padding-right: 1em;
