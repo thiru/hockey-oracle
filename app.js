@@ -57,7 +57,6 @@ function initExpress()
   return app;
 }
 
-// Open home page when server has started.
 function onServerStarted()
 {
   console.log('Web server started and listening on port ' + app.get('port') + '.');
