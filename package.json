@@ -1,8 +1,8 @@
 {
   "author": "Thiru <thiru0130@gmail.com>",
-  "description": "Generates two randomly selected teams from a pool of players",
+  "description": "An aid for pick-up hockey enthusiasts",
   "main": "app.js",
-  "name": "team-gen",
+  "name": "hockey-oracle",
   "version": "1.0.0",
 
   "dependencies":
@@ -17,7 +17,7 @@
   },
 
   "license": "GPLv2",
-  "keywords": [ "team", "generator", "hockey" ],
+  "keywords": [ "team", "generator", "hockey", "pick-up" ],
   "repository":
   {
     "type": "git",
