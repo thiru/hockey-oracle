@@ -1,30 +1,77 @@
-/* Global styles **************************************************** */
+/* Generic/high-level styles **************************************** */
 *
 {
+  color: #555555;
   margin: 0;
   padding: 0;
   font-family: Helvetica, Arial, sans-serif;
 }
 
-body { width: 80%; }
+body
+{
+  margin: 0.5em 0 0 0;
+}
 
-a { text-decoration: none; }
+a
+{
+  color: #3598DB;
+  text-decoration: none;
+}
+a *
+{
+  color: #3598DB;
+}
+a:hover
+{
+  text-decoration: underline;
+}
 
-h1, h2, p { margin-bottom: 0.3em; }
+h1, h2, p
+{
+  margin-bottom: 0.3em;
+}
 
-input[type=submit] { margin-top: 1em; }
+input[type=checkbox]
+{
+  display: none;
+}
 
-label span { padding-left: 0.2em; }
+input[type=submit]
+{
+  margin-top: 1em;
+}
+input[type=checkbox] + span
+{
+  background: transparent url('/images/stick-bullet.png') no-repeat left center;
+  display: inline-block;
+  opacity: 0.4;
+  padding: 0 0 0 1em;
+  text-decoration: line-through;
+}
+input[type=checkbox]:checked + span
+{
+  background: transparent url('/images/stick-bullet.png') no-repeat left center;
+  display: inline-block;
+  padding: 0 0 0 1em;
+  opacity: inherit;
+  text-decoration: inherit;
+}
 
-li { margin-bottom: 0.3em; }
+label span
+{
+  margin-left: 0.2em;
+}
 
-nav { margin-bottom: 0.5em; }
-nav * { padding-right: 1em; }
+li
+{
+  margin-bottom: 0.3em;
+  padding-left: 0.1em;
+}
 
 ul
 {
   list-style: none;
-  list-style-image: url('/images/bullet.png');
+  list-style-image: url('/images/puck-bullet.png');
   margin-top: 0.5em;
   padding-left: 1em;
 }
@@ -35,6 +82,36 @@ ul.no-bullet
   padding-left: 0;	
 }
 
-/* Random Players *************************************************** */
+/* Master layout **************************************************** */
+
+header h1
+{
+  margin-left: 10%;
+  margin-right: 10%;
+}
+header h1 a
+{
+  color: inherit;
+}
+
+nav
+{
+  background-color: #3598DB;
+  margin-bottom: 0.5em;
+  padding: 1em 10%;
+}
+
+nav *
+{
+  color: white;
+  padding-right: 1em;
+}
+
+#page-content
+{
+  margin: 1em 10%;
+}
+
+/* Random players page ********************************************** */
 
 section.team { margin: 1em 0; }

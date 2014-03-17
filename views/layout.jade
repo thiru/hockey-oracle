@@ -8,14 +8,12 @@ html(lang='en-CA')
     script(type='text/javascript', src='/javascripts/jquery-2.1.0.min.js')
     script(type='text/javascript', src='/javascripts/globals.js')
   body
-    script.
-      $(document).ready(function() {
-        $('body').centre(true, false);
-      });
     header
       h1
         a(href='/') Team Generator
       nav
+        a(href='/') Home
         a(href='/players') Players
         a(href='/teams') Teams
-    block content
+    #page-content
+      block content
