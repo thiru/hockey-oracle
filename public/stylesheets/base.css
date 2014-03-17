@@ -7,11 +7,6 @@
   font-family: Helvetica, Arial, sans-serif;
 }
 
-body
-{
-  margin: 0.5em 0 0 0;
-}
-
 a
 {
   color: #3598DB;
@@ -86,12 +81,17 @@ ul.no-bullet
 
 header h1
 {
-  margin-left: 10%;
-  margin-right: 10%;
+  margin: 0 10%;
 }
 header h1 a
 {
   color: inherit;
+}
+header h1 img
+{
+  height:1.5em;
+  padding-right: 0.4em;
+  vertical-align:bottom;
 }
 
 nav
