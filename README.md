@@ -1,3 +1,5 @@
-# Team Genenerator
+# Hockey Oracle
 
-Generates two randomly selected teams from a pool of players.
+An aid for pick-up hockey enthusiasts.
+
+So far I've only implemented the ability to generate two teams selected randomly from a pool of active players.
