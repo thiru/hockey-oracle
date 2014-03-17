@@ -16,7 +16,7 @@ routes.teams.randomize = require('./routes/teams/randomize');
 
 var defaultPort = 80;
 
-console.log('[START] '.yellow + 'Team Generator start-up');
+console.log('[START] '.yellow + 'Hockey Oracle start-up');
 
 var app = initExpress();
 http.createServer(app).listen(app.get('port'), onServerStarted);
@@ -26,7 +26,7 @@ function initExpress()
 {
   console.log('[START] '.yellow +  'Express configuration');
   var app = express();
-  app.set('title', 'Team Generator');
+  app.set('title', 'Hockey Oracle');
   app.set('port', process.env.PORT || defaultPort);
   app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'jade');
@@ -60,5 +60,5 @@ function initExpress()
 function onServerStarted()
 {
   console.log('Web server started and listening on port ' + app.get('port') + '.');
-  console.log('[END] '.green + 'Team Generator start-up');
+  console.log('[END] '.green + 'Hockey Oracle start-up');
 }
