@@ -25,6 +25,10 @@ h1, h2, p
 {
   margin-bottom: 0.3em;
 }
+h1 a:hover
+{
+  text-decoration: none;
+}
 
 input[type=checkbox]
 {
