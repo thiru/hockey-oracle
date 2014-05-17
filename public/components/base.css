@@ -1,0 +1,83 @@
+/*******************************
+            Global
+*******************************/
+
+html, body
+{
+  height: 100%;
+}
+
+body
+{
+  color: #555;
+  background: #FFF;
+  font-family: "Open Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  margin: 0;
+  min-width: 320px;
+  padding: 0;
+  text-rendering: optimizeLegibility;
+}
+
+a
+{
+  color: #3598DB;
+  text-decoration: none;
+}
+a *
+{
+  color: #3598DB;
+}
+a:hover
+{
+  text-decoration: underline;
+}
+
+/*******************************
+       Top-Level Layout
+*******************************/
+
+header h1
+{
+  margin: 0 10% 0.2em 10%;
+}
+header h1 a
+{
+  color: inherit;
+}
+header h1 a:hover
+{
+  text-decoration: none;
+}
+header h1 img
+{
+  height: 1.5em;
+  padding-right: 0.4em;
+  vertical-align: bottom;
+}
+
+nav
+{
+  background-color: #3598DB;
+  margin-bottom: 0.5em;
+  padding: 1em 10%;
+}
+
+nav *
+{
+  color: white;
+  padding-right: 1em;
+}
+
+main
+{
+  margin: 1em 10%
+}
+
+/*******************************
+      Random players page
+*******************************/
+
+section.team
+{
+  margin-bottom: 1em;
+}

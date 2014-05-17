@@ -9,7 +9,7 @@
   {
     "colors": "0.6.x",
     "express": "3.4.x",
-    "jade": "1.1.x"
+    "lodash": "2.4.x"
   },
   "engines":
   {

@@ -11,3 +11,4 @@ node_modules
 *.[Rr]e[Ss]harper.user
 *.csproj.user
 *.suo
+public/components/bundle.js

@@ -1,0 +1,58 @@
+<div ng-cloak ng-controller='playerListCtrlr'>
+  <!-- Loading -->
+  <p class='ui info message' ng-if='!data.finishedLoading'>Loading players...</p>
+  <!-- No Data -->
+  <p class='ui warning message' ng-if='data.finishedLoading && !data.players.length'>
+    No players found
+  <p>
+  <div ng-if='data.players.length'>
+    <!-- Player List -->
+    <table class='ui padded table'>
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Position</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat='player in data.players'>
+          <!-- Name -->
+          <td>
+            <div class='ui checkbox'>
+              <input id='{{player.id}}' ng-model='player.isActive' type='checkbox' />
+              <label for='{{player.id}}'>
+                {{player.firstName + ' ' + player.lastName}}
+              </label>
+            </div>
+          </td>
+          <!-- Position -->
+          <td>
+            {{player.position}}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class='ui info message'>
+      <i class='info icon'></i>
+      Checked players are considere <i>active</i> and will be included when generating teams.
+    </p>
+  </div>
+  <div class='ui horizontal divider' ng-if='data.players.length'>
+    <i class='user icon' />
+  </div>
+  <!-- Validation error -->
+  <p class='ui error message' ng-if='valError'>{{valError}}</p>
+  <!-- Saving message -->
+  <p class='ui info message' ng-if='isSaving'>Updating active player list...</p>
+  <!-- Save error -->
+  <div class='ui error message' ng-if='saveError'>
+    Failed to update active players.
+    <a href='/players/randomize'>Randomize anyway</a>?
+  </div>
+  <!-- Randomize -->
+  <button class='ui fluid blue labeled icon button' ng-click='saveAndRandomize()'
+          ng-if='data.players.length' title='Generate random teams based on checked players'>
+    <i class='shuffle icon'></i>
+    Randomize
+  </button>
+</div>

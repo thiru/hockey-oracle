@@ -1,13 +1,15 @@
 [
-  {"id": 1, "name": "Aiyaz", "isActive": true},
-  {"id": 2, "name": "Anish", "isActive": true},
-  {"id": 3, "name": "Brian", "isActive": true},
-  {"id": 4, "name": "Carmen", "isActive": true},
-  {"id": 5, "name": "Kup", "isActive": true},
-  {"id": 5, "name": "Osama", "isActive": true},
-  {"id": 6, "name": "Robin", "isActive": true},
-  {"id": 7, "name": "Steve", "isActive": true},
-  {"id": 8, "name": "Taran", "isActive": true},
-  {"id": 9, "name": "Thiru", "isActive": true},
-  {"id": 10, "name": "Touraj", "isActive": true}
+  {"id": 1, "firstName": "Aiyaz", "lastName": "Ahmed", "position": "LW", "isActive": true},
+  {"id": 2, "firstName": "Anish", "lastName": "Patel", "position": "RW", "isActive": true},
+  {"id": 3, "firstName": "Brian", "lastName": "Tse", "position": "D", "isActive": true},
+  {"id": 4, "firstName": "Carmen", "lastName": "Francese", "position": "C", "isActive": true},
+  {"id": 5, "firstName": "Kup", "lastName": "Santhirasivam", "position": "C", "isActive": true},
+  {"id": 6, "firstName": "Mark", "lastName": "MacDonald", "position": "G", "isActive": true},
+  {"id": 7, "firstName": "Mark", "lastName": "Solis", "position": "G", "isActive": true},
+  {"id": 8, "firstName": "Osama", "lastName": "Raza", "position": "LW", "isActive": true},
+  {"id": 9, "firstName": "Robin", "lastName": "Pinto", "position": "D", "isActive": true},
+  {"id": 10, "firstName": "Steve", "lastName": "Hall", "position": "LW", "isActive": true},
+  {"id": 11, "firstName": "Taran", "lastName": "Anderson", "position": "RW", "isActive": true},
+  {"id": 12, "firstName": "Thiru", "lastName": "Thirunavukarasu", "position": "D", "isActive": true},
+  {"id": 13, "firstName": "Touraj", "lastName": "Nikou", "position": "C", "isActive": true}
 ]

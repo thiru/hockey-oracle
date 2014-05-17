@@ -2,19 +2,12 @@ var colors = require('colors');
 var express = require('express');
 var http = require('http');
 var path = require('path');
-
-var routes = {};
-routes.index = require('./routes/index');
-routes.error = require('./routes/error');
-routes.players = {};
-routes.players.index = require('./routes/players/index');
-routes.players.save = require('./routes/players/save');
-routes.players.randomize = require('./routes/players/randomize');
-routes.teams = {};
-routes.teams.index = require('./routes/teams/index');
-routes.teams.randomize = require('./routes/teams/randomize');
+var fs = require('fs');
+var routes = require('./lib/routes.js');
 
 var defaultPort = 80;
+var homePage = fs.readFileSync(path.join(__dirname, 'public/index.html'),
+                               {encoding: 'utf8'});
 
 console.log('[START] '.yellow + 'Hockey Oracle start-up');
 
@@ -26,32 +19,37 @@ function initExpress()
 {
   console.log('[START] '.yellow +  'Express configuration');
   var app = express();
-  app.set('title', 'Hockey Oracle');
   app.set('port', process.env.PORT || defaultPort);
-  app.set('views', path.join(__dirname, 'views'));
-  app.set('view engine', 'jade');
+  app.set('view options', {layout: false});
   app.use(express.logger('dev'));
   app.use(express.favicon(path.join(__dirname, '/public/images/favicon.ico')));
   app.use(express.json());
   app.use(express.urlencoded());
   app.use(express.methodOverride());
   app.use(app.router);
-  app.use(express.static('public'));
+  app.use(express.static(path.join(__dirname, 'public')));
   //app.use(routes.error); // TODO: not working for some reason.
 
-  if ('development' == app.get('env')) {
+  if ('development' == app.get('env'))
+  {
     console.log('Running in DEV mode.');
     app.use(express.errorHandler());
   }
 
-  // Routes
-  app.get('/', routes.index);
-  app.get('/error', routes.error);
-  app.get('/players', routes.players.index);
-  app.post('/players', routes.players.save);
-  app.get('/players/randomize', routes.players.randomize);
-  app.get('/teams', routes.teams.index);
-  app.get('/teams/randomize', routes.teams.randomize);
+  // View Routes
+  app.get('/', sendHome);
+  app.get('/players', sendHome);
+  app.get('/players/randomize', sendHome);
+  app.get('/teams', sendHome);
+  function sendHome(req, res)
+  {
+    res.send(homePage);
+  }
+
+  // API Routes
+  app.get('/api/players', routes.players);
+  app.get('/api/players/randomize', routes.randomize);
+  app.post('/api/players/active', routes.updateActivePlayers);
 
   console.log('[END] '.green + 'Express configuration');
   return app;

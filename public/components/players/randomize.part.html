@@ -1,0 +1,29 @@
+<div ng-cloak ng-controller='playerRandomCtrlr'>
+  <!-- Loading -->
+  <p class='ui info message' ng-if='!data.finishedLoading'>Loading players...</p>
+
+  <!-- No Data -->
+  <p class='ui warning message' ng-if='data.finishedLoading && !data.teams.length'>
+    No players found
+  <p>
+
+  <!-- Random Teams -->
+  <div ng-if='data.teams.length'>
+    <p class='ui blue message'>How about these teams?</p>
+    <section class='team' ng-repeat='team in data.teams'>
+      <h3 class='ui inverted black block header center aligned'>Team {{team[0].lastName}}</h3>
+      <div class='ui link list'>
+        <a class='item' ng-repeat='player in team' ng-if='player.position != "G"'>
+          {{player.firstName + ' ' + player.lastName}}
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <!-- Re-randomize -->
+  <button class='ui fluid blue labeled icon button' ng-click='reload()' ng-if='data.teams.length'
+          title='Redo randomization'>
+    <i class='shuffle icon'></i>
+    Redo
+  </button>
+</div>
