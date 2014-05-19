@@ -1,5 +1,9 @@
 var colors = require('colors');
 var express = require('express');
+var morgan = require('morgan');
+var bodyParser = require('body-parser');
+var errorHandler = require('errorhandler');
+var methodOverride = require('method-override');
 var http = require('http');
 var path = require('path');
 var fs = require('fs');
@@ -18,22 +22,21 @@ http.createServer(app).listen(app.get('port'), onServerStarted);
 function initExpress()
 {
   console.log('[START] '.yellow +  'Express configuration');
+
   var app = express();
+
   app.set('port', process.env.PORT || defaultPort);
   app.set('view options', {layout: false});
-  app.use(express.logger('dev'));
-  app.use(express.favicon(path.join(__dirname, '/public/images/favicon.ico')));
-  app.use(express.json());
-  app.use(express.urlencoded());
-  app.use(express.methodOverride());
-  app.use(app.router);
-  app.use(express.static(path.join(__dirname, 'public')));
-  //app.use(routes.error); // TODO: not working for some reason.
+  app.set('isDev', app.get('env') == 'development');
 
-  if ('development' == app.get('env'))
+  app.use(morgan(app.get('isDev') ? 'dev' : ''));
+  app.use(bodyParser());
+  app.use(methodOverride());
+  app.use(express.static(path.join(__dirname, 'public')));
+
+  if (app.get('isDev'))
   {
-    console.log('Running in DEV mode.');
-    app.use(express.errorHandler());
+    console.log('Running in *DEVELOPMENT* mode.'.blue);
   }
 
   // View Routes
@@ -50,6 +53,9 @@ function initExpress()
   app.get('/api/players', routes.players);
   app.get('/api/players/randomize', routes.randomize);
   app.post('/api/players/active', routes.updateActivePlayers);
+
+  // Error handling
+  app.use(errorHandler());
 
   console.log('[END] '.green + 'Express configuration');
   return app;
