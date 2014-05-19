@@ -15,12 +15,15 @@
   {
     "node": "0.10.x"
   },
-
   "scripts":
   {
     "start": "node app.js"
   },
 
+  "bugs":
+  {
+    "url": "https://github.com/thiru/hockey-oracle/issues"
+  },
   "license": "GPLv2",
   "keywords": [ "team", "generator", "hockey", "pick-up" ],
   "repository":
