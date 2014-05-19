@@ -5,7 +5,7 @@ var path = require('path');
 var fs = require('fs');
 var routes = require('./lib/routes.js');
 
-var defaultPort = 80;
+var defaultPort = 3000;
 var homePage = fs.readFileSync(path.join(__dirname, 'public/index.html'),
                                {encoding: 'utf8'});
 
