@@ -6,6 +6,7 @@ var errorHandler = require('errorhandler');
 var methodOverride = require('method-override');
 var path = require('path');
 var routes = require('./lib/router');
+var customErrHandler = require('./lib/ui/error-handler.js');
 
 var defaultPort = 3000;
 var port = process.env.PORT || defaultPort;
@@ -26,17 +27,20 @@ function initExpress()
   if (app.get('env') == 'development')
   {
     console.log('Running in *DEVELOPMENT* mode.'.blue);
-    app.set('isDev', true);
+    app.enable('isDev');
   }
 
-  app.use(morgan(app.get('isDev') ? 'dev' : ''));
+  app.use(morgan(app.enabled('isDev') ? 'dev' : ''));
   app.use(bodyParser());
   app.use(methodOverride());
   app.use(express.static(path.join(__dirname, 'public')));
   app.use('/', routes);
 
   // Error handling
-  app.use(errorHandler());
+  if (app.enabled('isDev'))
+    app.use(errorHandler());
+  else
+    app.use(customErrHandler);
 
   console.log('[END] '.green + 'Express configuration');
   return app;
