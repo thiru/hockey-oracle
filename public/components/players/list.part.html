@@ -1,4 +1,4 @@
-<div ng-cloak ng-controller='playerListCtrlr'>
+<div id='player-list' ng-cloak ng-controller='playerListCtrlr'>
   <!-- Loading -->
   <p class='ui info message' ng-if='!data.finishedLoading'>Loading players...</p>
   <!-- No Data -->
@@ -17,7 +17,7 @@
       <tbody>
         <tr ng-repeat='player in data.players'>
           <!-- Name -->
-          <td>
+          <td class='name' ng-click='onNameClick(player)'>
             <div class='ui checkbox'>
               <input id='{{player.id}}' ng-model='player.isActive' type='checkbox' />
               <label for='{{player.id}}'>
@@ -26,7 +26,7 @@
             </div>
           </td>
           <!-- Position -->
-          <td>
+          <td class='position'>
             {{player.position}}
           </td>
         </tr>

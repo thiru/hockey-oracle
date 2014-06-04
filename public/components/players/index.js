@@ -8,6 +8,11 @@ module.exports = angular.module('horacle.players', ['ngResource'])
       $scope.data.players = $scope.playerResource.query();
       $scope.data.players.$promise.then(function() {$scope.data.finishedLoading = true;});
 
+      $scope.onNameClick = function(player)
+      {
+        player.isActive = !player.isActive;
+      };
+
       $scope.saveAndRandomize = function()
       {
         $scope.valError = '';
