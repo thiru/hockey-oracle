@@ -98,3 +98,11 @@ main
   margin-right: 0.5em;
   font-size: 0.8em;
 }
+
+/* Logo sizing */
+#player-randomize section.team img
+{
+  max-height: 1.2em;
+  max-width: 1.2em;
+  vertical-align: middle;
+}

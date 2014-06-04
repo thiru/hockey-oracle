@@ -11,7 +11,10 @@
   <!-- Random Teams -->
   <div ng-if='data.teams.length'>
     <section class='team' ng-repeat='team in data.teams'>
-      <h3 class='ui inverted black block header center aligned'>{{team.name}}</h3>
+      <h3 class='ui inverted black block header center aligned'>
+        <img ng-src='/images/team-logos/{{team.name | lowercase}}.png' />
+        {{team.name}}
+      </h3>
       <div class='ui link list'>
         <a class='item' ng-repeat='player in team'>
           {{player.firstName + ' ' + player.lastName}}
