@@ -53,7 +53,14 @@ module.exports = angular.module('horacle.players', ['ngResource'])
       $scope.randomizeResource = $resource('/api/players/randomize');
       $scope.data = {};
       $scope.data.teams = $scope.randomizeResource.query();
-      $scope.data.teams.$promise.then(function() {$scope.data.finishedLoading = true;});
+      $scope.data.teams.$promise.then(
+        function()
+        {
+          $scope.data.finishedLoading = true;
+          // TODO: Remove hard-coded team names.
+          $scope.data.teams[0].name = 'Cripplers';
+          $scope.data.teams[1].name = 'Panthers';
+        });
 
       $scope.reload = function()
       {
