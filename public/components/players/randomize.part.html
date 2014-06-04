@@ -9,13 +9,6 @@
 
   <!-- Random Teams -->
   <div ng-if='data.teams.length'>
-    <p class='ui blue message accept-question'>
-      <span>How about these teams?</span>
-      <!-- Re-randomize -->
-      <button class='ui blue labeled button' ng-click='reload()' title='Redo randomization'>
-        Redo
-      </button>
-    </p>
     <section class='team' ng-repeat='team in data.teams'>
       <h3 class='ui inverted black block header center aligned'>Team {{team[0].lastName}}</h3>
       <div class='ui link list'>
@@ -24,5 +17,20 @@
         </a>
       </div>
     </section>
+  </div>
+
+  <!-- Question/actions -->
+  <div class='ui blue message accept-question' ng-if='data.teams.length'>
+    <p>How do you like these teams?</p>
+    <div class='buttons'>
+      <!-- Re-randomize -->
+      <button class='ui blue labeled button' ng-click='reload()' title='Redo randomization'>
+        Redo
+      </button>
+      <!-- Back -->
+      <a class='ui blue labeled button' href='/players' title='Change active players'>
+        Players
+      </a>
+    </div>
   </div>
 </div>

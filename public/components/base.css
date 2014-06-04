@@ -86,12 +86,15 @@ main
       Random players page
 *******************************/
 
+/* Leave space below each team */
 #player-randomize section.team
 {
   margin-bottom: 1em;
 }
 
-#player-randomize .accept-question > button
+/* Space out 'accept question' buttons */
+#player-randomize .accept-question .button
 {
-  margin-left: 0.5em;
+  margin-right: 0.5em;
+  font-size: 0.8em;
 }
