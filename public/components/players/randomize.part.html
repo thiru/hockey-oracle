@@ -2,6 +2,7 @@
   <!-- Loading -->
   <p class='ui info message' ng-if='!data.finishedLoading'>Loading players...</p>
 
+  <!-- TODO: data.teams.length doesn't hide, use another mechanism to count players per team -->
   <!-- No Data -->
   <p class='ui warning message' ng-if='data.finishedLoading && !data.teams.length'>
     No players found
