@@ -86,7 +86,12 @@ main
       Random players page
 *******************************/
 
-section.team
+#player-randomize section.team
 {
   margin-bottom: 1em;
+}
+
+#player-randomize .accept-question > button
+{
+  margin-left: 0.5em;
 }
