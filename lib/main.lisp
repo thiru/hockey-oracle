@@ -45,6 +45,75 @@
       :active? active?)
     *players*))
 
-(add-player "Touraj" "Nikou" "C" T)
-(add-player "Osama" "Raza" "RW" T)
 (add-player "Aiyaz" "Ahmed" "LW" NIL)
+(add-player "Anish" "Patel" "RW" T)
+(add-player "Brian" "Tse" "D" T)
+(add-player "Brian" "Kwan" "D" T)
+(add-player "Carmen" "Francese" "C" NIL)
+(add-player "Elroy" "Toney" "G" T)
+(add-player "Kup" "Santhirasivam" "C" T)
+(add-player "Mark" "MacDonald" "RW" T)
+(add-player "Mark" "Solis" "G" T)
+(add-player "Mauz" "Syed" "RW" T)
+(add-player "Osama" "Raza" "LW" T)
+(add-player "Robin" "Pinto" "D" T)
+(add-player "Steve" "Hall" "LW" NIL)
+(add-player "Saif" "Ansari" "LW" T)
+(add-player "Taran" "Anderson" "RW" T)
+(add-player "Thiru" "Thirunavukarasu" "D" T)
+(add-player "Touraj" "Nikou" "C" T)
+(add-player "Extra 1" "" "D" NIL)
+(add-player "Extra 2" "" "D" NIL)
+(add-player "Extra 3" "" "D" NIL)
+(add-player "Extra 4" "" "D" NIL)
+
+(defmacro standard-page ((&key title) &body body)
+  "Creates a standard page layout."
+  `(with-html-output-to-string
+     (*standard-output* nil :prologue t :indent t)
+     (:html :lang "en"
+      (:head
+        (:meta :charset "utf-8")
+        (:meta :http-equiv "X-UA-Compatible"
+               :content "IE=edge")
+        (:meta :name "viewport"
+               :content "width=device-width, initial-scale=1")
+        (:title ,(format nil "~a - Hockey Oracle" title))
+        (:link :rel "shortcut icon"
+               :href "/images/favicon.ico")
+        (:link :type "text/css"
+               :rel "stylesheet"
+               :href "/deps/semantic-ui/semantic.min.css")
+        (:link :type "text/css"
+               :rel "stylesheet"
+               :href "/styles/base.css"))
+      (:body
+        (:header
+          (:h1
+            ;(:img :src "/images/magic-ball.svg" :alt "logo (crystal ball)")
+            (:a :href "/" "Hockey Oracle"))
+          (:nav
+            (:a :href "/players")))
+        ,@body))))
+
+;;; Web-related code:
+
+(defun start-server (port)
+  (start (make-instance 'easy-acceptor :port port :document-root #p"public/")))
+
+(define-easy-handler (p/players :uri "/players") ()
+  (standard-page
+    (:title "Players")
+    (:table
+      (:thead
+        (:tr
+          (:th "Player")
+          (:th "Position")))
+      (:tbody
+        (dolist (p (players))
+          (htm
+            (:tr
+              (:td (esc (fmt "~a ~a" (first-name p) (last-name p))))
+              (:td (esc (pposition p))))))))))
+
+(start-server 9090)
