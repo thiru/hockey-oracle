@@ -2,45 +2,73 @@
             Global
 *******************************/
 
-html, body
+*
 {
-  height: 100%;
+  box-sizing: border-box; /* Have element's width include border and padding: */
+  overflow: hidden; /* Prevent elements from collapsing their height when they only contain
+                       floated elements: */
+  text-rendering: optimizeLegibility;
 }
 
 body
 {
-  color: #555;
-  background: #FFF;
+  color: #555; /* VAR COMMON-TEXT-COLOUR */
   font-family: "Open Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   margin: 0;
-  min-width: 320px;
   padding: 0;
-  text-rendering: optimizeLegibility;
+}
+
+body
+{
+  background: #FFF;
+  min-width: 320px;
 }
 
 a
 {
-  color: #3598DB;
+  color: #3598DB; /* VAR BANNER-BLUE */
   text-decoration: none;
 }
 a *
 {
-  color: #3598DB;
+  color: #3598DB; /* VAR BANNER-BLUE */
 }
 a:hover
 {
   text-decoration: underline;
 }
 
+.col
+{
+  float: left;
+  padding: 5px; /* This is the gutter between columns */
+}
+.col-1 { width: 100%; }
+.col-2 { width: 50%; }
+.col-3 { width: 33.333%; }
+.col-4 { width: 25%; }
+.col-5 { width: 20%; }
+
 /*******************************
-       Top-Level Layout
+       Site-wide Layout
 *******************************/
 
+header
+{
+  font-size: 2em;
+}
+@media (max-width: 360px)
+{
+  header
+  {
+    font-size: 1em;
+  }
+}
 header h1
 {
-  margin: 0 10% 0.2em 10%;
+  margin: 0 5%; /* VAR CONTENT-MARGIN-HORIZ */
 }
-header h1 a
+header h1 *
 {
   color: inherit;
 }
@@ -48,7 +76,7 @@ header h1 a:hover
 {
   text-decoration: none;
 }
-header h1 img
+header .logo
 {
   height: 1.5em;
   padding-right: 0.4em;
@@ -57,12 +85,11 @@ header h1 img
 
 nav
 {
-  background-color: #3598DB;
-  margin-bottom: 0.5em;
-  padding: 1em 10%;
+  background-color: #3598DB; /* VAR BANNER-BLUE */
+  margin: 0.2em 0;
+  padding: 0.2em 5%; /* VAR CONTENT-MARGIN-HORIZ */
 }
-
-nav *
+nav a
 {
   color: white;
   padding-right: 1em;
@@ -70,17 +97,14 @@ nav *
 
 main
 {
-  margin: 1em 10%
+  margin: 0 5%; /* VAR CONTENT-MARGIN-HORIZ */
 }
 
 /*******************************
       Player list page
 *******************************/
 
-#player-list .name
-{
-  cursor: pointer;
-}
+
 
 /*******************************
       Random players page

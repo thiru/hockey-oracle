@@ -6,19 +6,21 @@
 (in-package :hockey-oracle)
 
 (defclass player ()
-  ((first-name :reader first-name
+  ((player-id :reader player-id
+              :initarg :player-id)
+   (first-name :reader first-name
                :initarg :first-name)
    (last-name :reader last-name
               :initarg :last-name)
    (pposition :accessor pposition
              :initarg :pposition)
    (active? :accessor active?
-              :initarg :active?)))
+            :initarg :active?)))
 
 (defmethod print-object ((object player) stream)
   (print-unreadable-object (object stream :type T)
-    (with-slots (first-name last-name pposition active?) object
-      (format stream "~s ~s ~s (active? ~s)" first-name last-name pposition active?))))
+    (with-slots (player-id first-name last-name pposition active?) object
+      (format stream "~s ~s ~s ~s (active? ~s)" player-id first-name last-name pposition active?))))
 
 (defmethod activate-player (p)
   "Activate the given player."
@@ -29,16 +31,19 @@
   (setf (active? p) NIL))
 
 (defvar *players* '())
+(defvar *player-id-seed* 0)
 
 (defun players ()
   "Get a sorted list of all players."
   (sort (copy-list *players*) #'string< :key #'first-name))
+
 
 (defun add-player (fname lname pos active?)
   "Add a player to the global list."
   (push
     (make-instance
       'player
+      :player-id (incf *player-id-seed*)
       :first-name fname
       :last-name lname
       :pposition pos
@@ -67,6 +72,8 @@
 (add-player "Extra 3" "" "D" NIL)
 (add-player "Extra 4" "" "D" NIL)
 
+;;; Web-related code:
+
 (defmacro standard-page ((&key title) &body body)
   "Creates a standard page layout."
   `(with-html-output-to-string
@@ -83,25 +90,21 @@
                :href "/images/favicon.ico")
         (:link :type "text/css"
                :rel "stylesheet"
-               :href "/deps/semantic-ui/semantic.min.css")
-        (:link :type "text/css"
-               :rel "stylesheet"
                :href "/styles/base.css"))
       (:body
         (:header
           (:h1
-            ;(:img :src "/images/magic-ball.svg" :alt "logo (crystal ball)")
-            (:a :href "/" "Hockey Oracle"))
+            (:a :href "/"
+              (:img :class "logo"
+                    :src "/images/magic-ball.svg"
+                    :alt "logo (crystal ball)")
+              "Hockey Oracle"))
           (:nav
-            (:a :href "/players")))
-        ,@body))))
+            (:a :href "/players" "Players")))
+        (:main
+          ,@body)))))
 
-;;; Web-related code:
-
-(defun start-server (port)
-  (start (make-instance 'easy-acceptor :port port :document-root #p"public/")))
-
-(define-easy-handler (p/players :uri "/players") ()
+(define-easy-handler (www-players :uri "/players") ()
   (standard-page
     (:title "Players")
     (:table
@@ -113,7 +116,14 @@
         (dolist (p (players))
           (htm
             (:tr
-              (:td (esc (fmt "~a ~a" (first-name p) (last-name p))))
+              (:td
+                (:label
+                  (:input :id (player-id p)
+                          :type "checkbox")
+                  (esc (fmt "~a ~a" (first-name p) (last-name p)))))
               (:td (esc (pposition p))))))))))
+
+(defun start-server (port)
+  (start (make-instance 'easy-acceptor :port port :document-root #p"public/")))
 
 (start-server 9090)
