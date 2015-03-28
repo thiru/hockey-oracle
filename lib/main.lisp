@@ -111,7 +111,7 @@
 (define-easy-handler (www-players :uri "/players") ()
   (standard-page
     (:title "Players")
-    (:table
+    (:table :class "data-table"
       (:thead
         (:tr
           (:th "Player")
@@ -124,7 +124,8 @@
                 (:label
                   (:input :id (player-id p)
                           :type "checkbox")
-                  (esc (fmt "~a ~a" (first-name p) (last-name p)))))
+                  (:span :class "label-text"
+                    (esc (fmt "~a ~a" (first-name p) (last-name p))))))
               (:td (esc (pposition p))))))))))
 
 (defun start-server (port)
