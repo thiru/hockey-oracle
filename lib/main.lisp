@@ -93,7 +93,11 @@
                :href "/images/favicon.ico")
         (:link :type "text/css"
                :rel "stylesheet"
+               :href "/deps/font-awesome/css/font-awesome.min.css")
+        (:link :type "text/css"
+               :rel "stylesheet"
                :href "/styles/base.css"))
+        (:script :src "/scripts/main.js")
       (:body
         (:header
           (:a :href "/"
@@ -131,12 +135,12 @@
                   (:span :class "label-text"
                     (esc (fmt "~a ~a" (first-name p) (last-name p))))))
               (:td (esc (pposition p))))))))
-    (:button :id "randomize"
+    (:button :id "make-teams"
+      :onclick "makeTeams()"
+      :title "Select to generate random teams"
       :type "button"
-      :click "alert('hi')"
-      "Randomize"
-      )
-    ))
+      (:i :class "fa fa-random")
+      "Make Teams")))
 
 (define-easy-handler (www-about :uri "/about") ()
   (standard-page

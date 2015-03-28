@@ -166,11 +166,16 @@ main
       Player list page
 *******************************/
 
-#player-list-page #randomize
+#player-list-page #make-teams
 {
+  font-size: 1.2em;
   margin: 1em 0;
-  padding: 0.5em 0;
+  padding: 0.3em;
   width: 100%;
+}
+#player-list-page #make-teams i
+{
+  padding-right: 0.5em;
 }
 
 /*******************************
