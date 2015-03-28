@@ -152,8 +152,8 @@
     (:title "About"
      :page-id "about-page")
     (:p
-      "The Hockey Oracle is a simple app that generates teams from a pool of "
-      "random players."
+      "The Hockey Oracle is a simple app that generates teams by randomly "
+      "selecting from a pool of active players."
       )
     (:br)
     (:table :class "brief-table"
