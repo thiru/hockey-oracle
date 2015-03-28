@@ -128,11 +128,14 @@
       (:tbody
         (dolist (p (players))
           (htm
-            (:tr
+            (:tr :onclick "togglePlayerActive(this)"
               (:td
                 (:label
-                  (:input :id (player-id p)
-                          :type "checkbox")
+                  (if (active? p)
+                    (htm
+                      (:i :class "player-check fa fa-check-circle-o"))
+                    (htm
+                      (:i :class "player-check fa fa-circle-o")))
                   (:span :class "label-text player-name"
                     (esc (fmt "~a ~a" (first-name p) (last-name p))))))
               (:td (esc (pposition p))))))))

@@ -84,17 +84,6 @@ i.fa
 {
   background: #F5F5F5;
 }
-/* Make entire column clickable */
-.data-table td label
-{
-  display: inline-block;
-  width: 100%;
-}
-.data-table input[type="checkbox"]
-{
-  margin: 0 0.4em 0 0;
-  padding: 0;
-}
 
 .brief-table td
 {
