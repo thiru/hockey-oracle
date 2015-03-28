@@ -77,7 +77,7 @@
 
 ;;; Web-related code:
 
-(defmacro standard-page ((&key title) &body body)
+(defmacro standard-page ((&key title page-id) &body body)
   "Creates a standard page layout."
   `(with-html-output-to-string
      (*standard-output* nil :prologue t :indent t)
@@ -108,12 +108,13 @@
             (:li
               (:a :href "/about" "About"))
             ))
-        (:main
+        (:main :id ,page-id
           ,@body)))))
 
 (define-easy-handler (www-players :uri "/players") ()
   (standard-page
-    (:title "Players")
+    (:title "Players"
+     :page-id "player-list-page")
     (:table :class "data-table"
       (:thead
         (:tr
@@ -129,11 +130,18 @@
                           :type "checkbox")
                   (:span :class "label-text"
                     (esc (fmt "~a ~a" (first-name p) (last-name p))))))
-              (:td (esc (pposition p))))))))))
+              (:td (esc (pposition p))))))))
+    (:button :id "randomize"
+      :type "button"
+      :click "alert('hi')"
+      "Randomize"
+      )
+    ))
 
 (define-easy-handler (www-about :uri "/about") ()
   (standard-page
-    (:title "About")
+    (:title "About"
+     :page-id "about-page")
     (:p
       "The Hockey Oracle is a simple app that generates teams from a pool of "
       "random players."

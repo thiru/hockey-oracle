@@ -166,7 +166,12 @@ main
       Player list page
 *******************************/
 
-
+#player-list-page #randomize
+{
+  margin: 1em 0;
+  padding: 0.5em 0;
+  width: 100%;
+}
 
 /*******************************
       Random players page
