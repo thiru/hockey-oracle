@@ -99,7 +99,12 @@
               :alt "logo (crystal ball)")
             (:span :class "title" "Hockey Oracle")))
         (:nav
-          (:a :href "/players" "Players"))
+          (:ul :class "nav-items"
+            (:li
+              (:a :href "/players" "Players"))
+            (:li
+              (:a :href "/about" "About"))
+            ))
         (:main
           ,@body)))))
 

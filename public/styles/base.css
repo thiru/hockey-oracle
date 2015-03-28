@@ -55,9 +55,11 @@ a:hover
 
 header
 {
-  /*background-color: yellow;*/
+  /* background-color: yellow; */
   font-weight: bold;
-  padding: 0 5%; /* VAR CONTENT-MARGIN-HORIZ */
+  margin: 0 auto;
+  max-width: 800px; /* VAR CONTENT-WIDTH */
+
 }
 header a
 {
@@ -92,6 +94,17 @@ nav
   margin: 0.5em 0;
   padding: 1em 5%; /* VAR CONTENT-MARGIN-HORIZ */
 }
+nav .nav-items
+{
+  margin: 0 auto;
+  max-width: 800px; /* VAR CONTENT-WIDTH */
+  padding: 0;
+}
+nav .nav-items li
+{
+  display: inline-block;
+  float: left;
+}
 nav a
 {
   color: white;
@@ -100,7 +113,8 @@ nav a
 
 main
 {
-  margin: 0 5%; /* VAR CONTENT-MARGIN-HORIZ */
+  margin: 0 auto;
+  max-width: 800px; /* VAR CONTENT-WIDTH */
 }
 
 /*******************************
