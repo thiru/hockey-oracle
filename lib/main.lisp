@@ -128,14 +128,14 @@
       (:tbody
         (dolist (p (players))
           (htm
-            (:tr :onclick "togglePlayerActive(this)"
+            (:tr :class "player-item"
+              ; This indicates the player's initial active status. I.e. it may
+              ; change on the client.
+              :data-player-active (active? p)
+              :onclick "togglePlayerActive(this)"
               (:td
                 (:label
-                  (if (active? p)
-                    (htm
-                      (:i :class "player-check fa fa-check-circle-o"))
-                    (htm
-                      (:i :class "player-check fa fa-circle-o")))
+                  (:i :class "player-check fa fa-circle-o")
                   (:span :class "label-text player-name"
                     (esc (fmt "~a ~a" (first-name p) (last-name p))))))
               (:td (esc (pposition p))))))))

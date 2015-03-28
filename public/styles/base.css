@@ -84,6 +84,10 @@ i.fa
 {
   background: #F5F5F5;
 }
+.data-table .selected
+{
+  font-weight: bold;
+}
 
 .brief-table td
 {
