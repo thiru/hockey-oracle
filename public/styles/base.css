@@ -55,32 +55,35 @@ a:hover
 
 header
 {
-  font-size: 2em;
+  /*background-color: yellow;*/
+  font-weight: bold;
+  padding: 0 5%; /* VAR CONTENT-MARGIN-HORIZ */
 }
-@media (max-width: 360px)
+header a
 {
-  header
-  {
-    font-size: 1em;
-  }
+  /*background-color: blue;*/
+  display: block;
+  height: 40px;
 }
-header h1
-{
-  margin: 0 5%; /* VAR CONTENT-MARGIN-HORIZ */
-}
-header h1 *
-{
-  color: inherit;
-}
-header h1 a:hover
+header a:hover
 {
   text-decoration: none;
 }
 header .logo
 {
-  height: 1.5em;
-  padding-right: 0.4em;
-  vertical-align: bottom;
+  /*background-color: red;*/
+  display: inline-block;
+  height: 100%;
+  padding-right: 0.2em;
+  vertical-align: middle;
+}
+header .title
+{
+  color: #555; /* VAR COMMON-TEXT-COLOUR */
+  display: inline-block;
+  font-size: 2.2em;
+  height: 100%;
+  vertical-align: middle;
 }
 
 nav

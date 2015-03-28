@@ -93,14 +93,13 @@
                :href "/styles/base.css"))
       (:body
         (:header
-          (:h1
-            (:a :href "/"
-              (:img :class "logo"
-                    :src "/images/magic-ball.svg"
-                    :alt "logo (crystal ball)")
-              "Hockey Oracle"))
-          (:nav
-            (:a :href "/players" "Players")))
+          (:a :href "/"
+            (:img :class "logo"
+              :src "/images/magic-ball.svg"
+              :alt "logo (crystal ball)")
+            (:span :class "title" "Hockey Oracle")))
+        (:nav
+          (:a :href "/players" "Players"))
         (:main
           ,@body)))))
 
