@@ -133,7 +133,7 @@
                 (:label
                   (:input :id (player-id p)
                           :type "checkbox")
-                  (:span :class "label-text"
+                  (:span :class "label-text player-name"
                     (esc (fmt "~a ~a" (first-name p) (last-name p))))))
               (:td (esc (pposition p))))))))
     (:button :id "make-teams"
