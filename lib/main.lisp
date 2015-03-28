@@ -137,6 +137,7 @@
                     (esc (fmt "~a ~a" (first-name p) (last-name p))))))
               (:td (esc (pposition p))))))))
     (:button :id "make-teams"
+      :class "wide-button"
       :onclick "makeTeams()"
       :title "Select to generate random teams"
       :type "button"
