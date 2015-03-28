@@ -83,6 +83,15 @@ a:hover
   padding: 0;
 }
 
+.brief-table td
+{
+  padding: 0 0.5em 0.5em 0;
+}
+.brief-table td:first-child
+{
+  font-weight: bold;
+}
+
 /*******************************
        Site-wide Layout
 *******************************/
@@ -183,3 +192,4 @@ main
   max-width: 1.2em;
   vertical-align: middle;
 }
+

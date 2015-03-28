@@ -5,6 +5,9 @@
 
 (in-package :hockey-oracle)
 
+(defvar app-version 0.2)
+(defvar app-updated "Mar 28 2015")
+
 (defclass player ()
   ((player-id :reader player-id
               :initarg :player-id)
@@ -127,6 +130,31 @@
                   (:span :class "label-text"
                     (esc (fmt "~a ~a" (first-name p) (last-name p))))))
               (:td (esc (pposition p))))))))))
+
+(define-easy-handler (www-about :uri "/about") ()
+  (standard-page
+    (:title "About")
+    (:p
+      "The Hockey Oracle is a simple app that generates teams from a pool of "
+      "random players."
+      )
+    (:br)
+    (:table :class "brief-table"
+      (:tr
+        (:td "Version")
+        (:td (fmt "~a" app-version)))
+      (:tr
+        (:td "Last Updated")
+        (:td (fmt "~a" app-updated)))
+      (:tr
+        (:td "License")
+        (:td
+          (:a :href "https://www.gnu.org/licenses/gpl-2.0.html" "GPL v2")))
+      (:tr
+        (:td "Copyright")
+        (:td "2014-2015 Thirushanth Thirunavukarasu")))
+    )
+  )
 
 (defun start-server (port)
   (start (make-instance 'easy-acceptor :port port :document-root #p"public/")))
