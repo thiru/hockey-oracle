@@ -117,6 +117,9 @@
         (:main :id ,page-id
           ,@body)))))
 
+(define-easy-handler (www-home :uri "/") ()
+  (redirect "/players"))
+
 (define-easy-handler (www-players :uri "/players") ()
   (standard-page
     (:title "Players"
