@@ -24,12 +24,9 @@ body
 
 a
 {
-  color: #3598DB; /* VAR BANNER-BLUE */
+  color: #FF7831; /* VAR LINK-COLOUR */
+  font-weight: bold;
   text-decoration: none;
-}
-a *
-{
-  color: #3598DB; /* VAR BANNER-BLUE */
 }
 a:hover
 {
@@ -68,7 +65,8 @@ i.fa
 }
 .data-table thead tr
 {
-  background: #F5F5F5;
+  background: #0F83BC; /* VAR BLUE-HEADING */
+  color: white;
 }
 .data-table th
 {
@@ -115,51 +113,40 @@ i.fa
 
 header
 {
-  /* background-color: yellow; */
+  background-color: #04080D;
+  color: white;
   font-weight: bold;
-  margin: 0 auto;
-  max-width: 800px; /* VAR CONTENT-WIDTH */
-
+  height: 35px; /* VAR BANNER-HEIGHT */
+  position: relative;
+  overflow: hidden;
 }
-header a
+header .logo
 {
-  /*background-color: blue;*/
-  display: block;
-  height: 35px;
+  height: 35px; /* VAR BANNER-HEIGHT */
+}
+header .title
+{
+  color: white;
+  display: inline-block;
+  font-size: 1em;
+  left: 55px;
+  position: absolute;
+  top: 8px;
 }
 header a:hover
 {
   text-decoration: none;
 }
-header .logo
-{
-  /*background-color: red;*/
-  display: inline-block;
-  height: 100%;
-  padding-right: 0.2em;
-  vertical-align: middle;
-}
-header .title
-{
-  color: #555; /* VAR COMMON-TEXT-COLOUR */
-  display: inline-block;
-  font-size: 1.9em;
-  height: 100%;
-  vertical-align: middle;
-}
 
 nav
 {
-  background-color: #3598DB; /* VAR BANNER-BLUE */
-  margin: 0.5em 0;
   overflow: hidden; /* Prevent elements from collapsing their height when they only contain
                        floated elements: */
-  padding: 1em 5%; /* VAR CONTENT-MARGIN-HORIZ */
+  padding: 0.5em 25px 1em 25px; /* VAR CONTENT-WIDTH */
 }
 nav .nav-items
 {
-  margin: 0 auto;
-  max-width: 800px; /* VAR CONTENT-WIDTH */
+  margin: 0;
   padding: 0;
 }
 nav .nav-items li
@@ -169,23 +156,38 @@ nav .nav-items li
 }
 nav a
 {
-  color: white;
   padding-right: 1em;
 }
 
 main
 {
-  margin: 0 auto;
-  max-width: 800px; /* VAR CONTENT-WIDTH */
+  padding: 0 25px; /* VAR CONTENT-WIDTH */
 }
 
 /*******************************
       Player list page
 *******************************/
 
+#player-list-page .player-item
+{
+  cursor: pointer;
+}
+#player-list-page .player-item:hover
+{
+  background: #C3FBFF;
+}
+
 #player-list-page #random-teams
 {
   display: none;
+}
+
+#player-list-page .team-heading
+{
+  background: #0F83BC; /* VAR BLUE-HEADING */
+  color: white;
+  margin: 0 0 0.5em 0;
+  padding: 0.3em;
 }
 
 /*******************************

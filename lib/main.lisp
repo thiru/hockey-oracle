@@ -103,9 +103,10 @@
       (:body
         (:header
           (:a :href "/"
-            (:img :class "logo"
-              :src "/images/magic-ball.svg"
-              :alt "logo (crystal ball)")
+            (:img
+              :alt "logo (magic ball)"
+              :class "logo"
+              :src "/images/banner.jpg")
             (:span :class "title" "Hockey Oracle")))
         (:nav
           (:ul :class "nav-items"
