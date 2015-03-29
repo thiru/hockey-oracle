@@ -98,6 +98,7 @@
                :rel "stylesheet"
                :href "/styles/base.css"))
         (:script :src "/deps/jquery/jquery-2.1.3.min.js")
+        (:script :src "/deps/lodash/lodash.min.js")
         (:script :src "/scripts/main.js")
       (:body
         (:header
@@ -120,7 +121,7 @@
   (standard-page
     (:title "Players"
      :page-id "player-list-page")
-    (:table :class "data-table"
+    (:table :id "player-list" :class "data-table"
       (:thead
         (:tr
           (:th "Player")
@@ -138,7 +139,18 @@
                   (:i :class "player-check fa fa-circle-o")
                   (:span :class "label-text player-name"
                     (esc (fmt "~a ~a" (first-name p) (last-name p))))))
-              (:td (esc (pposition p))))))))
+              (:td :class "player-position" (esc (pposition p))))))))
+    (:section :id "random-teams"
+      (:div :id "team1" :class "team"
+        (:h3 :class "team-heading"
+          (:img :class "team-logo" :src "/images/team-logos/cripplers.png")
+          (:span :class "team-name" "Cripplers"))
+        (:ul :class "team-players simple-list"))
+      (:div :id "team2" :class "team"
+        (:h3 :class "team-heading"
+          (:img :class "team-logo" :src "/images/team-logos/panthers.png")
+          (:span :class "team-name" "Panthers"))
+        (:ul :class "team-players simple-list")))
     (:button :id "make-teams"
       :class "wide-button"
       :onclick "makeTeams()"

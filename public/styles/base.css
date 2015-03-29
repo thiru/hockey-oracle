@@ -98,6 +98,17 @@ i.fa
   font-weight: bold;
 }
 
+.simple-list
+{
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.simple-list li
+{
+  padding-bottom: 0.3em;
+}
+
 /*******************************
        Site-wide Layout
 *******************************/
@@ -172,26 +183,30 @@ main
       Player list page
 *******************************/
 
+#player-list-page #random-teams
+{
+  display: none;
+}
 
 /*******************************
       Random players page
 *******************************/
 
 /* Leave space below each team */
-#player-randomize section.team
+#player-list-page .team
 {
   margin-bottom: 1em;
 }
 
 /* Space out 'accept question' buttons */
-#player-randomize .accept-question .button
+#player-list-page .accept-question .button
 {
   margin-right: 0.5em;
   font-size: 0.8em;
 }
 
 /* Logo sizing */
-#player-randomize section.team img
+#player-list-page .team-logo
 {
   max-height: 1.2em;
   max-width: 1.2em;
