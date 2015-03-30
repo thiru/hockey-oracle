@@ -23,13 +23,16 @@ function togglePlayerActive(ele)
 
 function makeTeams()
 {
-  var selPlayers = getActivePlayers();
+  var activePlayers = getActivePlayers();
+  if (!activePlayers.length)
+    return;
+
+  var teams = generateTeams(activePlayers);
+  if (!teams.length)
+    return;
 
   $("#player-list").hide();
-
-  var teams = generateTeams(selPlayers);
   populateTeams(teams);
-  
   $("#random-teams").show();
 
   function getActivePlayers() {
@@ -45,6 +48,9 @@ function makeTeams()
         }
     });
 
+    if (!players.length)
+      alert('No players selected');
+
     return players;
   }
 
@@ -53,7 +59,7 @@ function makeTeams()
 
     var goalies = _.filter(activePlayers, function(x) {return x.position == 'G'});
     if (goalies.length == 1) {
-      alert(goalies.length + " goalie was selected. Please choose two.");
+      alert("Only " + goalies.length + " goalie was selected. Please choose two.");
       return teams;
     }
     else if (goalies.length != 2) {
