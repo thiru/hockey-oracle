@@ -58,19 +58,10 @@ function makeTeams()
     var teams = [];
 
     var goalies = _.filter(activePlayers, function(x) {return x.position == 'G'});
-    if (goalies.length == 1) {
-      alert("Only " + goalies.length + " goalie was selected. Please choose two.");
-      return teams;
-    }
-    else if (goalies.length != 2) {
-      alert(goalies.length + " goalies were selected. Please choose two.");
-      return teams;
-    }
-
     goalies = _.shuffle(goalies);
 
-    teams.push({goalie: goalies[0], players: []});
-    teams.push({goalie: goalies[1], players: []});
+    teams.push({goalie: goalies[0] || {name: "None", position: "G"}, players: []});
+    teams.push({goalie: goalies[1] || {name: "None", position: "G"}, players: []});
 
     var players = _.filter(activePlayers, function(x) {return x.position != 'G'});
 
