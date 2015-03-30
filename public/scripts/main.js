@@ -79,8 +79,10 @@ function makeTeams()
 
   function populateTeams(teams) {
     var teamIdx = 0;
+
     $("#random-teams .team").each(function() {
       var playersUL = $(this).find(".team-players");
+      playersUL.empty();
       playersUL.append("<li><b>" + teams[teamIdx].goalie.name + "</b></li>");
       for (var i = 0; i < teams[teamIdx].players.length; i++) {
         playersUL.append("<li>" + teams[teamIdx].players[i].name + "</li>");
