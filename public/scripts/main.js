@@ -61,6 +61,8 @@ function makeTeams()
       return teams;
     }
 
+    goalies = _.shuffle(goalies);
+
     teams.push({goalie: goalies[0], players: []});
     teams.push({goalie: goalies[1], players: []});
 
