@@ -182,6 +182,12 @@ main
   display: none;
 }
 
+#player-list-page .data-table th:first-child,
+#player-list-page .data-table td:first-child
+{
+  width: 90%;
+}
+
 #player-list-page .team-heading
 {
   background: #0F83BC; /* VAR BLUE-HEADING */
@@ -210,8 +216,6 @@ main
 /* Logo sizing */
 #player-list-page .team-logo
 {
-  max-height: 1.2em;
-  max-width: 1.2em;
-  vertical-align: middle;
+  max-height: 1em;
 }
 

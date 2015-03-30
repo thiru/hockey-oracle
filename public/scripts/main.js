@@ -83,11 +83,19 @@ function makeTeams()
     $("#random-teams .team").each(function() {
       var playersUL = $(this).find(".team-players");
       playersUL.empty();
-      playersUL.append("<li><b>" + teams[teamIdx].goalie.name + "</b></li>");
+
+      playersUL.append(playerHtml(teams[teamIdx].goalie));
+
       for (var i = 0; i < teams[teamIdx].players.length; i++) {
-        playersUL.append("<li>" + teams[teamIdx].players[i].name + "</li>");
+        playersUL.append(playerHtml(teams[teamIdx].players[i]));
       }
+
       teamIdx++;
     });
+
+    function playerHtml(player) {
+      return "<tr class='player-item'><td>" + player.name + "</td>" +
+             "<td>" + player.position + "</td></tr>";
+    }
   }
 }

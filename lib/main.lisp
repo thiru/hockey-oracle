@@ -145,16 +145,24 @@
                     (esc (fmt "~a ~a" (first-name p) (last-name p))))))
               (:td :class "player-position" (esc (pposition p))))))))
     (:section :id "random-teams"
-      (:div :id "team1" :class "team"
-        (:h3 :class "team-heading"
-          (:img :class "team-logo" :src "/images/team-logos/cripplers.png")
-          (:span :class "team-name" "Cripplers"))
-        (:ul :class "team-players simple-list"))
-      (:div :id "team2" :class "team"
-        (:h3 :class "team-heading"
-          (:img :class "team-logo" :src "/images/team-logos/panthers.png")
-          (:span :class "team-name" "Panthers"))
-        (:ul :class "team-players simple-list")))
+      (:table :id "team1" :class "team data-table"
+        (:thead
+          (:tr :class "team-heading"
+           (:th :class "team-name"
+              "Cripplers")
+           (:th :class "team-logo"
+             (:img :class "team-logo" :src "/images/team-logos/cripplers.png"))))
+        (:tbody :class "team-players"))
+      (:table :id "team2" :class "team data-table"
+        (:thead
+          (:tr :class "team-heading"
+           (:th :class "team-name"
+              "Panthers")
+           (:th :class "team-logo"
+             (:img :class "team-logo" :src "/images/team-logos/panthers.png"))))
+        (:tbody :class "team-players"
+          ))
+      )
     (:button :id "make-teams"
       :class "wide-button"
       :onclick "makeTeams()"
