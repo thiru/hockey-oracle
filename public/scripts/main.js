@@ -34,6 +34,7 @@ function makeTeams()
   $("#player-list").hide();
   populateTeams(teams);
   $("#random-teams").show();
+  $("#pick-players").show();
 
   function getActivePlayers() {
     var players = [];
@@ -95,4 +96,10 @@ function makeTeams()
              "<td>" + player.position + "</td></tr>";
     }
   }
+}
+
+function pickPlayers() {
+  $("#random-teams").hide();
+  $("#pick-players").hide();
+  $("#player-list").show();
 }

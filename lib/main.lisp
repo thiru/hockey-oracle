@@ -169,7 +169,14 @@
       :title "Select to generate random teams"
       :type "button"
       (:i :class "fa fa-random")
-      "Make Teams")))
+      "Make Teams")
+    (:button :id "pick-players"
+      :class "wide-button"
+      :onclick "pickPlayers()"
+      :title "Select to choose active players"
+      :type "button"
+      (:i :class "fa fa-check-circle-o")
+      "Pick Players")))
 
 (define-easy-handler (www-about :uri "/about") ()
   (standard-page
