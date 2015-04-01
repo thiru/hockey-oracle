@@ -134,7 +134,7 @@
       (:tbody
         (dolist (p (players))
           (htm
-            (:tr :class "player-item"
+            (:tr :class "player-item" :data-player-id (player-id p)
               ; This indicates the player's initial active status. I.e. it may
               ; change on the client.
               :data-player-active (active? p)
@@ -161,9 +161,7 @@
               "Panthers")
            (:th :class "team-logo"
              (:img :class "team-logo" :src "/images/team-logos/panthers.png"))))
-        (:tbody :class "team-players"
-          ))
-      )
+        (:tbody :class "team-players")))
     (:button :id "make-teams"
       :class "wide-button"
       :onclick "makeTeams()"

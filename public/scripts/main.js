@@ -45,7 +45,7 @@ function makeTeams()
     $("#player-list .player-item.selected")
       .each(function() {
         var player = {};
-        // TODO: player.id
+        player.id = parseInt($(this).attr("data-player-id"));
         player.name = $(this).find(".player-name").text().trim();
         player.position = $(this).find(".player-position").text().trim();
         players.push(player);
