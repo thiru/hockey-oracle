@@ -189,7 +189,7 @@ main
 #player-list-page .data-table th:first-child,
 #player-list-page .data-table td:first-child
 {
-  width: 90%;
+  width: 80%;
 }
 
 #player-list-page .team-heading
@@ -219,3 +219,13 @@ main
   max-height: 1em;
 }
 
+#player-list-page .action-buttons
+{
+  white-space: nowrap;
+}
+#player-list-page #player-list button
+{
+  font-size: 1em;
+  height: 1.5em;
+  width: 1.5em;
+}

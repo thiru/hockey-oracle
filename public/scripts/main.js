@@ -57,7 +57,7 @@ function makeTeams()
     return new Result(2, "", players);
   }
 
-  /// Generate the specified number of team, given the specified "active"
+  /// Generate the specified number of teams, given the specified "active"
   /// players.
   function generateTeams(numTeams, activePlayers) {
     // Validate input params
@@ -132,3 +132,9 @@ function pickPlayers() {
   $("#pick-players").hide();
   $("#player-list").show();
 }
+
+function editPlayer(e, playerId) {
+  e.stopPropagation();
+  alert('todo');
+}
+

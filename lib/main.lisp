@@ -130,7 +130,8 @@
       (:thead
         (:tr
           (:th "Player")
-          (:th "Position")))
+          (:th "Pos")
+          (:th "")))
       (:tbody
         (dolist (p (players))
           (htm
@@ -145,7 +146,13 @@
                   (:i :class "player-check fa fa-circle-o")
                   (:span :class "label-text player-name"
                     (esc (fmt "~a ~a" (first-name p) (last-name p))))))
-              (:td :class "player-position" (esc (pposition p))))))))
+              (:td :class "player-position" (esc (pposition p)))
+              (:td :class "action-buttons"
+                (:button
+                  :class "edit-btn"
+                  :onclick (fmt "onclick='editPlayer(event, ~a)'" (player-id p))
+                  (:i :class "fa fa-pencil-square-o")))
+              )))))
     (:section :id "random-teams"
       (:table :id "team1" :class "team data-table"
         (:thead
