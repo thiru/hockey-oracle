@@ -23,56 +23,88 @@ function togglePlayerActive(ele)
 
 function makeTeams()
 {
-  var activePlayers = getActivePlayers();
-  if (!activePlayers.length)
+  var activePlayersRes = getActivePlayers();
+  if (activePlayersRes.failed()) {
+    alert(activePlayersRes.msg);
     return;
+  }
 
-  var teams = generateTeams(activePlayers);
-  if (!teams.length)
+  var teamsRes = generateTeams(2, activePlayersRes.data);
+  if (teamsRes.failed()) {
+    alert(teamsRes.msg);
     return;
-
+  }
   $("#player-list").hide();
-  populateTeams(teams);
+  populateTeams(teamsRes.data);
   $("#random-teams").show();
   $("#pick-players").show();
 
   function getActivePlayers() {
     var players = [];
 
-    $("#player-list .player-item")
+    $("#player-list .player-item.selected")
       .each(function() {
-        if ($(this).hasClass("selected")) {
-          var player = {};
-          player.name = $(this).find(".player-name").text().trim();
-          player.position = $(this).find(".player-position").text().trim();
-          players.push(player);
-        }
+        var player = {};
+        // TODO: player.id
+        player.name = $(this).find(".player-name").text().trim();
+        player.position = $(this).find(".player-position").text().trim();
+        players.push(player);
     });
 
     if (!players.length)
-      alert('No players selected');
+      return new Result(-1, "No players selected");
 
-    return players;
+    return new Result(2, "", players);
   }
 
-  function generateTeams(activePlayers) {
+  /// Generate the specified number of team, given the specified "active"
+  /// players.
+  function generateTeams(numTeams, activePlayers) {
+    // Validate input params
+    if (numTeams < 1)
+      return new Result(-1, "The number of teams should be a positive " +
+                            "integer but was " + numTeams);
+    if (!activePlayers || !activePlayers.length || activePlayers.length < 1)
+      return new Result(-1, "No active players specified");
+    if (numTeams > activePlayers.length)
+      return new Result(-1, "More teams are required (" + numTeams + ") " +
+                            "than the number of active players (" +
+                            activePlayers.length + ")");
+
+    // Create empty teams
     var teams = [];
+    for (var i = 0; i < numTeams; i++)
+      teams.push({players: []});
 
-    var goalies = _.filter(activePlayers, function(x) {return x.position == 'G'});
+    // Get active goalies
+    var goalies = _.filter(activePlayers,
+                           function(x) {return x.position == 'G'});
+
+    // If there are less than `numTeams` goalies, create placeholder goalies
+    while (goalies.length < numTeams)
+      goalies.push({id: 0, name: "NO GOALIE", position: "G"});
+
+    // Pick randmon goalies (note that not all goalies will be selected to
+    // play as a goalie - i.e. if there are more goalies than teams)
     goalies = _.shuffle(goalies);
+    for (var i = 0; i < numTeams; i++)
+      teams[i].players.push(goalies[i]);
 
-    teams.push({goalie: goalies[0] || {name: "None", position: "G"}, players: []});
-    teams.push({goalie: goalies[1] || {name: "None", position: "G"}, players: []});
-
-    var players = _.filter(activePlayers, function(x) {return x.position != 'G'});
-
+    // Get active players that won't play as a goalie and shuffle
+    var players = _.difference(activePlayers, goalies.slice(0, numTeams));
     players = _.shuffle(players);
-    var halfWayPoint = Math.floor(players.length / 2);
 
-    teams[0].players = _.sortBy(players.slice(0, halfWayPoint), function(x) {return x.name});
-    teams[1].players = _.sortBy(players.slice(halfWayPoint), function(x) {return x.name});
+    // Split the players into teams, sorting by name
+    var teamSize = Math.ceil(players.length / numTeams);
+    var dividedPlayers = _.chunk(players, teamSize);
 
-    return teams;
+    for (var i = 0; i < numTeams; i++) {
+      dividedPlayers[i] = _.sortBy(dividedPlayers[i],
+                                   function(x) {return x.name});
+      teams[i].players = teams[i].players.concat(dividedPlayers[i]);
+    }
+
+    return new Result(2, "", teams);
   }
 
   function populateTeams(teams) {
@@ -82,11 +114,8 @@ function makeTeams()
       var playersUL = $(this).find(".team-players");
       playersUL.empty();
 
-      playersUL.append(playerHtml(teams[teamIdx].goalie));
-
-      for (var i = 0; i < teams[teamIdx].players.length; i++) {
+      for (var i = 0; i < teams[teamIdx].players.length; i++)
         playersUL.append(playerHtml(teams[teamIdx].players[i]));
-      }
 
       teamIdx++;
     });
