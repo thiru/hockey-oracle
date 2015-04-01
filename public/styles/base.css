@@ -172,8 +172,8 @@ main
       Player list page
 *******************************/
 
-/* Make row clickable */
-#player-list-page .player-item
+/* Make name column clickable */
+#player-list-page .player-item .player-name-col
 {
   cursor: pointer;
 }

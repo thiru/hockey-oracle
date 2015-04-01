@@ -15,7 +15,7 @@ $(document).ready(function() {
 
 function togglePlayerActive(ele)
 {
-  $(ele).toggleClass("selected");
+  $(ele).parents(".player-item").toggleClass("selected");
   $(ele).find("i.player-check")
         .toggleClass("fa-check-circle-o")
         .toggleClass("fa-circle-o");

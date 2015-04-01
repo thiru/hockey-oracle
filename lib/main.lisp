@@ -138,8 +138,9 @@
               ; This indicates the player's initial active status. I.e. it may
               ; change on the client.
               :data-player-active (active? p)
-              :onclick "togglePlayerActive(this)"
               (:td
+                :class "player-name-col"
+                :onclick "togglePlayerActive(this)" 
                 (:label
                   (:i :class "player-check fa fa-circle-o")
                   (:span :class "label-text player-name"
