@@ -86,6 +86,10 @@ i.fa
 {
   font-weight: bold;
 }
+.data-table tbody tr:hover
+{
+  background: #D3FCFF;
+}
 
 .brief-table td
 {
@@ -168,14 +172,10 @@ main
       Player list page
 *******************************/
 
-/* Row clickability and hover highlight */
+/* Make row clickable */
 #player-list-page .player-item
 {
   cursor: pointer;
-}
-#player-list-page .player-item:hover
-{
-  background: #C3FBFF;
 }
 
 /* Don't initially show the random team elements */
