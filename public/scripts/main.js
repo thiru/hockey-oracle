@@ -138,8 +138,16 @@ function editPlayer(e, playerId) {
     $("#player-list .player-item[data-player-id=" + playerId + "]");
 
   var currName = playerRow.find(".player-name").text().trim();
-
   playerRow.find(".player-name-edit").val(currName);
+
+  var currPos = playerRow.find(".player-position").text().trim();
+  playerRow.find(".player-position-edit option").each(function() {
+    if ($(this).val() == currPos)
+      $(this).attr("selected", "selected");
+    else
+      $(this).removeAttr("selected");
+  });
+
   playerRow.toggleClass("view-mode").toggleClass("edit-mode");
 }
 
@@ -154,7 +162,10 @@ function savePlayer(playerId) {
     playerRow.find(".player-name-edit").val(oldName);
     return;
   }
-
   playerRow.find(".player-name").text(newName.trim());
+
+  var newPos = playerRow.find(".player-position-edit").val();
+  playerRow.find(".player-position").text(newPos);
+
   playerRow.toggleClass("view-mode").toggleClass("edit-mode");
 }

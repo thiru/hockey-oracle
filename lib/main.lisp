@@ -146,7 +146,15 @@
                 (:input :class "player-name-edit edit-mode-ele" :type "text")
                 (:span :class "player-name view-mode-ele"
                   (esc (fmt "~a ~a" (first-name p) (last-name p)))))
-              (:td :class "player-position" (esc (pposition p)))
+              (:td 
+                (:span :class "player-position view-mode-ele"
+                  (esc (pposition p)))
+                (:select :class "player-position-edit edit-mode-ele"
+                  (:option :value "C" "C")
+                  (:option :value "D" "D")
+                  (:option :value "G" "G")
+                  (:option :value "LW" "LW")
+                  (:option :value "RW" "RW")))
               (:td :class "action-buttons"
                 (:button
                   :class "view-mode-ele"

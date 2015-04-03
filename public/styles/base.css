@@ -179,9 +179,13 @@ main
   display: none;
 }
 
-#player-list-page .player-name-edit
+#player-list-page .player-name-edit,
+#player-list-page .player-position-edit
 {
   font-size: 1em;
+}
+#player-list-page .player-name-edit
+{
   width: 80%;
 }
 
