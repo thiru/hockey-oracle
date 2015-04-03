@@ -133,6 +133,10 @@ function pickPlayers() {
   $("#player-list").show();
 }
 
+function editClick(ev) {
+  ev.stopPropagation();
+}
+
 function editPlayer(e, playerId) {
   var playerRow =
     $("#player-list .player-item[data-player-id=" + playerId + "]");

@@ -143,7 +143,10 @@
                 :class "player-name-col"
                 :onclick "togglePlayerActive(this)" 
                 (:i :class "player-check fa fa-circle-o")
-                (:input :class "player-name-edit edit-mode-ele" :type "text")
+                (:input
+                  :class "player-name-edit edit-mode-ele"
+                  :onclick "editClick(event)"
+                  :type "text")
                 (:span :class "player-name view-mode-ele"
                   (esc (fmt "~a ~a" (first-name p) (last-name p)))))
               (:td 
