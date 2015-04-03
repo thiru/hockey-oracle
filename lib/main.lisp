@@ -102,7 +102,8 @@
         (:script :src "/scripts/utils.js")
         (:script :src "/scripts/main.js")
       (:body
-        (:header
+        (:div :id "overlay")
+        (:header :id "top-heading"
           (:a :href "/"
             (:img
               :alt "logo (magic ball)"
@@ -126,6 +127,35 @@
   (standard-page
     (:title "Players"
      :page-id "player-list-page")
+    (:div :id "edit-dialog" :class "dialog"
+      (:header "Editing Player")
+      (:section :class "content"
+        (:table
+          (:tr :class "input-row"
+            (:td :class "label-col"
+              (:label :for "player-name-edit" "Name: "))
+            (:td :class "input-col"
+              (:input :id "player-name-edit" :type "text")))
+          (:tr
+            (:td
+              (:label :for "player-pos-edit" "Position: "))
+            (:td
+              (:select :id "player-pos-edit"
+               (:option :value "C" "C")
+               (:option :value "D" "D")
+               (:option :value "G" "G")
+               (:option :value "LW" "LW")
+               (:option :value "RW" "RW")))))
+        (:div :class "actions"
+          (:button
+            :class "save-btn"
+            :data-player-id "0"
+            :onclick "savePlayer()"
+            "Save")
+          (:button
+            :class "cancel-btn"
+            :onclick "closeDialog()"
+            "Cancel"))))
     (:table :id "player-list" :class "data-table"
       (:thead
         (:tr
@@ -135,7 +165,7 @@
       (:tbody
         (dolist (p (players))
           (htm
-            (:tr :class "player-item view-mode" :data-player-id (player-id p)
+            (:tr :class "player-item" :data-player-id (player-id p)
               ; This indicates the player's initial active status. I.e. it may
               ; change on the client.
               :data-player-active (active? p)
@@ -143,32 +173,16 @@
                 :class "player-name-col"
                 :onclick "togglePlayerActive(this)" 
                 (:i :class "player-check fa fa-circle-o")
-                (:input
-                  :class "player-name-edit edit-mode-ele"
-                  :onclick "editClick(event)"
-                  :type "text")
-                (:span :class "player-name view-mode-ele"
+                (:span :class "player-name"
                   (esc (fmt "~a ~a" (first-name p) (last-name p)))))
               (:td 
-                (:span :class "player-position view-mode-ele"
-                  (esc (pposition p)))
-                (:select :class "player-position-edit edit-mode-ele"
-                  (:option :value "C" "C")
-                  (:option :value "D" "D")
-                  (:option :value "G" "G")
-                  (:option :value "LW" "LW")
-                  (:option :value "RW" "RW")))
+                (:span :class "player-position"
+                  (esc (pposition p))))
               (:td :class "action-buttons"
-                (:button
-                  :class "view-mode-ele"
-                  :onclick (fmt "onclick='editPlayer(event, ~a)'" (player-id p))
-                  (:i :class "fa fa-pencil-square-o"))
-                (:button
-                  :class "edit-mode-ele"
-                  :onclick (fmt "onclick='savePlayer(~a)'" (player-id p))
-                  :title "Save"
-                  (:i :class "fa fa-floppy-o")))
-              )))))
+                (:button 
+                  :class "edit-btn"
+                  :onclick (fmt "onclick='editPlayer(~a)'" (player-id p))
+                  (:i :class "fa fa-pencil-square-o"))))))))
     (:section :id "random-teams"
       (:table :id "team1" :class "team data-table"
         (:thead

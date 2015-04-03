@@ -137,39 +137,53 @@ function editClick(ev) {
   ev.stopPropagation();
 }
 
-function editPlayer(e, playerId) {
+function editPlayer(playerId) {
   var playerRow =
     $("#player-list .player-item[data-player-id=" + playerId + "]");
 
   var currName = playerRow.find(".player-name").text().trim();
-  playerRow.find(".player-name-edit").val(currName);
-
   var currPos = playerRow.find(".player-position").text().trim();
-  playerRow.find(".player-position-edit option").each(function() {
+
+  $("#player-name-edit").val(currName);
+  $("#player-pos-edit option").each(function() {
     if ($(this).val() == currPos)
       $(this).attr("selected", "selected");
     else
       $(this).removeAttr("selected");
   });
 
-  playerRow.toggleClass("view-mode").toggleClass("edit-mode");
+  $("#edit-dialog .save-btn").attr("data-player-id", playerId);
+
+  $("#overlay").show();
+  $("#edit-dialog").show();
 }
 
-function savePlayer(playerId) {
+function savePlayer() {
+  var playerId = parseInt($("#edit-dialog .save-btn").attr("data-player-id"));
+  if (playerId <= 0) {
+    alert("Invalid player ID");
+    return;
+  }
+
+  var name = $("#player-name-edit").val().trim();
+  if (!name || !name.length) {
+    alert("Player name can't be blank");
+    return;
+  }
+
+  var position = $("#player-pos-edit :selected").text().trim();
+
   var playerRow =
     $("#player-list .player-item[data-player-id=" + playerId + "]");
 
-  var oldName = playerRow.find(".player-name").text().trim();
-  var newName = playerRow.find(".player-name-edit").val();
-  if (!newName || !newName.length) {
-    alert("Player name can't be blank");
-    playerRow.find(".player-name-edit").val(oldName);
-    return;
-  }
-  playerRow.find(".player-name").text(newName.trim());
+  playerRow.find(".player-name").text(name);
+  playerRow.find(".player-position").text(position);
 
-  var newPos = playerRow.find(".player-position-edit").val();
-  playerRow.find(".player-position").text(newPos);
+  $("#edit-dialog").hide();
+  $("#overlay").hide();
+}
 
-  playerRow.toggleClass("view-mode").toggleClass("edit-mode");
+function closeDialog() {
+  $("#overlay").hide();
+  $("#edit-dialog").hide();
 }
