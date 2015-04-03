@@ -135,23 +135,28 @@
       (:tbody
         (dolist (p (players))
           (htm
-            (:tr :class "player-item" :data-player-id (player-id p)
+            (:tr :class "player-item view-mode" :data-player-id (player-id p)
               ; This indicates the player's initial active status. I.e. it may
               ; change on the client.
               :data-player-active (active? p)
               (:td
                 :class "player-name-col"
                 :onclick "togglePlayerActive(this)" 
-                (:label
-                  (:i :class "player-check fa fa-circle-o")
-                  (:span :class "label-text player-name"
-                    (esc (fmt "~a ~a" (first-name p) (last-name p))))))
+                (:i :class "player-check fa fa-circle-o")
+                (:input :class "player-name-edit edit-mode-ele" :type "text")
+                (:span :class "player-name view-mode-ele"
+                  (esc (fmt "~a ~a" (first-name p) (last-name p)))))
               (:td :class "player-position" (esc (pposition p)))
               (:td :class "action-buttons"
                 (:button
-                  :class "edit-btn"
+                  :class "view-mode-ele"
                   :onclick (fmt "onclick='editPlayer(event, ~a)'" (player-id p))
-                  (:i :class "fa fa-pencil-square-o")))
+                  (:i :class "fa fa-pencil-square-o"))
+                (:button
+                  :class "edit-mode-ele"
+                  :onclick (fmt "onclick='savePlayer(~a)'" (player-id p))
+                  :title "Save"
+                  (:i :class "fa fa-floppy-o")))
               )))))
     (:section :id "random-teams"
       (:table :id "team1" :class "team data-table"

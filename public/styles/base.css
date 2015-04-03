@@ -172,6 +172,19 @@ main
       Player list page
 *******************************/
 
+/* Hide editable player details initially */
+#player-list-page .view-mode .edit-mode-ele,
+#player-list-page .edit-mode .view-mode-ele
+{
+  display: none;
+}
+
+#player-list-page .player-name-edit
+{
+  font-size: 1em;
+  width: 80%;
+}
+
 /* Make name column clickable */
 #player-list-page .player-item .player-name-col
 {

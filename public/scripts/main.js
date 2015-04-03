@@ -134,7 +134,27 @@ function pickPlayers() {
 }
 
 function editPlayer(e, playerId) {
-  e.stopPropagation();
-  alert('todo');
+  var playerRow =
+    $("#player-list .player-item[data-player-id=" + playerId + "]");
+
+  var currName = playerRow.find(".player-name").text().trim();
+
+  playerRow.find(".player-name-edit").val(currName);
+  playerRow.toggleClass("view-mode").toggleClass("edit-mode");
 }
 
+function savePlayer(playerId) {
+  var playerRow =
+    $("#player-list .player-item[data-player-id=" + playerId + "]");
+
+  var oldName = playerRow.find(".player-name").text().trim();
+  var newName = playerRow.find(".player-name-edit").val();
+  if (!newName || !newName.length) {
+    alert("Player name can't be blank");
+    playerRow.find(".player-name-edit").val(oldName);
+    return;
+  }
+
+  playerRow.find(".player-name").text(newName.trim());
+  playerRow.toggleClass("view-mode").toggleClass("edit-mode");
+}
