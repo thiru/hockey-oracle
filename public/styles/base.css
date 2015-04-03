@@ -230,7 +230,7 @@ main
 /* Define player table column widths */
 #player-list-page #player-list .name-col
 {
-  width 80%;
+  width: 80%;
 }
 #player-list-page #player-list .position-col
 {

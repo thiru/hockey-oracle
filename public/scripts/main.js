@@ -35,6 +35,7 @@ function makeTeams()
     return;
   }
   $("#player-list").hide();
+  $("#add-player").hide();
   populateTeams(teamsRes.data);
   $("#random-teams").show();
   $("#pick-players").show();
@@ -131,16 +132,16 @@ function pickPlayers() {
   $("#random-teams").hide();
   $("#pick-players").hide();
   $("#player-list").show();
+  $("#add-player").show();
 }
 
 function editClick(ev) {
   ev.stopPropagation();
 }
 
-function editPlayer(playerId) {
-  var playerRow =
-    $("#player-list .player-item[data-player-id=" + playerId + "]");
-
+function editPlayer(ele) {
+  var playerRow = $(ele).parents("#player-list .player-item");
+  var playerId = playerRow.attr("data-player-id");
   var currName = playerRow.find(".player-name").text().trim();
   var currPos = playerRow.find(".player-position").text().trim();
 
@@ -159,25 +160,50 @@ function editPlayer(playerId) {
 }
 
 function savePlayer() {
+  // Determine player ID
   var playerId = parseInt($("#edit-dialog .save-btn").attr("data-player-id"));
-  if (playerId <= 0) {
+  if (playerId < 0) {
     alert("Invalid player ID");
     return;
   }
 
+  // Get player name
   var name = $("#player-name-edit").val().trim();
   if (!name || !name.length) {
     alert("Player name can't be blank");
     return;
   }
 
+  // Get player position
   var position = $("#player-pos-edit :selected").text().trim();
 
-  var playerRow =
-    $("#player-list .player-item[data-player-id=" + playerId + "]");
+  // If we're adding a new player
+  if (playerId == 0) {
+    var newPlayerRow = $("#player-list .player-item").first().clone();
 
-  playerRow.find(".player-name").text(name);
-  playerRow.find(".player-position").text(position);
+    var maxPlayerId = -1;
+    $("#player-list .player-item").each(function() {
+      var id = parseInt($(this).attr("data-player-id"));
+      if (id > maxPlayerId)
+        maxPlayerId = id;
+    });
+    newPlayerRow.attr("data-player-id", maxPlayerId + 1);
+    newPlayerRow.attr("data-player-active", "data-player-active");
+    newPlayerRow.addClass("selected");
+    newPlayerRow.find("i.player-check")
+                .addClass("fa-check-circle-o")
+                .removeClass("fa-circle-o");
+    newPlayerRow.find(".player-name").text(name);
+    newPlayerRow.find(".player-position").text(position);
+    newPlayerRow.appendTo("#player-list");
+  }
+  // Otherwise we're editing an existing player
+  else {
+    var playerRow =
+      $("#player-list .player-item[data-player-id=" + playerId + "]");
+    playerRow.find(".player-name").text(name);
+    playerRow.find(".player-position").text(position);
+  }
 
   $("#edit-dialog").hide();
   $("#overlay").hide();
@@ -186,4 +212,11 @@ function savePlayer() {
 function closeDialog() {
   $("#overlay").hide();
   $("#edit-dialog").hide();
+}
+
+function addPlayer() {
+  $("#player-name-edit").val("Extra 1");
+  $("#player-pos-edit option").removeAttr("selected");
+  $("#overlay").show();
+  $("#edit-dialog").show();
 }

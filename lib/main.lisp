@@ -70,10 +70,6 @@
 (add-player "Taran" "Anderson" "RW" T)
 (add-player "Thiru" "Thirunavukarasu" "D" T)
 (add-player "Touraj" "Nikou" "C" T)
-(add-player "Extra 1" "" "D" NIL)
-(add-player "Extra 2" "" "D" NIL)
-(add-player "Extra 3" "" "D" NIL)
-(add-player "Extra 4" "" "D" NIL)
 
 ;;; Web-related code:
 
@@ -180,8 +176,7 @@
                   (esc (pposition p))))
               (:td :class "action-buttons"
                 (:button 
-                  :class "edit-btn"
-                  :onclick (fmt "onclick='editPlayer(~a)'" (player-id p))
+                  :onclick "editPlayer(this)"
                   (:i :class "fa fa-pencil-square-o"))))))))
     (:section :id "random-teams"
       (:table :id "team1" :class "team data-table"
@@ -207,6 +202,12 @@
       :type "button"
       (:i :class "fa fa-random")
       "Make Teams")
+    (:button :id "add-player"
+      :class "wide-button"
+      :onclick "addPlayer()"
+      :type "button"
+      (:i :class "fa fa-user-plus")
+      "Add Player")
     (:button :id "pick-players"
       :class "wide-button"
       :onclick "pickPlayers()"
