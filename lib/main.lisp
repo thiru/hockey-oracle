@@ -129,9 +129,9 @@
     (:table :id "player-list" :class "data-table"
       (:thead
         (:tr
-          (:th "Player")
-          (:th "Pos")
-          (:th "")))
+          (:th :class "name-col" "Player")
+          (:th :class "position-col" :title "Position" "Pos")
+          (:th :class "actions-col" "")))
       (:tbody
         (dolist (p (players))
           (htm

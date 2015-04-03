@@ -172,7 +172,20 @@ main
       Player list page
 *******************************/
 
-/* Hide editable player details initially */
+#player-list-page #player-list .name-col
+{
+  width 80%;
+}
+#player-list-page #player-list .position-col
+{
+  width: 10%;
+}
+#player-list-page #player-list .actions-col
+{
+  width: 10%;
+}
+
+/* Toggle edit/view modes of player details */
 #player-list-page .view-mode .edit-mode-ele,
 #player-list-page .edit-mode .view-mode-ele
 {
