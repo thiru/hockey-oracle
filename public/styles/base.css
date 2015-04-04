@@ -5,13 +5,13 @@
 *
 {
   box-sizing: border-box; /* Have element's width include border and padding: */
+  font-family: "Ubuntu", "Open Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   text-rendering: optimizeLegibility;
 }
 
 body
 {
   color: #555; /* VAR COMMON-TEXT-COLOUR */
-  font-family: "Open Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   margin: 0;
   padding: 0;
 }
@@ -252,6 +252,7 @@ main
       Player list page
 *******************************/
 
+/* Edit dialog spacing */
 #player-list-page #edit-dialog .label-col > *
 {
   padding-right: 2em;
@@ -270,6 +271,7 @@ main
   text-align: right;
 }
 
+/* Leave space after players table */
 #player-list-page #player-list
 {
   margin-bottom: 1em;
@@ -287,6 +289,13 @@ main
 #player-list-page #player-list .actions-col
 {
   width: 10%;
+}
+
+/* Add more space after player checkbox */
+#player-list-page .player-check
+{
+  display: inline-block;
+  padding-right: 0.3em;
 }
 
 /* Make entire name column clickable */

@@ -87,12 +87,18 @@
         (:title ,(format nil "~a - Hockey Oracle" title))
         (:link :rel "shortcut icon"
                :href "/images/favicon.ico")
-        (:link :type "text/css"
-               :rel "stylesheet"
-               :href "/deps/font-awesome/css/font-awesome.min.css")
-        (:link :type "text/css"
-               :rel "stylesheet"
-               :href "/styles/base.css"))
+        (:link
+          :href "http://fonts.googleapis.com/css?family=Ubuntu|Ubuntu+Mono"
+          :rel "stylesheet"
+          :type "text/css")
+        (:link
+          :href "/deps/font-awesome/css/font-awesome.min.css"
+          :rel "stylesheet"
+          :type "text/css")
+        (:link
+          :href "/styles/base.css"
+          :rel "stylesheet"
+          :type "text/css"))
         (:script :src "/deps/jquery/jquery-2.1.3.min.js")
         (:script :src "/deps/lodash/lodash.min.js")
         (:script :src "/scripts/utils.js")
