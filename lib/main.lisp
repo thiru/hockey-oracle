@@ -192,7 +192,7 @@
           (:tr :class "team-heading"
            (:th :class "team-name"
               "Cripplers")
-           (:th :class "team-logo"
+           (:th
              (:img :class "team-logo" :src "/images/team-logos/cripplers.png"))))
         (:tbody :class "team-players"))
       (:table :id "team2" :class "team data-table"
@@ -200,7 +200,7 @@
           (:tr :class "team-heading"
            (:th :class "team-name"
               "Panthers")
-           (:th :class "team-logo"
+           (:th
              (:img :class "team-logo" :src "/images/team-logos/panthers.png"))))
         (:tbody :class "team-players")))
     (:button :id "make-teams"
