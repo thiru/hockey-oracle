@@ -176,7 +176,8 @@
                 (:span :class "player-position"
                   (esc (pposition p))))
               (:td :class "action-buttons"
-                (:button 
+                (:button
+                  :href "javascript:void(0)"
                   :onclick "editPlayer(this)"
                   (:i :class "fa fa-pencil-square-o"))))))))
     (:section :id "random-teams"
@@ -198,24 +199,24 @@
         (:tbody :class "team-players")))
     (:button :id "make-teams"
       :class "wide-button"
+      :href "javascript:void(0)"
       :onclick "makeTeams()"
       :title "Select to generate random teams"
-      :type "button"
       (:i :class "fa fa-random")
-      "Make Teams")
+      (:span :class "button-text" "Make Teams"))
     (:button :id "add-player"
       :class "wide-button"
+      :href "javascript:void(0)"
       :onclick "addPlayer()"
-      :type "button"
       (:i :class "fa fa-user-plus")
-      "Add Player")
+      (:span :class "button-text" "Add Player"))
     (:button :id "pick-players"
       :class "wide-button"
+      :href "javascript:void(0)"
       :onclick "pickPlayers()"
       :title "Select to choose active players"
-      :type "button"
       (:i :class "fa fa-check-circle-o")
-      "Pick Players")))
+      (:span :class "button-text" "Pick Players"))))
 
 (define-easy-handler (www-about :uri "/about") ()
   (standard-page
