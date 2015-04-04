@@ -146,7 +146,7 @@ nav
 {
   overflow: hidden; /* Prevent elements from collapsing their height when they only contain
                        floated elements: */
-  padding: 0.5em 25px 1em 25px; /* VAR CONTENT-WIDTH */
+  padding: 0.5em 25px 0.5em 25px; /* VAR CONTENT-WIDTH */
 }
 nav .nav-items
 {
