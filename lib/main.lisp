@@ -98,7 +98,8 @@
         (:script :src "/scripts/utils.js")
         (:script :src "/scripts/main.js")
       (:body
-        (:div :id "overlay")
+        (:div :id "overlay" "&nbsp;")
+        (:div :id "top-shade")
         (:header :id "top-heading"
           (:a :href "/"
             (:img

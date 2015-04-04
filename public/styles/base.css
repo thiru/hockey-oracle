@@ -19,7 +19,6 @@ body
 body
 {
   background: #FFF;
-  min-width: 320px;
 }
 
 a
@@ -115,18 +114,32 @@ i.fa
        Site-wide Layout
 *******************************/
 
+main
+{
+  margin: 0 auto;
+  max-width: 1200px; /* VAR MAX-PAGE-WIDTH */
+}
+
+#top-shade
+{
+  background-color: #04080D; /* VAR TOP-SHADE */
+  position: fixed;
+  height: 35px; /* VAR TOP-BANNER-HEIGHT */
+  width: 100%;
+}
 #top-heading
 {
-  background-color: #04080D;
   color: white;
   font-weight: bold;
-  height: 35px; /* VAR BANNER-HEIGHT */
+  height: 35px; /* VAR TOP-BANNER-HEIGHT */
   position: relative;
   overflow: hidden;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 #top-heading .logo
 {
-  height: 35px; /* VAR BANNER-HEIGHT */
+  height: 35px; /* VAR TOP-BANNER-HEIGHT */
 }
 #top-heading .title
 {
@@ -146,6 +159,8 @@ nav
 {
   overflow: hidden; /* Prevent elements from collapsing their height when they only contain
                        floated elements: */
+  max-width: 1200px; /* VAR MAX-PAGE-WIDTH */
+  margin: 0 auto;
   padding: 0.5em 25px 0.5em 25px; /* VAR CONTENT-WIDTH */
 }
 nav .nav-items
