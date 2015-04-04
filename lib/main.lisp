@@ -148,7 +148,12 @@
                (:option :value "D" "D")
                (:option :value "G" "G")
                (:option :value "LW" "LW")
-               (:option :value "RW" "RW")))))
+               (:option :value "RW" "RW"))))
+          (:tr
+            (:td
+              (:label :for "player-active-edit" "Is Active: "))
+            (:td
+              (:input :id "player-active-edit" :type "checkbox"))))
         (:div :class "actions"
           (:button
             :class "save-btn"

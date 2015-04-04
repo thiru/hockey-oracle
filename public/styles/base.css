@@ -265,6 +265,10 @@ main
 {
   padding-bottom: 0.5em;
 }
+#player-list-page input[type="checkbox"]
+{
+  margin: 0;
+}
 #player-list-page #edit-dialog .actions
 {
   margin-top: 1em;

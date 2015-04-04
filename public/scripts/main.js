@@ -144,6 +144,7 @@ function editPlayer(ele) {
   var playerId = playerRow.attr("data-player-id");
   var currName = playerRow.find(".player-name").text().trim();
   var currPos = playerRow.find(".player-position").text().trim();
+  var currActive = playerRow.hasClass("selected");
 
   $("#player-name-edit").val(currName);
   $("#player-pos-edit option").each(function() {
@@ -152,6 +153,7 @@ function editPlayer(ele) {
     else
       $(this).removeAttr("selected");
   });
+  $("#player-active-edit").prop("checked", currActive);
 
   $("#edit-dialog .save-btn").attr("data-player-id", playerId);
 
@@ -177,6 +179,9 @@ function savePlayer() {
   // Get player position
   var position = $("#player-pos-edit :selected").text().trim();
 
+  // Get player active state
+  var isActive = $("#player-active-edit").is(":checked");
+
   // If we're adding a new player
   if (playerId == 0) {
     var newPlayerRow = $("#player-list .player-item").first().clone();
@@ -188,7 +193,6 @@ function savePlayer() {
         maxPlayerId = id;
     });
     newPlayerRow.attr("data-player-id", maxPlayerId + 1);
-    newPlayerRow.attr("data-player-active", "data-player-active");
     newPlayerRow.addClass("selected");
     newPlayerRow.find("i.player-check")
                 .addClass("fa-check-circle-o")
@@ -203,6 +207,18 @@ function savePlayer() {
       $("#player-list .player-item[data-player-id=" + playerId + "]");
     playerRow.find(".player-name").text(name);
     playerRow.find(".player-position").text(position);
+    if (isActive) {
+      playerRow.addClass("selected");
+      playerRow.find("i.player-check")
+               .addClass("fa-check-circle-o")
+               .removeClass("fa-circle-o");
+    }
+    else {
+      playerRow.removeClass("selected");
+      playerRow.find("i.player-check")
+               .addClass("fa-circle-o")
+               .removeClass("fa-check-circle-o");
+    }
   }
 
   $("#edit-dialog").hide();
@@ -217,6 +233,7 @@ function closeDialog() {
 function addPlayer() {
   $("#player-name-edit").val("Extra 1");
   $("#player-pos-edit option").removeAttr("selected");
+  $("#player-active-edit").prop("checked", true);
   $("#overlay").show();
   $("#edit-dialog").show();
 }
