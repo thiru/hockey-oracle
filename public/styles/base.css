@@ -23,9 +23,13 @@ body
 
 a
 {
-  color: #FF7831; /* VAR LINK-COLOUR */
+  color: #F55813; /* VAR CLICKABLE-COLOUR */
   font-weight: bold;
   text-decoration: none;
+}
+a:focus
+{
+  color: #FFAC0A; /* VAR FOCUSED-COLOUR */
 }
 a:hover
 {
@@ -108,7 +112,7 @@ a:hover
 
 button
 {
-  background: #F55813;
+  background: #F55813; /* CLICKABLE-COLOUR */
   border: none;
   border-radius: 0.2em;
   box-shadow: 1px 1px 2px #888;
@@ -123,7 +127,7 @@ button:hover
 }
 button:focus
 {
-  background: #FFAC0A;
+  background: #FFAC0A; /* VAR FOCUSED-COLOUR */
 }
 button .button-text
 {
