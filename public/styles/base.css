@@ -147,7 +147,7 @@ main
 #top-shade
 {
   background-color: #04080D; /* VAR TOP-SHADE */
-  position: fixed;
+  position: absolute;
   height: 35px; /* VAR TOP-BANNER-HEIGHT */
   width: 100%;
 }
