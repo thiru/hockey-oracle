@@ -158,6 +158,10 @@ nav .nav-items li
   display: inline-block;
   float: left;
 }
+nav .nav-items li:last-child
+{
+  float: right;
+}
 nav a
 {
   padding-right: 1em;
