@@ -231,6 +231,7 @@ function closeDialog() {
 }
 
 function addPlayer() {
+  $("#edit-dialog .save-btn").attr("data-player-id", 0);
   $("#player-name-edit").val("Extra 1");
   $("#player-pos-edit option").removeAttr("selected");
   $("#player-active-edit").prop("checked", true);
