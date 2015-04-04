@@ -96,7 +96,7 @@
           :rel "stylesheet"
           :type "text/css")
         (:link
-          :href "/styles/base.css"
+          :href "/styles/main.css"
           :rel "stylesheet"
           :type "text/css"))
         (:script :src "/deps/jquery/jquery-2.1.3.min.js")
