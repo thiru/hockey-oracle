@@ -1,12 +1,7 @@
-(ql:quickload '(cl-who hunchentoot parenscript))
-
-(defpackage :hockey-oracle
-  (:use :cl :cl-who :hunchentoot :parenscript))
-
 (in-package :hockey-oracle)
 
 (defvar app-version 0.2)
-(defvar app-updated "Mar 28 2015")
+(defvar app-updated "Apr 6 2015")
 
 (defclass player ()
   ((player-id :reader player-id
