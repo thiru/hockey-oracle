@@ -251,6 +251,14 @@
   )
 
 (defun start-server (port)
-  (start (make-instance 'easy-acceptor :port port :document-root #p"public/")))
+  (let* ((www-root
+           (asdf:system-relative-pathname
+             (string-downcase (package-name *package*))
+             "public/"))
+         (web-app (make-instance
+                    'easy-acceptor
+                    :port port
+                    :document-root www-root)))
+    (start web-app)))
 
 (start-server 9090)
