@@ -6,7 +6,7 @@
   (:export 
     :app-version
     :app-updated
-    :*players*
+    :players
     :add-player
     :activate-player
     :deactivate-player

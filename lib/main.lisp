@@ -28,24 +28,24 @@
   "Deactivate the given player."
   (setf (active? p) NIL))
 
-(defvar *players* '())
-(defvar *player-id-seed* 0)
+(defvar players '())
+(defvar player-id-seed 0)
 
 (defun players ()
   "Get a sorted list of all players."
-  (sort (copy-list *players*) #'string< :key #'first-name))
+  (sort (copy-list players) #'string< :key #'first-name))
 
 (defun add-player (fname lname pos active?)
   "Add a player to the global list."
   (push
     (make-instance
       'player
-      :player-id (incf *player-id-seed*)
+      :player-id (incf player-id-seed)
       :first-name fname
       :last-name lname
       :pposition pos
       :active? active?)
-    *players*))
+    players))
 
 (add-player "Aiyaz" "" "LW" NIL)
 (add-player "Anish" "" "RW" T)
