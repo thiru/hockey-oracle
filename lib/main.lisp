@@ -35,7 +35,6 @@
   "Get a sorted list of all players."
   (sort (copy-list *players*) #'string< :key #'first-name))
 
-
 (defun add-player (fname lname pos active?)
   "Add a player to the global list."
   (push
@@ -250,15 +249,35 @@
     )
   )
 
-(defun start-server (port)
-  (let* ((www-root
-           (asdf:system-relative-pathname
-             (string-downcase (package-name *package*))
-             "public/"))
+(defun create-server (port)
+  (let* ((www-root (asdf:system-relative-pathname :hockey-oracle "public/"))
          (web-app (make-instance
                     'easy-acceptor
                     :port port
                     :document-root www-root)))
-    (start web-app)))
+    web-app))
 
-(start-server 9090)
+(defvar web-app nil)
+
+(defun start-server! (&key (port 9090) debug)
+  "Starts the web server.
+   @param port:
+     Specifies the port for the web server.
+   @param debug:
+     If T, the server is started with the following hunchentoot
+     special variables set:
+     * *CATCH-ERRORS-P* => NIL
+     * *SHOW-LISP-ERRORS-P* => T
+   Side-effects: sets the special variable web-app to the created acceptor."
+  (setf web-app (create-server port))
+  (when debug
+    (setf *catch-errors-p* nil)
+    (setf *show-lisp-errors-p* t))
+  (start web-app))
+
+(defun stop-server ()
+  "Stops the web server referenced by the special variable web-app.
+   The server is stopped safely using the :soft key on hunchentoot's stop
+   function."
+  (if web-app
+    (stop web-app :soft t)))
