@@ -117,6 +117,29 @@
         (:main :id ,page-id
           ,@body)))))
 
+(defmethod acceptor-status-message (acceptor (http-status-code (eql 404)) &key)
+  (standard-page
+    (:title "Not Found" :page-id "not-found-page")
+    (:h2 "Hmm.. I can't seem to find the page (or resource) you requested")
+    (:a :href "/" "Go back to the home page")))
+
+(defmethod acceptor-status-message (acceptor (http-status-code (eql 500)) &key)
+  (standard-page
+    (:title "Server Error" :page-id "server-error-page")
+    (:h2 "Something unexpected happened on the server!")
+    (:p "Someone really outta look into this..")
+    (:a :href "/" "Go back to the home page")))
+
+(define-easy-handler (www-oops :uri "/oops") ()
+  (log-message* :error "Oops \(error log level).")
+  (log-message* :warning "Oops \(warning log level).")
+  (log-message* :info "Oops \(info log level).")
+  (error "This is an intentional error for testing purposes.")
+  ; The following should never be displayed
+  (standard-page
+    (:title "Oops")
+    (:h1 "Test error page")))
+
 (define-easy-handler (www-home :uri "/") ()
   (redirect "/players"))
 
@@ -245,16 +268,14 @@
           (:a :href "https://www.gnu.org/licenses/gpl-2.0.html" "GPL v2")))
       (:tr
         (:td "Copyright")
-        (:td "2014-2015 Thirushanth Thirunavukarasu")))
-    )
-  )
+        (:td "2014-2015 Thirushanth Thirunavukarasu")))))
 
 (defun create-server (port)
-  (let* ((www-root (asdf:system-relative-pathname :hockey-oracle "public/"))
+  (let* ((root-dir (asdf:system-relative-pathname :hockey-oracle "public/"))
          (web-app (make-instance
                     'easy-acceptor
                     :port port
-                    :document-root www-root)))
+                    :document-root root-dir)))
     web-app))
 
 (defvar web-app nil)
