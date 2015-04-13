@@ -67,6 +67,44 @@
 
 ;;; Web-related code:
 
+(defvar web-app nil)
+
+(defun create-server (port)
+  (let* ((root-dir (asdf:system-relative-pathname :hockey-oracle "public/"))
+         (web-app (make-instance
+                    'easy-acceptor
+                    :port port
+                    :document-root root-dir
+                    :access-log-destination "~/tbnl-access.log"
+                    :message-log-destination "~/tbnl-message.log")))
+    web-app))
+
+(defun start-server! (&key (port 9090) debug)
+  "Starts the web server.
+   @param port:
+     Specifies the port for the web server.
+   @param debug:
+     If T, the server is started with access and message logs to standard
+     out, and the following hunchentoot special variable settings:
+     * *CATCH-ERRORS-P* => NIL
+     * *SHOW-LISP-ERRORS-P* => T
+   Side-effects: sets the special variable web-app to the created acceptor."
+  (setf web-app (create-server port))
+  (when debug
+    (setf *catch-errors-p* nil)
+    (setf *show-lisp-errors-p* t)
+    (setf (acceptor-access-log-destination web-app) *standard-output*)
+    (setf (acceptor-message-log-destination web-app) *standard-output*))
+  (start web-app))
+
+
+(defun stop-server ()
+  "Stops the web server referenced by the special variable web-app.
+   The server is stopped safely using the :soft key on hunchentoot's stop
+   function."
+  (if web-app
+    (stop web-app :soft t)))
+
 (defmacro standard-page ((&key title page-id) &body body)
   "Creates a standard page layout."
   `(with-html-output-to-string
@@ -269,36 +307,3 @@
       (:tr
         (:td "Copyright")
         (:td "2014-2015 Thirushanth Thirunavukarasu")))))
-
-(defun create-server (port)
-  (let* ((root-dir (asdf:system-relative-pathname :hockey-oracle "public/"))
-         (web-app (make-instance
-                    'easy-acceptor
-                    :port port
-                    :document-root root-dir)))
-    web-app))
-
-(defvar web-app nil)
-
-(defun start-server! (&key (port 9090) debug)
-  "Starts the web server.
-   @param port:
-     Specifies the port for the web server.
-   @param debug:
-     If T, the server is started with the following hunchentoot
-     special variables set:
-     * *CATCH-ERRORS-P* => NIL
-     * *SHOW-LISP-ERRORS-P* => T
-   Side-effects: sets the special variable web-app to the created acceptor."
-  (setf web-app (create-server port))
-  (when debug
-    (setf *catch-errors-p* nil)
-    (setf *show-lisp-errors-p* t))
-  (start web-app))
-
-(defun stop-server ()
-  "Stops the web server referenced by the special variable web-app.
-   The server is stopped safely using the :soft key on hunchentoot's stop
-   function."
-  (if web-app
-    (stop web-app :soft t)))
