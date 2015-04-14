@@ -291,9 +291,11 @@
      :page-id "about-page")
     (:p
       "The Hockey Oracle is a simple app that generates teams by randomly "
-      "selecting from a pool of active players."
-      )
-    (:br)
+      "selecting from a pool of active players.")
+    (:p
+      (:span "Please note this is an")
+      (:b "alpha")
+      (:span "version of the website with very limited functionality."))
     (:table :class "brief-table"
       (:tr
         (:td "Version")
