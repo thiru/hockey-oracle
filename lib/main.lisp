@@ -58,6 +58,7 @@
 (add-player "Mark" "S." "G" T)
 (add-player "Mauz" "" "RW" T)
 (add-player "Osama" "" "LW" T)
+(add-player "Raj" "" "D" NIL)
 (add-player "Robin" "" "D" T)
 (add-player "Steve" "" "LW" NIL)
 (add-player "Saif" "" "LW" T)

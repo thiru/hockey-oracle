@@ -139,6 +139,16 @@ function editClick(ev) {
   ev.stopPropagation();
 }
 
+function addPlayer() {
+  $("#edit-dialog .save-btn").attr("data-player-id", 0);
+  $("#player-name-edit").val("Extra 1");
+  $("#player-pos-edit option").removeAttr("selected");
+  $("#player-active-edit").prop("checked", true);
+  $("#overlay").show();
+  $("#edit-dialog").show();
+  $("#player-name-edit").focus().select();
+}
+
 function editPlayer(ele) {
   var playerRow = $(ele).parents("#player-list .player-item");
   var playerId = playerRow.attr("data-player-id");
@@ -159,6 +169,7 @@ function editPlayer(ele) {
 
   $("#overlay").show();
   $("#edit-dialog").show();
+  $("#player-name-edit").focus().select();
 }
 
 function savePlayer() {
@@ -228,13 +239,4 @@ function savePlayer() {
 function closeDialog() {
   $("#overlay").hide();
   $("#edit-dialog").hide();
-}
-
-function addPlayer() {
-  $("#edit-dialog .save-btn").attr("data-player-id", 0);
-  $("#player-name-edit").val("Extra 1");
-  $("#player-pos-edit option").removeAttr("selected");
-  $("#player-active-edit").prop("checked", true);
-  $("#overlay").show();
-  $("#edit-dialog").show();
 }
