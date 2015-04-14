@@ -134,6 +134,10 @@ button .button-text
   padding-left: 0.2em;
 }
 
+/* Get rid of ugly system-outline */
+:focus {outline:none;}
+::-moz-focus-inner {border:0;}
+
 /*******************************
        Site-wide Layout
 *******************************/
