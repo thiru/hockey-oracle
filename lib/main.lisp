@@ -142,7 +142,7 @@
         (:header :id "top-heading"
           (:a :href "/"
             (:img
-              :alt "logo (magic ball)"
+              :alt "logo"
               :class "logo"
               :src "/images/banner.jpg")
             (:span :class "title" "Hockey Oracle")))
