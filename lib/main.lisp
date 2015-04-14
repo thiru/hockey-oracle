@@ -120,7 +120,7 @@
         (:link :rel "shortcut icon"
                :href "/images/favicon.ico")
         (:link
-          :href "http://fonts.googleapis.com/css?family=Ubuntu|Ubuntu+Mono"
+          :href "//code.cdn.mozilla.net/fonts/fira.css"
           :rel "stylesheet"
           :type "text/css")
         (:link

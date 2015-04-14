@@ -5,7 +5,7 @@
 *
 {
   box-sizing: border-box; /* Have element's width include border and padding: */
-  font-family: "Ubuntu", "Open Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  font-family: "Fira Sans", "Open Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   text-rendering: optimizeLegibility;
 }
 
