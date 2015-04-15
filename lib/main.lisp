@@ -131,11 +131,11 @@
         (:link
           :href "/styles/main.css"
           :rel "stylesheet"
-          :type "text/css"))
+          :type "text/css")
         (:script :src "/deps/jquery/jquery-2.1.3.min.js")
         (:script :src "/deps/lodash/lodash.min.js")
         (:script :src "/scripts/utils.js")
-        (:script :src "/scripts/main.js")
+        (:script :src "/scripts/main.js"))
       (:body
         (:div :id "overlay" "&nbsp;")
         (:div :id "top-shade")
