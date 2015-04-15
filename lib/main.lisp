@@ -1,7 +1,7 @@
 (in-package :hockey-oracle)
 
 (defvar app-version 0.2)
-(defvar app-updated "Apr 6 2015")
+(defvar app-updated "Apr 14 2015")
 
 (defclass player ()
   ((player-id :reader player-id
