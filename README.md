@@ -2,31 +2,23 @@
 
 ## Overview
 
-An aid for pick-up hockey enthusiasts.
+Intended to be a general management tool for amateur, or pick-up hockey leagues.
 
-**NOTE:** So far, I've only implemented the ability to generate two teams selected randomly from a pool of active players.
+Currently, it's only possible to generate teams by randomly selecting from a pool of players.
 
 ## Development
 
 ### Prerequisites
 
-1. [Node.js](http://nodejs.org/) (with NPM).
-2. [nodemon](https://github.com/remy/nodemon)
-  * This isn't strictly required however, the handy *start* script uses it to start the web server
-  * Run the following to install it:
-    * `npm -g install nodemon`
-3. [browserify](http://browserify.org/)
-  * This is used to generate the javascript used throughout the website
-  * Run the following to install it:
-    * `npm -g install browserify`
-4. [watchify](https://github.com/substack/watchify)
-  * This is used to automate updating the javascript used throughout the website
-  * Run the following to install it:
-    * `npm -g install watchify`
+1. A modern implementation of Common Lisp such as [SBCL](http://www.sbcl.org/)
+  * I've only been testing with SBCL but I believe the code is portable
+2. [Quicklisp](http://www.quicklisp.org/)
+3. [Glu](https://github.com/thiru/glu) project
+  * This is small utilities project I maintain that's not available through Quicklisp (and is not intended to be)
 
 ### Running the website
 
-1. Open a command prompt and go to the directory containing the source
-2. `watchify -d public/components/app.js -o public/components/bundle.js -v `
-3. Open another command prompt and go to the directory containing the source
-4. `npm start`
+1. Open a Common Lisp REPL
+2. Make sure this project and Glu are visible to Quicklisp (e.g. ~/quicklisp/local-projects)
+2. `(ql:quickload :hockey-oracle)`
+3. `(hockey-oracle:start-server! :port 9090)`
