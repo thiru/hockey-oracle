@@ -7,4 +7,4 @@
 
 (ql:quickload :hockey-oracle)
 
-(hockey-oracle:start-server! :port 9090)
+(hockey-oracle.web:start-server! :port 9090)

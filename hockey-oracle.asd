@@ -11,5 +11,6 @@
                (:static-file "LICENSE")
                (:static-file "EULA")
                (:file "package")
-               (:file "lib/main")))
+               (:file "lib/main")
+               (:file "lib/web")))
 
