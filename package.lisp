@@ -2,7 +2,7 @@
 
 (defpackage :hockey-oracle
   (:use :cl :glu :asdf)
-  (:documentation "Core domain")
+  (:documentation "Hockey Oracle core domain/API")
   (:export
     :app-version
     :app-updated
@@ -18,7 +18,7 @@
 
 (defpackage :hockey-oracle.web
   (:use :hockey-oracle :cl :asdf :glu :cl-who :hunchentoot)
-  (:documentation "Web interface")
+  (:documentation "Hockey Oracle web interface")
   (:export 
     :web-app
     :start-server!
