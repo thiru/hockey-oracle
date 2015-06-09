@@ -1,8 +1,9 @@
 (in-package :hockey-oracle.web)
 
-(defvar web-app nil)
+(defvar web-app nil "Contains the web-server instance")
 
 (defun create-server (port)
+  "Creates the web server on the specified port."
   (let* ((root-dir (asdf:system-relative-pathname :hockey-oracle "public/"))
          (web-app (make-instance
                     'easy-acceptor
@@ -17,7 +18,7 @@
    @param port:
      Specifies the port for the web server.
    @param debug:
-     If T, the server is started with access and message logs to standard
+     If T, the server is started with access and message logs sent to standard
      out, and the following hunchentoot special variable settings:
      * *CATCH-ERRORS-P* => NIL
      * *SHOW-LISP-ERRORS-P* => T
@@ -32,14 +33,19 @@
 
 
 (defun stop-server ()
-  "Stops the web server referenced by the special variable web-app.
-   The server is stopped safely using the :soft key on hunchentoot's stop
-   function."
+  "Stops the web server referenced by the special variable web-app."
   (if web-app
     (stop web-app :soft t)))
 
 (defmacro standard-page ((&key title page-id) &body body)
-  "Creates a standard page layout."
+  "Creates a standard page layout.
+   @param title
+     Specifies the title of a page.
+   @param page-id
+     Specifies an id for the root element of the page. This is primarily
+     intended to be used for CSS rules.
+   @param body
+     Contains the page body."
   `(with-html-output-to-string
      (*standard-output* nil :prologue t :indent t)
      (:html :lang "en"
