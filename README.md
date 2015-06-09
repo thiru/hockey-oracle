@@ -2,9 +2,9 @@
 
 ## Overview
 
-Intended to be a general management tool for amateur, or pick-up hockey leagues.
+Intended to be a general management tool for pick-up hockey, or amateur leagues.
 
-Currently, it's only possible to generate teams by randomly selecting from a pool of players.
+**Note**: currently, it's only possible to generate teams by randomly selecting from a pool of players.
 
 ## Development
 
@@ -13,12 +13,12 @@ Currently, it's only possible to generate teams by randomly selecting from a poo
 1. A modern implementation of Common Lisp such as [SBCL](http://www.sbcl.org/)
   * I've only been testing with SBCL but I believe the code is portable
 2. [Quicklisp](http://www.quicklisp.org/)
-3. [Glu](https://github.com/thiru/glu) project
-  * This is small utilities project I maintain that's not available through Quicklisp (and is not intended to be)
+3. [Glu](https://github.com/thiru/glu)
+  * This is a small (opinionated) utility project I maintain that's not available through Quicklisp (and is not intended to be)
 
 ### Running the website
 
 1. Open a Common Lisp REPL
 2. Make sure this project and Glu are visible to Quicklisp (e.g. ~/quicklisp/local-projects)
 2. `(ql:quickload :hockey-oracle)`
-3. `(hockey-oracle:start-server! :port 9090)`
+3. `(hockey-oracle.web:start-server! :port 9090)`
