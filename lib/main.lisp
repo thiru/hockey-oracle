@@ -1,67 +1,49 @@
 (in-package :hockey-oracle)
 
-(defvar app-version 0.2)
-(defvar app-updated "Apr 14 2015")
+(defvar app-version 0.3)
+(defvar app-updated "Jun 28 2015")
 
-(defclass player ()
-  ((player-id :reader player-id
-              :initarg :player-id)
-   (first-name :reader first-name
-               :initarg :first-name)
-   (last-name :reader last-name
-              :initarg :last-name)
-   (pposition :accessor pposition
-             :initarg :pposition)
-   (active? :accessor active?
-            :initarg :active?)))
+(defstruct player
+  (id 0)
+  (first-name "")
+  (last-name "")
+  (position "")
+  (active? t))
 
-(defmethod print-object ((object player) stream)
-  (print-unreadable-object (object stream :type T)
-    (with-slots (player-id first-name last-name pposition active?) object
-      (format stream "~s ~s ~s ~s (active? ~s)" player-id first-name last-name pposition active?))))
+(defmethod player-add ((p player))
+  "Add the given player to the list of all players."
+  (when (eql 0 (player-id p))
+    (setf (player-id p) (incf player-id-seed)))
+  (push p players))
 
-(defmethod activate-player (p)
+(defmethod player-activate ((p player))
   "Activate the given player."
-  (setf (active? p) T))
+  (setf (player-active? p) T))
 
-(defmethod deactivate-player (p)
+(defmethod player-deactivate ((p player))
   "Deactivate the given player."
-  (setf (active? p) NIL))
+  (setf (player-active? p) NIL))
 
 (defvar players '())
 (defvar player-id-seed 0)
 
-(defun players ()
+(defun sorted-players ()
   "Get a sorted list of all players."
-  (sort (copy-list players) #'string< :key #'first-name))
+  (sort (copy-list players) #'string< :key #'player-first-name))
 
-(defun add-player (fname lname pos active?)
-  "Add a player to the global list."
-  (push
-    (make-instance
-      'player
-      :player-id (incf player-id-seed)
-      :first-name fname
-      :last-name lname
-      :pposition pos
-      :active? active?)
-    players))
-
-(add-player "Aiyaz" "" "LW" NIL)
-(add-player "Anish" "" "RW" T)
-(add-player "Bryan" "T." "D" T)
-(add-player "Brian" "K." "D" T)
-(add-player "Carmen" "" "C" NIL)
-(add-player "Elroy" "" "G" T)
-(add-player "Kup" "" "C" T)
-(add-player "Mark" "M." "RW" T)
-(add-player "Mark" "S." "G" T)
-(add-player "Mauz" "" "RW" T)
-(add-player "Osama" "" "LW" T)
-(add-player "Raj" "" "D" NIL)
-(add-player "Robin" "" "D" T)
-(add-player "Steve" "" "LW" NIL)
-(add-player "Saif" "" "LW" T)
-(add-player "Taran" "" "RW" T)
-(add-player "Thiru" "" "D" T)
-(add-player "Touraj" "" "C" T)
+(player-add (make-player :first-name "Anish" :position "RW"))
+(player-add (make-player :first-name "Brian"  :last-name"K." :position "D"))
+(player-add (make-player :first-name "Bryan" :last-name "T." :position "D"))
+(player-add (make-player :first-name "Carmen" :position "C"))
+(player-add (make-player :first-name "Elroy" :position "G"))
+(player-add (make-player :first-name "Kup" :position "C"))
+(player-add (make-player :first-name "Mark" :last-name "M." :position "RW"))
+(player-add (make-player :first-name "Mark" :last-name "S." :position "G"))
+(player-add (make-player :first-name "Osama" :position "LW"))
+(player-add (make-player :first-name "Raj" :position "D"))
+(player-add (make-player :first-name "Robin" :position "D"))
+(player-add (make-player :first-name "Saif" :position "LW"))
+(player-add (make-player :first-name "Steve" :position "LW" :active? nil))
+(player-add (make-player :first-name "Taran" :position "RW"))
+(player-add (make-player :first-name "Thiru" :position "D"))
+(player-add (make-player :first-name "Touraj" :position "C"))

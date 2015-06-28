@@ -6,15 +6,16 @@
   (:export
     :app-version
     :app-updated
-    :players
+    :player
+    :sorted-players
+    :player-add
     :player-id
-    :first-name
-    :last-name
-    :pposition
-    :active?
-    :add-player
-    :activate-player
-    :deactivate-player))
+    :player-first-name
+    :player-last-name
+    :player-position
+    :player-active?
+    :player-activate
+    :player-deactivate))
 
 (defpackage :hockey-oracle.web
   (:use :hockey-oracle :cl :asdf :glu :cl-who :hunchentoot)

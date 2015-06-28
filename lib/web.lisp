@@ -165,21 +165,21 @@
           (:th :class "position-col" :title "Position" "Pos")
           (:th :class "actions-col" "")))
       (:tbody
-        (dolist (p (players))
+        (dolist (p (sorted-players))
           (htm
             (:tr :class "player-item" :data-player-id (player-id p)
               ; This indicates the player's initial active status. I.e. it may
               ; change on the client.
-              :data-player-active (active? p)
+              :data-player-active (player-active? p)
               (:td
                 :class "player-name-col"
                 :onclick "togglePlayerActive(this)" 
                 (:i :class "player-check fa fa-circle-o")
                 (:span :class "player-name"
-                  (esc (fmt "~a ~a" (first-name p) (last-name p)))))
+                  (esc (fmt "~a ~a" (player-first-name p) (player-last-name p)))))
               (:td 
                 (:span :class "player-position"
-                  (esc (pposition p))))
+                  (esc (player-position p))))
               (:td :class "action-buttons"
                 (:button
                   :href "javascript:void(0)"
