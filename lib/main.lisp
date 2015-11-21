@@ -33,8 +33,9 @@
 
 (player-add (make-player :first-name "Anish" :position "RW"))
 (player-add (make-player :first-name "Brian"  :last-name"K." :position "D"))
-(player-add (make-player :first-name "Bryan" :last-name "T." :position "D"))
+(player-add (make-player :first-name "Bryan" :last-name "T." :position "D" :active? nil))
 (player-add (make-player :first-name "Carmen" :position "C"))
+(player-add (make-player :first-name "Daniel" :position "D"))
 (player-add (make-player :first-name "Elroy" :position "G"))
 (player-add (make-player :first-name "Kup" :position "C"))
 (player-add (make-player :first-name "Mark" :last-name "M." :position "RW"))
