@@ -1,7 +1,7 @@
 (in-package :hockey-oracle)
 
-(defvar app-version 0.3)
-(defvar app-updated "Jun 28 2015")
+(defvar app-version (uiop:read-file-form "version.lisp-expr"))
+(defvar app-updated (uiop:read-file-form "date-updated.lisp-expr"))
 
 (defstruct player
   (id 0)
