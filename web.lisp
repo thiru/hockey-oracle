@@ -23,6 +23,7 @@
      * *CATCH-ERRORS-P* => NIL
      * *SHOW-LISP-ERRORS-P* => T
    Side-effects: sets the special variable web-app to the created acceptor."
+  (init-app)
   (setf web-app (create-server port))
   (when debug
     (setf *catch-errors-p* nil)
@@ -165,7 +166,7 @@
           (:th :class "position-col" :title "Position" "Pos")
           (:th :class "actions-col" "")))
       (:tbody
-        (dolist (p (sorted-players))
+        (dolist (p (players-get-all))
           (htm
             (:tr :class "player-item" :data-player-id (player-id p)
               ; This indicates the player's initial active status. I.e. it may

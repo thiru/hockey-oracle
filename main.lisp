@@ -3,18 +3,18 @@
 (defvar app-version (uiop:read-file-form "version.lisp-expr"))
 (defvar app-updated (uiop:read-file-form "date-updated.lisp-expr"))
 
+;; TODO: Should a connection always be left open, or only on request?
+(defun init-app ()
+  "Initialise app, including making a connection to the local Redis server."
+  (connect))
+
+;;; Player struct
 (defstruct player
   (id 0)
   (first-name "")
   (last-name "")
   (position "")
   (active? t))
-
-(defmethod player-add ((p player))
-  "Add the given player to the list of all players."
-  (when (eql 0 (player-id p))
-    (setf (player-id p) (incf player-id-seed)))
-  (push p players))
 
 (defmethod player-activate ((p player))
   "Activate the given player."
@@ -23,28 +23,23 @@
 (defmethod player-deactivate ((p player))
   "Deactivate the given player."
   (setf (player-active? p) NIL))
+;;; Player struct ----------------------------------------------------------- END
 
-(defvar players '())
-(defvar player-id-seed 0)
+(defun players-get-all ()
+  "Gets a list of all players sorted by first name."
+  ;; TODO: Use (red-scan) instead of (red-keys) to get player keys
+  ;; TODO: Use pipelines to send multiple commands at once
+  (let* ((player-keys (red-keys "player:*"))
+         (players nil))
+    (dolist (player-key player-keys)
+      (push (create-player-from-db player-key) players))
+    (sort players #'string< :key #'player-first-name)))
 
-(defun sorted-players ()
-  "Get a sorted list of all players."
-  (sort (copy-list players) #'string< :key #'player-first-name))
-
-(player-add (make-player :first-name "Anish" :position "RW"))
-(player-add (make-player :first-name "Brian"  :last-name"K." :position "D"))
-(player-add (make-player :first-name "Bryan" :last-name "T." :position "D" :active? nil))
-(player-add (make-player :first-name "Carmen" :position "C"))
-(player-add (make-player :first-name "Daniel" :position "D"))
-(player-add (make-player :first-name "Elroy" :position "G"))
-(player-add (make-player :first-name "Kup" :position "C"))
-(player-add (make-player :first-name "Mark" :last-name "M." :position "RW"))
-(player-add (make-player :first-name "Mark" :last-name "S." :position "G"))
-(player-add (make-player :first-name "Osama" :position "LW"))
-(player-add (make-player :first-name "Raj" :position "D"))
-(player-add (make-player :first-name "Robin" :position "D"))
-(player-add (make-player :first-name "Saif" :position "LW"))
-(player-add (make-player :first-name "Steve" :position "LW" :active? nil))
-(player-add (make-player :first-name "Taran" :position "RW"))
-(player-add (make-player :first-name "Thiru" :position "D"))
-(player-add (make-player :first-name "Touraj" :position "C"))
+(defun create-player-from-db (player-key)
+  "Create a player struct from a database record."
+  (let ((id (parse-integer player-key :start 7)))
+    (make-player :id id
+                 :first-name (red-hget player-key "first-name")
+                 :last-name (red-hget player-key "last-name")
+                 :position (red-hget player-key "position")
+                 :active? (red-sismember "players:active" id))))
