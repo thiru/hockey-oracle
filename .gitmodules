@@ -1,0 +1,3 @@
+[submodule "public/deps/fira"]
+	path = public/deps/fira
+	url = https://github.com/mozilla/Fira.git

@@ -59,7 +59,7 @@
         (:link :rel "shortcut icon"
                :href "/images/favicon.ico")
         (:link
-          :href "//code.cdn.mozilla.net/fonts/fira.css"
+          :href "/deps/fira/fira.css"
           :rel "stylesheet"
           :type "text/css")
         (:link
