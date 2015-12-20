@@ -6,7 +6,6 @@
   (:export
     :app-version
     :app-updated
-    :init-app
     :player
     :player-id
     :player-first-name
@@ -20,7 +19,7 @@
 (defpackage :hockey-oracle.web
   (:use :hockey-oracle :cl :asdf :glu :cl-who :hunchentoot)
   (:documentation "Hockey Oracle web interface")
-  (:export 
+  (:export
     :web-app
     :start-server!
     :stop-server))

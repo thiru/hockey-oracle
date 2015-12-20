@@ -23,7 +23,6 @@
      * *CATCH-ERRORS-P* => NIL
      * *SHOW-LISP-ERRORS-P* => T
    Side-effects: sets the special variable web-app to the created acceptor."
-  (init-app)
   (setf web-app (create-server port))
   (when debug
     (setf *catch-errors-p* nil)

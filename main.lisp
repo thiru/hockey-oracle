@@ -3,11 +3,6 @@
 (defvar app-version (uiop:read-file-form "version.lisp-expr"))
 (defvar app-updated (uiop:read-file-form "date-updated.lisp-expr"))
 
-;; TODO: Should a connection always be left open, or only on request?
-(defun init-app ()
-  "Initialise app, including making a connection to the local Redis server."
-  (connect))
-
 ;;; Player struct
 (defstruct player
   (id 0)
@@ -29,11 +24,12 @@
   "Gets a list of all players sorted by first name."
   ;; TODO: Use (red-scan) instead of (red-keys) to get player keys
   ;; TODO: Use pipelines to send multiple commands at once
-  (let* ((player-keys (red-keys "player:*"))
-         (players nil))
-    (dolist (player-key player-keys)
-      (push (create-player-from-db player-key) players))
-    (sort players #'string< :key #'player-first-name)))
+  (redis:with-persistent-connection ()
+    (let* ((player-keys (red-keys "player:*"))
+           (players nil))
+      (dolist (player-key player-keys)
+        (push (create-player-from-db player-key) players))
+      (sort players #'string< :key #'player-first-name))))
 
 (defun create-player-from-db (player-key)
   "Create a player struct from a database record."
