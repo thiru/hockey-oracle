@@ -140,11 +140,9 @@
               (:label :for "player-pos-edit" "Position: "))
             (:td
               (:select :id "player-pos-edit"
-               (:option :value "C" "C")
-               (:option :value "D" "D")
-               (:option :value "G" "G")
-               (:option :value "LW" "LW")
-               (:option :value "RW" "RW"))))
+                       (dolist (pos players-positions)
+                         (htm
+                           (:option :value pos (esc pos)))))))
           (:tr
             (:td
               (:label :for "player-active-edit" "Is Active: "))
