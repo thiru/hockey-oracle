@@ -97,25 +97,27 @@
 (defmethod acceptor-status-message (acceptor (http-status-code (eql 404)) &key)
   (standard-page
     (:title "Not Found" :page-id "not-found-page")
-    (:h2 "Hmm.. I can't seem to find the page (or resource) you requested")
+    (:h2 "Not Found")
+    (:p "The page or resource you requested could not be found.")
     (:a :href "/" "Go back to the home page")))
 
 (defmethod acceptor-status-message (acceptor (http-status-code (eql 500)) &key)
   (standard-page
     (:title "Server Error" :page-id "server-error-page")
-    (:h2 "Something unexpected happened on the server!")
-    (:p "Someone really outta look into this..")
+    (:h2 "Server Error")
+    (:p "Sorry, it looks like something unexpected happened on the server.")
+    (:p "An administrator has been notified of the error.")
     (:a :href "/" "Go back to the home page")))
 
-(define-easy-handler (www-oops :uri "/oops") ()
-  (log-message* :error "Oops \(error log level).")
-  (log-message* :warning "Oops \(warning log level).")
-  (log-message* :info "Oops \(info log level).")
+(define-easy-handler (www-test-server-error :uri "/test-server-error") ()
+  (log-message* :error "Test error page \(error log level).")
+  (log-message* :warning "Test error page \(warning log level).")
+  (log-message* :info "Test error page \(info log level).")
   (error "This is an intentional error for testing purposes.")
   ; The following should never be displayed
   (standard-page
-    (:title "Oops")
-    (:h1 "Test error page")))
+    (:title "Test Server Error")
+    (:h2 "Test Server Error")))
 
 (define-easy-handler (www-home :uri "/") ()
   (redirect "/players"))
