@@ -14,6 +14,7 @@
     :player-active?
     :player-activate
     :player-deactivate
+    :players-positions
     :players-get-all))
 
 (defpackage :hockey-oracle.web

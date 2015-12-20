@@ -20,6 +20,8 @@
   (setf (player-active? p) NIL))
 ;;; Player struct ----------------------------------------------------------- END
 
+(defvar players-positions '("C" "D" "G" "LW" "RW"))
+
 (defun players-get-all ()
   "Gets a list of all players sorted by first name."
   ;; TODO: Use (red-scan) instead of (red-keys) to get player keys

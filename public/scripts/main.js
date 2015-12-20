@@ -48,7 +48,7 @@ function makeTeams()
         var player = {};
         player.id = parseInt($(this).attr("data-player-id"));
         player.name = $(this).find(".player-name").text().trim();
-        player.position = $(this).find(".player-position").text().trim();
+        player.position = $(this).find(".player-position :selected").val();
         players.push(player);
     });
 
@@ -153,16 +153,11 @@ function editPlayer(ele) {
   var playerRow = $(ele).parents("#player-list .player-item");
   var playerId = playerRow.attr("data-player-id");
   var currName = playerRow.find(".player-name").text().trim();
-  var currPos = playerRow.find(".player-position").text().trim();
+  var currPos = playerRow.find(".player-position :selected").val();
   var currActive = playerRow.hasClass("selected");
 
   $("#player-name-edit").val(currName);
-  $("#player-pos-edit option").each(function() {
-    if ($(this).val() == currPos)
-      $(this).attr("selected", "selected");
-    else
-      $(this).removeAttr("selected");
-  });
+  $("#player-pos-edit").val(currPos);
   $("#player-active-edit").prop("checked", currActive);
 
   $("#edit-dialog .save-btn").attr("data-player-id", playerId);
@@ -188,7 +183,7 @@ function savePlayer() {
   }
 
   // Get player position
-  var position = $("#player-pos-edit :selected").text().trim();
+  var position = $("#player-pos-edit :selected").val();
 
   // Get player active state
   var isActive = $("#player-active-edit").is(":checked");
@@ -209,7 +204,7 @@ function savePlayer() {
                 .addClass("fa-check-circle-o")
                 .removeClass("fa-circle-o");
     newPlayerRow.find(".player-name").text(name);
-    newPlayerRow.find(".player-position").text(position);
+    newPlayerRow.find(".player-position").val(position);
     newPlayerRow.appendTo("#player-list");
   }
   // Otherwise we're editing an existing player
@@ -217,7 +212,7 @@ function savePlayer() {
     var playerRow =
       $("#player-list .player-item[data-player-id=" + playerId + "]");
     playerRow.find(".player-name").text(name);
-    playerRow.find(".player-position").text(position);
+    playerRow.find(".player-position").val(position);
     if (isActive) {
       playerRow.addClass("selected");
       playerRow.find("i.player-check")

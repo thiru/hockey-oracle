@@ -175,14 +175,19 @@
               :data-player-active (player-active? p)
               (:td
                 :class "player-name-col"
-                :onclick "togglePlayerActive(this)" 
+                :onclick "togglePlayerActive(this)"
                 (:i :class "player-check fa fa-circle-o"
                     :title "When checked the player is considered active/able to play")
                 (:span :class "player-name"
                   (esc (fmt "~a ~a" (player-first-name p) (player-last-name p)))))
-              (:td 
-                (:span :class "player-position"
-                  (esc (player-position p))))
+              (:td
+               (:select :class "player-position"
+                        (dolist (pos players-positions)
+                          (htm
+                           (:option
+                            :value pos
+                            :selected (if (string-equal pos (player-position p)) "" nil)
+                            (esc pos))))))
               (:td :class "action-buttons"
                 (:button
                   :href "javascript:void(0)"
