@@ -6,7 +6,7 @@
   :author "Thirushanth Thirunavukarasu <thiru0130@gmail.com>"
   :license "GPLv2"
   :serial t
-  :depends-on (:glu :cl-redis :cl-who :hunchentoot)
+  :depends-on (:bordeaux-threads :cl-redis :cl-smtp :cl-who :glu :hunchentoot)
   :components ((:static-file "README.md")
                (:static-file "LICENSE")
                (:static-file "EULA")

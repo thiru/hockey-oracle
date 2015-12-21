@@ -41,3 +41,9 @@
                  :last-name (red-hget player-key "last-name")
                  :position (red-hget player-key "position")
                  :active? (red-sismember "players:active" id))))
+
+;;; Utils
+(defun get-secure-key (key)
+  "Gets a secure key by calling the 'pass' program."
+  (uiop:run-program (sf "pass ~A" key) :output '(:string :stripped t)))
+;;; Utils ------------------------------------------------------------------- END

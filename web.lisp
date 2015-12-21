@@ -102,12 +102,28 @@
     (:a :href "/" "Go back to the home page")))
 
 (defmethod acceptor-status-message (acceptor (http-status-code (eql 500)) &key)
+  (bt:make-thread (lambda () (send-error-email "A <b>server</b> error occurred.")))
   (standard-page
     (:title "Server Error" :page-id "server-error-page")
     (:h2 "Server Error")
     (:p "Sorry, it looks like something unexpected happened on the server.")
     (:p "An administrator has been notified of the error.")
     (:a :href "/" "Go back to the home page")))
+
+(defun send-error-email (message)
+  "Sends an email indicating a server error occurred."
+  (let ((auth '()))
+    (push (get-secure-key "ho/email/pwd") auth)
+    (push (get-secure-key "ho/email/username") auth)
+    (cl-smtp:send-email (get-secure-key "ho/email/server")
+                        (get-secure-key "ho/email/reply-to")
+                        (get-secure-key "ho/email/admins")
+                        "Server Error" ""
+                        :display-name "Hockey Oracle"
+                        :html-message message :ssl :tls
+                        :port (parse-integer
+                               (get-secure-key "ho/email/ssl-port"))
+                        :authentication auth)))
 
 (define-easy-handler (www-test-server-error :uri "/test-server-error") ()
   (log-message* :error "Test error page \(error log level).")

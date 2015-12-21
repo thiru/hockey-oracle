@@ -15,7 +15,8 @@
     :player-activate
     :player-deactivate
     :players-positions
-    :players-get-all))
+    :players-get-all
+    :get-secure-key))
 
 (defpackage :hockey-oracle.web
   (:use :hockey-oracle :cl :asdf :glu :cl-who :hunchentoot)
