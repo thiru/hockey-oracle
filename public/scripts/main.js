@@ -1,20 +1,9 @@
 /*
- * Domain-related functionality.
+ * Domain-specific functionality.
  */
 
 $(document).ready(function() {
-  checkActivePlayers();
-
-  function checkActivePlayers() {
-    $(".player-item").each(function() {
-      if ($(this).is("[data-player-active]")) {
-        $(this).addClass("selected");
-        $(this).find(".player-check")
-               .removeClass("fa-circle-o")
-               .addClass("fa-check-circle-o");
-      }
-    });
-  }
+    // Do nothing
 });
 
 function togglePlayerActive(ele)

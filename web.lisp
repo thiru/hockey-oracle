@@ -183,15 +183,15 @@
       (:tbody
         (dolist (p (players-get-all))
           (htm
-            (:tr :class "player-item" :data-player-id (player-id p)
-              ; This indicates the player's initial active status. I.e. it may
-              ; change on the client.
-              :data-player-active (player-active? p)
+            (:tr
+              :class (if (player-active? p) "player-item selected" "player-item")
+              :data-player-id (player-id p)
               (:td
                 :class "player-name-col"
                 :onclick "togglePlayerActive(this)"
-                (:i :class "player-check fa fa-circle-o"
-                    :title "When checked the player is considered active/able to play")
+                (:i
+                  :class (if (player-active? p) "player-check fa fa-check-circle-o" "player-check fa fa-circle-o")
+                  :title "When checked the player is considered active/able to play")
                 (:span :class "player-name"
                   (esc (fmt "~a ~a" (player-first-name p) (player-last-name p)))))
               (:td
