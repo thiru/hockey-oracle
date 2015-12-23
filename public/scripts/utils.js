@@ -1,3 +1,7 @@
+/*
+ * Generic utils.
+ */
+
 function Result(status, msg, data)
 {
   this.status = status || 0;

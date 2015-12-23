@@ -1,3 +1,7 @@
+/*
+ * Domain-related functionality.
+ */
+
 $(document).ready(function() {
   checkActivePlayers();
 
