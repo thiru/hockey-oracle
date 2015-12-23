@@ -3,7 +3,44 @@
 (defvar app-version (uiop:read-file-form "version.lisp-expr"))
 (defvar app-updated (uiop:read-file-form "date-updated.lisp-expr"))
 
-;;; Player struct
+;;; Utils
+(defun get-secure-key (key)
+  "Gets a secure key by calling the 'pass' program."
+  (uiop:run-program (sf "pass ~A" key) :output '(:string :stripped t)))
+
+(defun to-bool (redis-val)
+  "Converts the given redis value to bool."
+  (plusp (parse-integer redis-val)))
+;;; Utils ------------------------------------------------------------------- END
+
+;;; Leagues
+(defstruct league
+  (id 0)
+  (name "")
+  (created "")
+  (active? t))
+
+(defun leagues-get-all ()
+  "Gets a list of all leagues sorted by name."
+  ;; TODO: Use (red-scan) instead of (red-keys) to get player keys
+  ;; TODO: Use pipelines to send multiple commands at once
+  (redis:with-persistent-connection ()
+    (let* ((league-keys (red-keys "league:*"))
+           (leagues nil))
+      (dolist (league-key league-keys)
+        (push (create-league-from-db league-key) leagues))
+      (sort leagues #'string< :key #'league-name))))
+
+(defun create-league-from-db (league-key)
+  "Create a league struct from a database record."
+  (let ((id (parse-integer league-key :start 7)))
+    (make-league :id id
+                 :name (red-hget league-key "name")
+                 :created (red-hget league-key "created")
+                 :active? (to-bool (red-hget league-key "active?")))))
+;;; Leagues ----------------------------------------------------------------- END
+
+;;; Players
 (defstruct player
   (id 0)
   (first-name "")
@@ -18,7 +55,6 @@
 (defmethod player-deactivate ((p player))
   "Deactivate the given player."
   (setf (player-active? p) NIL))
-;;; Player struct ----------------------------------------------------------- END
 
 (defvar players-positions '("C" "D" "G" "LW" "RW"))
 
@@ -41,9 +77,4 @@
                  :last-name (red-hget player-key "last-name")
                  :position (red-hget player-key "position")
                  :active? (red-sismember "players:active" id))))
-
-;;; Utils
-(defun get-secure-key (key)
-  "Gets a secure key by calling the 'pass' program."
-  (uiop:run-program (sf "pass ~A" key) :output '(:string :stripped t)))
-;;; Utils ------------------------------------------------------------------- END
+;;; Players ----------------------------------------------------------------- END
