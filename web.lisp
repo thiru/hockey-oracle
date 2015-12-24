@@ -1,5 +1,6 @@
 (in-package :hockey-oracle.web)
 
+;;; General
 (defvar web-app nil "Contains the web-server instance")
 
 (defun create-server (port)
@@ -31,12 +32,28 @@
     (setf (acceptor-message-log-destination web-app) *standard-output*))
   (start web-app))
 
-
 (defun stop-server ()
   "Stops the web server referenced by the special variable web-app."
   (if web-app
     (stop web-app :soft t)))
 
+(defun send-error-email (message)
+  "Sends an email indicating a server error occurred."
+  (let ((auth '()))
+    (push (get-secure-key "ho/email/pwd") auth)
+    (push (get-secure-key "ho/email/username") auth)
+    (cl-smtp:send-email (get-secure-key "ho/email/server")
+                        (get-secure-key "ho/email/reply-to")
+                        (get-secure-key "ho/email/admins")
+                        "Server Error" ""
+                        :display-name "Hockey Oracle"
+                        :html-message message :ssl :tls
+                        :port (parse-integer
+                               (get-secure-key "ho/email/ssl-port"))
+                        :authentication auth)))
+;;; General ---------------------------------------------------------------- END
+
+;;; Template Page
 (defmacro standard-page ((&key title page-id) &body body)
   "Creates a standard page layout.
    @param title
@@ -89,13 +106,17 @@
             (:li
               (:a :href "/" (:i :class "fa fa-bars")))
             (:li
+              (:a :href "/leagues" "Leagues"))
+            (:li
               (:a :href "/players" "Players"))
             (:li
               (:a :href "/about" "About"))
             ))
         (:main :id ,page-id
           ,@body)))))
+;;; Template Page ---------------------------------------------------------- END
 
+;;; Error Pages
 (defmethod acceptor-status-message (acceptor (http-status-code (eql 404)) &key)
   (standard-page
     (:title "Not Found" :page-id "not-found-page")
@@ -112,21 +133,6 @@
     (:p "An administrator has been notified of the error.")
     (:a :href "/" "Go back to the home page")))
 
-(defun send-error-email (message)
-  "Sends an email indicating a server error occurred."
-  (let ((auth '()))
-    (push (get-secure-key "ho/email/pwd") auth)
-    (push (get-secure-key "ho/email/username") auth)
-    (cl-smtp:send-email (get-secure-key "ho/email/server")
-                        (get-secure-key "ho/email/reply-to")
-                        (get-secure-key "ho/email/admins")
-                        "Server Error" ""
-                        :display-name "Hockey Oracle"
-                        :html-message message :ssl :tls
-                        :port (parse-integer
-                               (get-secure-key "ho/email/ssl-port"))
-                        :authentication auth)))
-
 (define-easy-handler (www-test-server-error :uri "/test-server-error") ()
   (log-message* :error "Test error page \(error log level).")
   (log-message* :warning "Test error page \(warning log level).")
@@ -136,10 +142,28 @@
   (standard-page
     (:title "Test Server Error")
     (:h2 "Test Server Error")))
+;;; Error Pages ------------------------------------------------------------ END
 
+;;; Home Page
 (define-easy-handler (www-home :uri "/") ()
-  (redirect "/players"))
+  (redirect "/leagues"))
+;;; Home Page -------------------------------------------------------------- END
 
+;;; League List Page
+(define-easy-handler (www-leauges :uri "/leagues") ()
+  (standard-page
+    (:title "Leagues"
+     :page-id "league-list-page")
+    (:h2 "Choose your league:")
+    (:ul :class "simple-list"
+         (dolist (league (leagues-get-all))
+           (htm
+            (:li
+              (:a :class "button wide-button"
+                  (esc (league-name league)))))))))
+;;; League List Page ------------------------------------------------------- END
+
+;;; Player List Page
 (define-easy-handler (www-players :uri "/players") ()
   (standard-page
     (:title "Players"
@@ -168,12 +192,12 @@
               (:input :id "player-active-edit" :type "checkbox"))))
         (:div :class "actions"
           (:button
-            :class "save-btn"
+            :class "button save-btn"
             :data-player-id "0"
             :onclick "savePlayer()"
             "Save")
           (:button
-            :class "cancel-btn"
+            :class "button cancel-btn"
             :onclick "closeDialog()"
             "Cancel"))))
     (:table :id "player-list" :class "data-table"
@@ -206,6 +230,7 @@
                             (esc pos))))))
               (:td :class "action-buttons"
                 (:button
+                  :class "button"
                   :href "javascript:void(0)"
                   :onclick "editPlayer(this)"
                   (:i :class "fa fa-pencil-square-o"))))))))
@@ -227,26 +252,28 @@
              (:img :class "team-logo" :src "/images/team-logos/panthers.png"))))
         (:tbody :class "team-players")))
     (:button :id "make-teams"
-      :class "wide-button"
+      :class "button wide-button"
       :href "javascript:void(0)"
       :onclick "makeTeams()"
       :title "Select to generate random teams"
       (:i :class "fa fa-random")
       (:span :class "button-text" "Make Teams"))
     (:button :id "add-player"
-      :class "wide-button"
+      :class "button wide-button"
       :href "javascript:void(0)"
       :onclick "addPlayer()"
       (:i :class "fa fa-user-plus")
       (:span :class "button-text" "Add Player"))
     (:button :id "pick-players"
-      :class "wide-button"
+      :class "button wide-button"
       :href "javascript:void(0)"
       :onclick "pickPlayers()"
       :title "Select to choose active players"
       (:i :class "fa fa-check-circle-o")
       (:span :class "button-text" "Pick Players"))))
+;;; Player List Page ------------------------------------------------------- END
 
+;;; About Page
 (define-easy-handler (www-about :uri "/about") ()
   (standard-page
     (:title "About"
@@ -272,3 +299,4 @@
       (:tr
         (:td "Copyright")
         (:td "2014-2015 Thirushanth Thirunavukarasu")))))
+;;; About Page ------------------------------------------------------------- END
