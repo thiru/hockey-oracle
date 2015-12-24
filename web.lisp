@@ -87,6 +87,8 @@
         (:nav
           (:ul :class "nav-items"
             (:li
+              (:a :href "/" (:i :class "fa fa-bars")))
+            (:li
               (:a :href "/players" "Players"))
             (:li
               (:a :href "/about" "About"))

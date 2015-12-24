@@ -205,14 +205,12 @@ nav .nav-items li
 {
   display: inline-block;
   float: left;
+  padding-right: 1em;
 }
 nav .nav-items li:last-child
 {
   float: right;
-}
-nav a
-{
-  padding-right: 1em;
+  padding-right: 0;
 }
 
 main
