@@ -12,6 +12,17 @@
     :league-created
     :league-active?
     :get-all-leagues
+    :season
+    :season-id
+    :season-name
+    :season-start-date
+    :season-end-date
+    :get-seasons
+    :game
+    :game-id
+    :game-date-time
+    :game-progress
+    :get-games
     :player
     :player-id
     :player-first-name
@@ -26,7 +37,7 @@
     :get-secure-key))
 
 (defpackage :hockey-oracle.web
-  (:use :hockey-oracle :cl :asdf :glu :cl-who :hunchentoot)
+  (:use :hockey-oracle :cl :asdf :glu :cl-who :hunchentoot :local-time)
   (:documentation "Hockey Oracle web interface")
   (:export
     :web-app

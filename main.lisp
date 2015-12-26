@@ -40,6 +40,64 @@
                  :active? (to-bool (red-hget league-key "active?")))))
 ;;; Leagues ----------------------------------------------------------------- END
 
+;;; Seasons
+(defstruct season
+  (id 0)
+  (name "")
+  (start-date "")
+  (end-date ""))
+
+(defun get-seasons (league-name)
+  "Gets all seasons for the specified league."
+  (let* ((leagues (get-all-leagues))
+         (league (find league-name leagues :test #'string-equal
+                                           :key #'league-name)))
+    (if league
+      (redis:with-persistent-connection ()
+        (let* ((season-ids (red-smembers (sf "leagues:~A:seasons" (league-id league))))
+               (seasons '()))
+          (dolist (season-id season-ids)
+            (push (create-season-from-db (sf "season:~A" season-id)) seasons))
+          (sort seasons #'string< :key #'season-start-date))))))
+
+(defun create-season-from-db (season-key)
+  "Create a season struct from a database record."
+  (let ((id (parse-integer season-key :start 7)))
+    (make-season :id id
+                 :name (red-hget season-key "name")
+                 :start-date (red-hget season-key "start-date")
+                 :end-date (red-hget season-key "end-date"))))
+;;; Seasons ----------------------------------------------------------------- END
+
+;;; Games
+(defstruct game
+  (id 0)
+  (date-time "")
+  (progress ""))
+
+(defun get-games (seasons)
+  "Get all games belonging to the given seasons."
+  (if seasons
+      (redis:with-persistent-connection ()
+        (let* ((game-keys '())
+               (game-ids '())
+               (games '()))
+          (dolist (season seasons)
+            (push (sf "seasons:~A:games" (season-id season)) game-keys))
+          (dolist (game-key game-keys)
+            (setf game-ids (append game-ids (red-smembers game-key))))
+          (dolist (game-id game-ids)
+            (push (create-game-from-db (sf "game:~A" game-id)) games))
+          (sort games #'string< :key #'game-date-time)))))
+
+(defun create-game-from-db (game-key)
+  "Create a game struct from a database record."
+  (let ((id (parse-integer game-key :start 5)))
+    (make-game :id id
+               :date-time (red-hget game-key "date-time")
+               :progress (red-hget game-key "progress"))))
+;;; Games ------------------------------------------------------------------- END
+
 ;;; Players
 (defstruct player
   (id 0)
@@ -77,10 +135,9 @@
          (league (find league-name leagues :test #'string-equal
                                            :key #'league-name)))
     (redis:with-persistent-connection ()
-      (let* ((player-ids '())
+      (let* ((player-ids (red-smembers (sf "leagues:~A:players"
+                                           (league-id league))))
              (players '()))
-        (setf player-ids
-              (red-smembers (sf "leagues:~A:players" (league-id league))))
         (dolist (player-id player-ids)
           (push (create-player-from-db (sf "player:~A" player-id)) players))
         (sort players #'string< :key #'player-first-name)))))
