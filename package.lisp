@@ -11,7 +11,7 @@
     :league-name
     :league-created
     :league-active?
-    :leagues-get-all
+    :get-all-leagues
     :player
     :player-id
     :player-first-name
@@ -21,7 +21,8 @@
     :player-activate
     :player-deactivate
     :players-positions
-    :players-get-all
+    :get-all-players
+    :get-players
     :get-secure-key))
 
 (defpackage :hockey-oracle.web

@@ -20,7 +20,7 @@
   (created "")
   (active? t))
 
-(defun leagues-get-all ()
+(defun get-all-leagues ()
   "Gets a list of all leagues sorted by name."
   ;; TODO: Use (red-scan) instead of (red-keys) to get player keys
   ;; TODO: Use pipelines to send multiple commands at once
@@ -58,7 +58,7 @@
 
 (defvar players-positions '("C" "D" "G" "LW" "RW"))
 
-(defun players-get-all ()
+(defun get-all-players ()
   "Gets a list of all players sorted by first name."
   ;; TODO: Use (red-scan) instead of (red-keys) to get player keys
   ;; TODO: Use pipelines to send multiple commands at once
@@ -68,6 +68,22 @@
       (dolist (player-key player-keys)
         (push (create-player-from-db player-key) players))
       (sort players #'string< :key #'player-first-name))))
+
+(defun get-players (&key league-name)
+  "Gets a list of all players sorted by first name."
+  ;; TODO: Use (red-scan) instead of (red-keys) to get player keys
+  ;; TODO: Use pipelines to send multiple commands at once
+  (let* ((leagues (get-all-leagues))
+         (league (find league-name leagues :test #'string-equal
+                                           :key #'league-name)))
+    (redis:with-persistent-connection ()
+      (let* ((player-ids '())
+             (players '()))
+        (setf player-ids
+              (red-smembers (sf "leagues:~A:players" (league-id league))))
+        (dolist (player-id player-ids)
+          (push (create-player-from-db (sf "player:~A" player-id)) players))
+        (sort players #'string< :key #'player-first-name)))))
 
 (defun create-player-from-db (player-key)
   "Create a player struct from a database record."

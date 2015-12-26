@@ -142,6 +142,11 @@ a:hover
   width: 100%;
 }
 
+.hidden
+{
+  display: none;
+}
+
 /* Get rid of ugly system-outline */
 :focus {outline:none;}
 ::-moz-focus-inner {border:0;}

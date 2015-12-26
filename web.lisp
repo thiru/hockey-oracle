@@ -3,6 +3,9 @@
 ;;; General
 (defvar web-app nil "Contains the web-server instance")
 
+(defparameter league-agnostic-paths
+  '("" "deps" "images" "scripts" "styles" "about" "leagues" "test-server-error"))
+
 (defun create-server (port)
   "Creates the web server on the specified port."
   (let* ((root-dir (asdf:system-relative-pathname :hockey-oracle "public/"))
@@ -53,8 +56,16 @@
                         :authentication auth)))
 ;;; General ---------------------------------------------------------------- END
 
+;;; Utils
+(defun empty? (val)
+  "Determine whether 'val' is essentially empty. I.e. is nil, an empty sequence
+  or empty string."
+  (or (null val)
+      (= 0 (length val))))
+;;; Utils ------------------------------------------------------------------ END
+
 ;;; Template Page
-(defmacro standard-page ((&key title page-id) &body body)
+(defmacro standard-page ((&key title page-id league) &body body)
   "Creates a standard page layout.
    @param title
      Specifies the title of a page.
@@ -107,31 +118,43 @@
               (:a :href "/" (:i :class "fa fa-bars")))
             (:li
               (:a :href "/leagues" "Leagues"))
+            (if (not (empty? ,league))
+                (htm
+                 (:li
+                  (:a :href (sf "/~A/players" ,league) "Players"))))
             (:li
-              (:a :href "/players" "Players"))
-            (:li
-              (:a :href "/about" "About"))
+              (:a :href (if (empty? ,league) "/about" (sf "/~A/about" ,league)) "About"))
             ))
         (:main :id ,page-id
           ,@body)))))
 ;;; Template Page ---------------------------------------------------------- END
 
 ;;; Error Pages
-(defmethod acceptor-status-message (acceptor (http-status-code (eql 404)) &key)
+(defun www-not-found-page (league-name)
   (standard-page
-    (:title "Not Found" :page-id "not-found-page")
+      (:title "Not Found"
+       :league league-name
+       :page-id "not-found-page")
     (:h2 "Not Found")
     (:p "The page or resource you requested could not be found.")
     (:a :href "/" "Go back to the home page")))
 
-(defmethod acceptor-status-message (acceptor (http-status-code (eql 500)) &key)
-  (bt:make-thread (lambda () (send-error-email "A <b>server</b> error occurred.")))
+(defmethod acceptor-status-message (acceptor (http-status-code (eql 404)) &key)
+  (www-not-found-page nil))
+
+(defun www-server-error-page (league-name)
   (standard-page
-    (:title "Server Error" :page-id "server-error-page")
+      (:title "Server Error"
+       :league league-name
+       :page-id "server-error-page")
     (:h2 "Server Error")
     (:p "Sorry, it looks like something unexpected happened on the server.")
     (:p "An administrator has been notified of the error.")
     (:a :href "/" "Go back to the home page")))
+
+(defmethod acceptor-status-message (acceptor (http-status-code (eql 500)) &key)
+  (bt:make-thread (lambda () (send-error-email "A <b>server</b> error occurred.")))
+  (www-server-error-page nil))
 
 (define-easy-handler (www-test-server-error :uri "/test-server-error") ()
   (log-message* :error "Test error page \(error log level).")
@@ -149,6 +172,38 @@
   (redirect "/leagues"))
 ;;; Home Page -------------------------------------------------------------- END
 
+;;; About Page
+(define-easy-handler (www-about :uri "/about") ()
+  (www-about-page nil))
+
+(defun www-about-page (league-name)
+  (standard-page
+      (:title "About"
+       :league league-name
+       :page-id "about-page")
+    (:p
+     "The Hockey Oracle is a simple app that generates teams by randomly "
+     "selecting from a pool of active players.")
+    (:p
+     (:span "Please note this is an")
+     (:b "alpha")
+     (:span "version of the website with very limited functionality."))
+    (:table :class "brief-table"
+            (:tr
+             (:td "Version")
+             (:td (fmt "~a" app-version)))
+            (:tr
+             (:td "Last Updated")
+             (:td (fmt "~a" app-updated)))
+            (:tr
+             (:td "License")
+             (:td
+              (:a :href "https://www.gnu.org/licenses/gpl-2.0.html" "GPL v2")))
+            (:tr
+             (:td "Copyright")
+             (:td "2014-2015 Thirushanth Thirunavukarasu")))))
+;;; About Page ------------------------------------------------------------- END
+
 ;;; League List Page
 (define-easy-handler (www-leauges :uri "/leagues") ()
   (standard-page
@@ -156,17 +211,66 @@
      :page-id "league-list-page")
     (:h2 "Choose your league:")
     (:ul :class "simple-list"
-         (dolist (league (leagues-get-all))
+         (dolist (league (get-all-leagues))
            (htm
             (:li
               (:a :class "button wide-button"
+                  :href (string-downcase (league-name league))
                   (esc (league-name league)))))))))
 ;;; League List Page ------------------------------------------------------- END
 
+;;; League-Dependent Routing
+(defun league-route? (req)
+  "Determine whether the given request is dependent on a specific league."
+  (let* ((path (script-name* req))
+         (clean-path (string-trim " /" (if (null path) "" path)))
+         (slash-pos (position #\/ clean-path)))
+    (setf clean-path (if slash-pos (subseq clean-path 0 slash-pos) clean-path))
+    (null (find clean-path league-agnostic-paths :test #'string-equal))))
+
+(defun parse-league-dependent-page (req)
+  "Parses a resource dependent on a specific league into the league's name and
+   the remaining path."
+  (let* ((path (script-name* req))
+         (slash-pos nil)
+         (league-name "")
+         (remaining-path ""))
+    (setf path (string-trim " /" path))
+    (setf slash-pos (position #\/ path))
+    (setf league-name (if slash-pos (subseq path 0 slash-pos) path))
+    (setf remaining-path (if slash-pos (subseq path slash-pos) ""))
+    (setf remaining-path (string-trim " /" remaining-path))
+    (values league-name remaining-path)))
+
+(define-easy-handler (www-league-dependent :uri #'league-route?) ()
+  (multiple-value-bind (league-name remaining-path)
+      (parse-league-dependent-page *request*)
+    (let ((curr-league (find league-name
+                             (get-all-leagues)
+                             :test #'string-equal
+                             :key #'league-name)))
+      (cond ((null curr-league)
+             (www-not-found-page nil))
+            ((empty? remaining-path)
+             (www-league-detail-page league-name))
+            ((string-equal "players" remaining-path)
+             (www-player-list-page league-name))
+            ((string-equal "about" remaining-path)
+             (www-about-page league-name))
+            (t
+             (www-not-found-page league-name))))))
+;;; League-Dependent Routing ------------------------------------------------ END
+
+;;; League Detail Page
+(defun www-league-detail-page (league-name)
+  (redirect (sf "/~A/players" league-name)))
+;;; League Detail Page ------------------------------------------------------ END
+
 ;;; Player List Page
-(define-easy-handler (www-players :uri "/players") ()
+(defun www-player-list-page (league-name)
   (standard-page
     (:title "Players"
+     :league league-name
      :page-id "player-list-page")
     (:div :id "edit-dialog" :class "dialog"
       (:header "Editing Player")
@@ -207,7 +311,7 @@
           (:th :class "position-col" :title "Position" "Pos")
           (:th :class "actions-col" "")))
       (:tbody
-        (dolist (p (players-get-all))
+        (dolist (p (get-players :league-name league-name))
           (htm
             (:tr
               :class (if (player-active? p) "player-item selected" "player-item")
@@ -272,31 +376,3 @@
       (:i :class "fa fa-check-circle-o")
       (:span :class "button-text" "Pick Players"))))
 ;;; Player List Page ------------------------------------------------------- END
-
-;;; About Page
-(define-easy-handler (www-about :uri "/about") ()
-  (standard-page
-    (:title "About"
-     :page-id "about-page")
-    (:p
-      "The Hockey Oracle is a simple app that generates teams by randomly "
-      "selecting from a pool of active players.")
-    (:p
-      (:span "Please note this is an")
-      (:b "alpha")
-      (:span "version of the website with very limited functionality."))
-    (:table :class "brief-table"
-      (:tr
-        (:td "Version")
-        (:td (fmt "~a" app-version)))
-      (:tr
-        (:td "Last Updated")
-        (:td (fmt "~a" app-updated)))
-      (:tr
-        (:td "License")
-        (:td
-          (:a :href "https://www.gnu.org/licenses/gpl-2.0.html" "GPL v2")))
-      (:tr
-        (:td "Copyright")
-        (:td "2014-2015 Thirushanth Thirunavukarasu")))))
-;;; About Page ------------------------------------------------------------- END
