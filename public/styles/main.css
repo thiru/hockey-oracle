@@ -195,6 +195,12 @@ main
 {
   text-decoration: none;
 }
+#league-name-header
+{
+  position: absolute;
+  right: 1.7em;
+  top: 8px;
+}
 
 nav
 {

@@ -65,7 +65,7 @@
 ;;; Utils ------------------------------------------------------------------ END
 
 ;;; Template Page
-(defmacro standard-page ((&key title page-id league) &body body)
+(defmacro standard-page ((&key title page-id league-name) &body body)
   "Creates a standard page layout.
    @param title
      Specifies the title of a page.
@@ -106,26 +106,29 @@
         (:div :id "overlay" "&nbsp;")
         (:div :id "top-shade")
         (:header :id "top-heading"
-          (:a :href "/"
-            (:img
-              :alt "logo"
-              :class "logo"
-              :src "/images/banner.jpg")
-            (:span :class "title" "Hockey Oracle")))
+                 (:div :id "league-name-header" (esc ,league-name))
+                 (:a :href "/"
+                     (:img
+                      :alt "logo"
+                      :class "logo"
+                      :src "/images/banner.jpg")
+                     (:span :class "title" "Hockey Oracle")))
         (:nav
           (:ul :class "nav-items"
             (:li
               (:a :href "/" (:i :class "fa fa-bars")))
             (:li
               (:a :href "/leagues" "Leagues"))
-            (if (not (empty? ,league))
+            (if (not (empty? ,league-name))
                 (htm
                  (:li
-                  (:a :href (sf "/~A/schedule", league) "Schedule"))
+                  (:a :href (sf "/~A/schedule", league-name) "Schedule"))
                  (:li
-                  (:a :href (sf "/~A/players" ,league) "Players"))))
+                  (:a :href (sf "/~A/players" ,league-name) "Players"))))
             (:li
-              (:a :href (if (empty? ,league) "/about" (sf "/~A/about" ,league)) "About"))
+             (:a :href (if (empty? ,league-name)
+                           "/about"
+                           (sf "/~A/about" ,league-name)) "About"))
             ))
         (:main :id ,page-id
           ,@body)))))
@@ -135,7 +138,7 @@
 (defun www-not-found-page (league-name)
   (standard-page
       (:title "Not Found"
-       :league league-name
+       :league-name league-name
        :page-id "not-found-page")
     (:h2 "Not Found")
     (:p "The page or resource you requested could not be found.")
@@ -147,7 +150,7 @@
 (defun www-server-error-page (league-name)
   (standard-page
       (:title "Server Error"
-       :league league-name
+       :league-name league-name
        :page-id "server-error-page")
     (:h2 "Server Error")
     (:p "Sorry, it looks like something unexpected happened on the server.")
@@ -181,7 +184,7 @@
 (defun www-about-page (league-name)
   (standard-page
       (:title "About"
-       :league league-name
+       :league-name league-name
        :page-id "about-page")
     (:p
      "The Hockey Oracle is a simple app that generates teams by randomly "
@@ -290,7 +293,7 @@
          (games (get-games seasons)))
     (standard-page
         (:title "Schedule"
-         :league league-name
+         :league-name league-name
          :page-id "schedule-page")
       (if (null games)
           (htm (:div "No games have been created for this league."))
@@ -318,7 +321,7 @@
 (defun www-player-list-page (league-name)
   (standard-page
     (:title "Players"
-     :league league-name
+     :league-name league-name
      :page-id "player-list-page")
     (:div :id "edit-dialog" :class "dialog"
       (:header "Editing Player")
