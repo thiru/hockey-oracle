@@ -201,7 +201,7 @@ nav
   overflow: hidden; /* Prevent elements from collapsing their height when they only contain
                        floated elements: */
   max-width: 1200px; /* VAR MAX-PAGE-WIDTH */
-  margin: 0 auto;
+  margin: 0 auto 1em auto;
   padding: 0.5em 25px 0.5em 25px; /* VAR CONTENT-WIDTH */
 }
 nav .nav-items
@@ -266,11 +266,6 @@ main
 /*******************************
       League list page
 *******************************/
-
-#league-list-page
-{
-  margin-top: 2em;
-}
 
 #league-list-page .button
 {
