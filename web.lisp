@@ -297,7 +297,7 @@
 
 ;;; League Detail Page
 (defun www-league-detail-page (league)
-  (redirect (sf "/~A/games" (league-name league))))
+  (redirect (sf "/~A/games" (string-downcase (league-name league)))))
 ;;; League Detail Page ------------------------------------------------------ END
 
 ;;; Game List Page
@@ -339,7 +339,8 @@
                             (:tr
                              (:td
                               (:a :href (sf "/~A/game/~A"
-                                            (league-name league)
+                                            (string-downcase (league-name
+                                                              league))
                                             (game-date-time game))
                                   (esc (to-nice-date-time
                                         (game-date-time game)))))
