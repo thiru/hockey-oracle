@@ -132,12 +132,12 @@
                       (if ,league
                           (htm
                            (:li
-                            (:a :class (if (based-on-path? path "schedule")
+                            (:a :class (if (based-on-path? path "games")
                                            "active"
                                            nil)
-                                :href (sf "/~A/schedule"
+                                :href (sf "/~A/games"
                                           (string-downcase(league-name ,league)))
-                                "Schedule"))
+                                "Games"))
                            (:li
                             (:a :class (if (based-on-path? path "players")
                                            "active"
@@ -285,8 +285,8 @@
            (www-not-found-page nil))
           ((empty? remaining-path)
            (www-league-detail-page league))
-          ((string-equal "schedule" remaining-path)
-           (www-schedule-page league))
+          ((string-equal "games" remaining-path)
+           (www-game-list-page league))
           ((string-equal "players" remaining-path)
            (www-player-list-page league))
           ((string-equal "about" remaining-path)
@@ -297,10 +297,10 @@
 
 ;;; League Detail Page
 (defun www-league-detail-page (league)
-  (redirect (sf "/~A/schedule" (league-name league))))
+  (redirect (sf "/~A/games" (league-name league))))
 ;;; League Detail Page ------------------------------------------------------ END
 
-;;; Schedule (Game List) Page
+;;; Game List Page
 (defun to-nice-date-time (date-time-str)
   "Formats a date/time to a user-friendly form. 'date-time-str' is expected to
    be a string of the form 'year4-month2-day2-hour2-min2'."
@@ -315,15 +315,15 @@
                        :format '(:long-weekday " " :short-month " " :day " "
                                  :hour12 ":" (:min 2) :ampm))))
 
-(defun www-schedule-page (league)
+(defun www-game-list-page (league)
   (if (null league)
       (www-not-found-page league)
       (let* ((seasons (get-seasons league))
              (games (get-games seasons)))
         (standard-page
-         (:title "Schedule"
+         (:title "Games"
           :league league
-          :page-id "schedule-page")
+          :page-id "game-list-page")
          (if (null games)
              (htm (:div "No games have been created for this league."))
              (dolist (season seasons)
@@ -344,7 +344,7 @@
                                   (esc (to-nice-date-time
                                         (game-date-time game)))))
                              (:td ""))))))))))))) ; TODO: game-state
-;;; Schedule (Game List) Page ----------------------------------------------- END
+;;; Game List Page ---------------------------------------------------------- END
 
 ;;; Player List Page
 (defun www-player-list-page (league)
