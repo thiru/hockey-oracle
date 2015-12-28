@@ -4,6 +4,12 @@
 (defvar app-updated (uiop:read-file-form "date-updated.lisp-expr"))
 
 ;;; Utils
+(defun empty? (val)
+  "Determine whether 'val' is essentially empty. I.e. is nil, an empty sequence
+  or empty string."
+  (or (null val)
+      (= 0 (length val))))
+
 (defun get-secure-key (key)
   "Gets a secure key by calling the 'pass' program."
   (uiop:run-program (sf "pass ~A" key) :output '(:string :stripped t)))
@@ -31,6 +37,15 @@
         (push (create-league-from-db league-key) leagues))
       (sort leagues #'string< :key #'league-name))))
 
+(defun get-league (&key id name)
+  "Get a league by id or name."
+  (if (and (null id) (empty? name))
+      nil
+      (let* ((leagues (get-all-leagues)))
+        (if (not (empty? name))
+            (find name leagues :test #'string-equal :key #'league-name)
+            (find id leagues :test #'= :key #'league-id)))))
+
 (defun create-league-from-db (league-key)
   "Create a league struct from a database record."
   (let ((id (parse-integer league-key :start 7)))
@@ -47,18 +62,15 @@
   (start-date "")
   (end-date ""))
 
-(defun get-seasons (league-name)
+(defun get-seasons (league)
   "Gets all seasons for the specified league."
-  (let* ((leagues (get-all-leagues))
-         (league (find league-name leagues :test #'string-equal
-                                           :key #'league-name)))
-    (if league
+  (if league
       (redis:with-persistent-connection ()
         (let* ((season-ids (red-smembers (sf "leagues:~A:seasons" (league-id league))))
                (seasons '()))
           (dolist (season-id season-ids)
             (push (create-season-from-db (sf "season:~A" season-id)) seasons))
-          (sort seasons #'string< :key #'season-start-date))))))
+          (sort seasons #'string< :key #'season-start-date)))))
 
 (defun create-season-from-db (season-key)
   "Create a season struct from a database record."
@@ -127,20 +139,18 @@
         (push (create-player-from-db player-key) players))
       (sort players #'string< :key #'player-first-name))))
 
-(defun get-players (&key league-name)
+(defun get-players (league)
   "Gets a list of all players sorted by first name."
   ;; TODO: Use (red-scan) instead of (red-keys) to get player keys
   ;; TODO: Use pipelines to send multiple commands at once
-  (let* ((leagues (get-all-leagues))
-         (league (find league-name leagues :test #'string-equal
-                                           :key #'league-name)))
-    (redis:with-persistent-connection ()
-      (let* ((player-ids (red-smembers (sf "leagues:~A:players"
-                                           (league-id league))))
-             (players '()))
-        (dolist (player-id player-ids)
-          (push (create-player-from-db (sf "player:~A" player-id)) players))
-        (sort players #'string< :key #'player-first-name)))))
+  (if league
+      (redis:with-persistent-connection ()
+        (let* ((player-ids (red-smembers (sf "leagues:~A:players"
+                                             (league-id league))))
+               (players '()))
+          (dolist (player-id player-ids)
+            (push (create-player-from-db (sf "player:~A" player-id)) players))
+          (sort players #'string< :key #'player-first-name)))))
 
 (defun create-player-from-db (player-key)
   "Create a player struct from a database record."

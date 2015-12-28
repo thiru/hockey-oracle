@@ -6,12 +6,14 @@
   (:export
     :app-version
     :app-updated
+    :empty?
     :league
     :league-id
     :league-name
     :league-created
     :league-active?
     :get-all-leagues
+    :get-league
     :season
     :season-id
     :season-name
