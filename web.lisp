@@ -54,7 +54,7 @@
                         :port (parse-integer
                                (get-secure-key "ho/email/ssl-port"))
                         :authentication auth)))
-;;; General ---------------------------------------------------------------- END
+;;; General ----------------------------------------------------------------- END
 
 ;;; Utils
 (defun based-on-path? (path base-path)
@@ -65,7 +65,7 @@
     (or (string-equal (first path-segs) base-path)
         (string-equal (second path-segs) base-path)))
   )
-;;; Utils ------------------------------------------------------------------ END
+;;; Utils ------------------------------------------------------------------- END
 
 ;;; Template Page
 (defmacro standard-page ((&key title page-id league) &body body)
@@ -143,14 +143,16 @@
                                            "active"
                                            nil)
                                 :href (sf "/~A/players"
-                                          (string-downcase (league-name ,league)))
+                                          (string-downcase (league-name
+                                                            ,league)))
                                 "Players"))
                            (:li
                             (:a :class (if (based-on-path? path "about")
                                            "active"
                                            nil)
                                 :href (sf "/~A/about"
-                                          (string-downcase (league-name ,league)))
+                                          (string-downcase (league-name
+                                                            ,league)))
                                 "About"))
                            ))
                       (if (null ,league)
@@ -161,7 +163,7 @@
                                      :href "/about" "About"))))))))
              (:main :id ,page-id
                     ,@body)))))
-;;; Template Page ---------------------------------------------------------- END
+;;; Template Page ----------------------------------------------------------- END
 
 ;;; Error Pages
 (defun www-not-found-page (league)
@@ -199,12 +201,12 @@
   (standard-page
     (:title "Test Server Error")
     (:h2 "Test Server Error")))
-;;; Error Pages ------------------------------------------------------------ END
+;;; Error Pages ------------------------------------------------------------- END
 
 ;;; Home Page
 (define-easy-handler (www-home :uri "/") ()
   (redirect "/leagues"))
-;;; Home Page -------------------------------------------------------------- END
+;;; Home Page --------------------------------------------------------------- END
 
 ;;; About Page
 (define-easy-handler (www-about :uri "/about") ()
@@ -236,7 +238,7 @@
             (:tr
              (:td "Copyright")
              (:td "2014-2015 Thirushanth Thirunavukarasu")))))
-;;; About Page ------------------------------------------------------------- END
+;;; About Page -------------------------------------------------------------- END
 
 ;;; League List Page
 (define-easy-handler (www-leauges :uri "/leagues") ()
@@ -251,7 +253,7 @@
               (:a :class "button wide-button"
                   :href (string-downcase (league-name league))
                   (esc (league-name league)))))))))
-;;; League List Page ------------------------------------------------------- END
+;;; League List Page -------------------------------------------------------- END
 
 ;;; League-Dependent Routing
 (defun league-route? (req)
@@ -394,23 +396,33 @@
                 (dolist (p (get-players league))
                   (htm
                    (:tr
-                    :class (if (player-active? p) "player-item selected" "player-item")
+                    :class (if (player-active? p)
+                               "player-item selected"
+                               "player-item")
                     :data-player-id (player-id p)
                     (:td
                      :class "player-name-col"
                      :onclick "togglePlayerActive(this)"
                      (:i
-                      :class (if (player-active? p) "player-check fa fa-check-circle-o" "player-check fa fa-circle-o")
+                      :class (if (player-active? p)
+                                 "player-check fa fa-check-circle-o"
+                                 "player-check fa fa-circle-o")
                       :title "When checked the player is considered active/able to play")
                      (:span :class "player-name"
-                            (esc (fmt "~a ~a" (player-first-name p) (player-last-name p)))))
+                            (esc (fmt "~a ~a"
+                                      (player-first-name p)
+                                      (player-last-name p)))))
                     (:td
                      (:select :class "player-position"
                               (dolist (pos players-positions)
                                 (htm
                                  (:option
                                   :value pos
-                                  :selected (if (string-equal pos (player-position p)) "" nil)
+                                  :selected (if (string-equal
+                                                 pos
+                                                 (player-position p))
+                                                ""
+                                                nil)
                                   (esc pos))))))
                     (:td :class "action-buttons"
                          (:button
@@ -425,7 +437,8 @@
                                (:th :class "team-name"
                                     "Cripplers")
                                (:th
-                                (:img :class "team-logo" :src "/images/team-logos/cripplers.png"))))
+                                (:img :class "team-logo"
+                                      :src "/images/team-logos/cripplers.png"))))
                          (:tbody :class "team-players"))
                  (:table :id "team2" :class "team data-table"
                          (:thead
@@ -433,7 +446,8 @@
                                (:th :class "team-name"
                                     "Panthers")
                                (:th
-                                (:img :class "team-logo" :src "/images/team-logos/panthers.png"))))
+                                (:img :class "team-logo"
+                                      :src "/images/team-logos/panthers.png"))))
                          (:tbody :class "team-players")))
        (:button :id "make-teams"
                 :class "button wide-button"
@@ -455,4 +469,4 @@
                 :title "Select to choose active players"
                 (:i :class "fa fa-check-circle-o")
                 (:span :class "button-text" "Pick Players")))))
-;;; Player List Page ------------------------------------------------------- END
+;;; Player List Page -------------------------------------------------------- END
