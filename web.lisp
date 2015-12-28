@@ -167,6 +167,7 @@
 
 ;;; Error Pages
 (defun www-not-found-page (league)
+  (setf (return-code*) +http-not-found+)
   (standard-page
       (:title "Not Found"
        :league league
