@@ -66,7 +66,8 @@
   "Gets all seasons for the specified league."
   (if league
       (redis:with-persistent-connection ()
-        (let* ((season-ids (red-smembers (sf "leagues:~A:seasons" (league-id league))))
+        (let* ((season-ids (red-smembers (sf "leagues:seasons:~A"
+                                             (league-id league))))
                (seasons '()))
           (dolist (season-id season-ids)
             (push (create-season-from-db (sf "season:~A" season-id)) seasons))
@@ -95,7 +96,7 @@
                (game-ids '())
                (games '()))
           (dolist (season seasons)
-            (push (sf "seasons:~A:games" (season-id season)) game-keys))
+            (push (sf "seasons:games:~A" (season-id season)) game-keys))
           (dolist (game-key game-keys)
             (setf game-ids (append game-ids (red-smembers game-key))))
           (dolist (game-id game-ids)
@@ -145,7 +146,7 @@
   ;; TODO: Use pipelines to send multiple commands at once
   (if league
       (redis:with-persistent-connection ()
-        (let* ((player-ids (red-smembers (sf "leagues:~A:players"
+        (let* ((player-ids (red-smembers (sf "leagues:players:~A"
                                              (league-id league))))
                (players '()))
           (dolist (player-id player-ids)
