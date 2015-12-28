@@ -39,7 +39,8 @@
     :get-secure-key))
 
 (defpackage :hockey-oracle.web
-  (:use :hockey-oracle :cl :asdf :glu :cl-who :hunchentoot :local-time)
+  (:use :hockey-oracle :cl :asdf :glu :cl-who :hunchentoot :local-time
+   :split-sequence)
   (:documentation "Hockey Oracle web interface")
   (:export
     :web-app

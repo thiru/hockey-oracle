@@ -57,6 +57,14 @@
 ;;; General ---------------------------------------------------------------- END
 
 ;;; Utils
+(defun based-on-path? (path base-path)
+  "Determine whether 'path' is based on 'base-path'."
+  (let ((path-segs (split-sequence #\/
+                                   path
+                                   :remove-empty-subseqs t)))
+    (or (string-equal (first path-segs) base-path)
+        (string-equal (second path-segs) base-path)))
+  )
 ;;; Utils ------------------------------------------------------------------ END
 
 ;;; Template Page
@@ -110,29 +118,47 @@
                            :class "logo"
                            :src "/images/banner.jpg")
                           (:span :class "title" "Hockey Oracle")))
-             (:nav
-              (:ul :class "nav-items"
-                   (:li
-                    (:a :href "/" (:i :class "fa fa-bars")))
-                   (:li
-                    (:a :href "/leagues" "Leagues"))
-                   (if ,league
-                       (htm
-                        (:li
-                         (:a :href (sf "/~A/schedule"
-                                       (string-downcase(league-name ,league)))
-                             "Schedule"))
-                        (:li
-                         (:a :href (sf "/~A/players"
-                                       (string-downcase (league-name ,league)))
-                             "Players"))
-                        (:li
-                         (:a :href (sf "/~A/about"
-                                       (string-downcase (league-name ,league)))
-                             "About"))
-                        ))
-                   (if (null ,league)
-                       (htm (:li (:a :href "/about" "About"))))))
+             (let ((path (script-name* *request*)))
+               (htm
+                (:nav
+                 (:ul :class "nav-items"
+                      (:li
+                       (:a :href "/" (:i :class "fa fa-bars")))
+                      (:li
+                       (:a :class (if (based-on-path? path "leagues")
+                                      "active"
+                                      nil)
+                           :href "/leagues" "Leagues"))
+                      (if ,league
+                          (htm
+                           (:li
+                            (:a :class (if (based-on-path? path "schedule")
+                                           "active"
+                                           nil)
+                                :href (sf "/~A/schedule"
+                                          (string-downcase(league-name ,league)))
+                                "Schedule"))
+                           (:li
+                            (:a :class (if (based-on-path? path "players")
+                                           "active"
+                                           nil)
+                                :href (sf "/~A/players"
+                                          (string-downcase (league-name ,league)))
+                                "Players"))
+                           (:li
+                            (:a :class (if (based-on-path? path "about")
+                                           "active"
+                                           nil)
+                                :href (sf "/~A/about"
+                                          (string-downcase (league-name ,league)))
+                                "About"))
+                           ))
+                      (if (null ,league)
+                          (htm (:li (:a :class (if (based-on-path? path
+                                                                   "about")
+                                                   "active"
+                                                   nil)
+                                     :href "/about" "About"))))))))
              (:main :id ,page-id
                     ,@body)))))
 ;;; Template Page ---------------------------------------------------------- END

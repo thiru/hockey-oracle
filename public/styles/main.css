@@ -41,6 +41,11 @@ a:hover
   text-decoration: underline;
 }
 
+.active
+{
+  color: #0F83BC; /* VAR BLUE-HEADING */
+}
+
 .col
 {
   float: left;
@@ -108,7 +113,7 @@ a:hover
 .button
 {
   display: inline-block;
-  background: #F55813; /* CLICKABLE-COLOUR */
+  background: #F55813; /* ORANGE-HIGHLIGHT */
   border: none;
   border-radius: 0.2em;
   box-shadow: 1px 1px 2px #888;
