@@ -2,6 +2,8 @@
 
 ;;; General
 (defvar main-acceptor nil "The global web-server instance.")
+(defvar static-files-dir (asdf:system-relative-pathname
+                          :hockey-oracle "public/"))
 
 (defparameter league-agnostic-paths
   '("" "deps" "images" "scripts" "styles" "about" "leagues" "test-server-error"))
@@ -10,8 +12,7 @@
   "Creates an 'easy-acceptor' which will listen on the specified port."
   (make-instance 'easy-acceptor
                  :port port
-                 :document-root (asdf:system-relative-pathname
-                                 :hockey-oracle "public/")
+                 :document-root static-files-dir
                  :access-log-destination (if debug
                                              *standard-output*
                                              "~/tbnl-access.log")
@@ -66,7 +67,52 @@
     (or (string-equal (first path-segs) base-path)
         (string-equal (second path-segs) base-path)))
   )
+
+(defun parse-league (req)
+  "Parses the request path to obtain the league defined as the first segment.
+   The league is returned."
+  (let* ((path (script-name* req))
+         (path-segs (split-sequence #\/ path
+                                    :remove-empty-subseqs t))
+         (league-name (first path-segs)))
+    (if (not (empty? league-name))
+        (get-league :name league-name))))
 ;;; Utils ------------------------------------------------------------------- END
+
+;;; Routes
+(setf *dispatch-table*
+      (list (create-regex-dispatcher "^/$" 'www-home-page)
+            (create-folder-dispatcher-and-handler "/deps/" (merge-pathnames
+                                                              "deps/"
+                                                              static-files-dir))
+            (create-folder-dispatcher-and-handler "/images/" (merge-pathnames
+                                                              "images/"
+                                                              static-files-dir))
+            (create-folder-dispatcher-and-handler "/scripts/" (merge-pathnames
+                                                              "scripts/"
+                                                              static-files-dir))
+            (create-folder-dispatcher-and-handler "/styles/" (merge-pathnames
+                                                              "styles/"
+                                                              static-files-dir))
+            (create-regex-dispatcher "^/about$"
+                                     'www-about-page)
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/about$"
+                                     'www-about-page)
+            (create-regex-dispatcher "^/leagues$"
+                                     'www-league-list-page)
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/games$"
+                                     'www-game-list-page)
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/game/[0-9-]+$"
+                                     'www-game-detail-page)
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/players$"
+                                     'www-player-list-page)
+            (create-regex-dispatcher "^/test-server-error$"
+                                     'www-test-server-error)
+            (create-regex-dispatcher "^/test-not-found$"
+                                     'www-not-found-page)
+            (create-regex-dispatcher "^/[a-zA-Z-]+$"
+                                     'www-league-detail-page)))
+;;; Routes ------------------------------------------------------------------ END
 
 ;;; Template Page
 (defmacro standard-page ((&key title page-id league) &body body)
@@ -167,18 +213,17 @@
 ;;; Template Page ----------------------------------------------------------- END
 
 ;;; Error Pages
-(defun www-not-found-page (league)
+(defun www-not-found-page ()
   (setf (return-code*) +http-not-found+)
   (standard-page
       (:title "Not Found"
-       :league league
        :page-id "not-found-page")
     (:h2 "Not Found")
     (:p "The page or resource you requested could not be found.")
     (:a :href "/" "Go back to the home page")))
 
 (defmethod acceptor-status-message (acceptor (http-status-code (eql 404)) &key)
-  (www-not-found-page nil))
+  (www-not-found-page))
 
 (defun www-server-error-page (league)
   (standard-page
@@ -194,7 +239,7 @@
   (bt:make-thread (lambda () (send-error-email "A <b>server</b> error occurred.")))
   (www-server-error-page nil))
 
-(define-easy-handler (www-test-server-error :uri "/test-server-error") ()
+(defun www-test-server-error ()
   (log-message* :error "Test error page \(error log level).")
   (log-message* :warning "Test error page \(warning log level).")
   (log-message* :info "Test error page \(info log level).")
@@ -206,18 +251,14 @@
 ;;; Error Pages ------------------------------------------------------------- END
 
 ;;; Home Page
-(define-easy-handler (www-home :uri "/") ()
+(defun www-home-page ()
   (redirect "/leagues"))
 ;;; Home Page --------------------------------------------------------------- END
 
 ;;; About Page
-(define-easy-handler (www-about :uri "/about") ()
-  (www-about-page nil))
-
-(defun www-about-page (league)
+(defun www-about-page ()
   (standard-page
       (:title "About"
-       :league league
        :page-id "about-page")
     (:p
      "The Hockey Oracle is a simple app that generates teams by randomly "
@@ -243,7 +284,7 @@
 ;;; About Page -------------------------------------------------------------- END
 
 ;;; League List Page
-(define-easy-handler (www-leauges :uri "/leagues") ()
+(defun www-league-list-page ()
   (standard-page
     (:title "Leagues"
      :page-id "league-list-page")
@@ -257,49 +298,10 @@
                   (esc (league-name league)))))))))
 ;;; League List Page -------------------------------------------------------- END
 
-;;; League-Dependent Routing
-(defun league-route? (req)
-  "Determine whether the given request is dependent on a specific league."
-  (let* ((path (script-name* req))
-         (clean-path (string-trim " /" (if (null path) "" path)))
-         (slash-pos (position #\/ clean-path)))
-    (setf clean-path (if slash-pos (subseq clean-path 0 slash-pos) clean-path))
-    (null (find clean-path league-agnostic-paths :test #'string-equal))))
-
-(defun parse-league-dependent-page (req)
-  "Parses the request path which depends on a specific league. E.g. the request
-   path should be of the form '/<league-name>/remaining/path'. This returns two
-   values: league (if found, otherwise nil) and the path excluding the league's
-   name."
-  (let* ((path (script-name* req))
-         (path (string-trim " /" path))
-         (slash-pos (position #\/ path))
-         (league-name (if slash-pos (subseq path 0 slash-pos) path))
-         (league (if (not (empty? league-name)) (get-league :name league-name)))
-         (remaining-path (if slash-pos (subseq path slash-pos) ""))
-         (remaining-path (string-trim " /" remaining-path)))
-    (values league remaining-path)))
-
-(define-easy-handler (www-league-dependent :uri #'league-route?) ()
-  (multiple-value-bind (league remaining-path)
-      (parse-league-dependent-page *request*)
-    (cond ((null league)
-           (www-not-found-page nil))
-          ((empty? remaining-path)
-           (www-league-detail-page league))
-          ((string-equal "games" remaining-path)
-           (www-game-list-page league))
-          ((string-equal "players" remaining-path)
-           (www-player-list-page league))
-          ((string-equal "about" remaining-path)
-           (www-about-page league))
-          (t
-           (www-not-found-page league)))))
-;;; League-Dependent Routing ------------------------------------------------ END
-
 ;;; League Detail Page
-(defun www-league-detail-page (league)
-  (redirect (sf "/~A/games" (string-downcase (league-name league)))))
+(defun www-league-detail-page ()
+  (let ((league (parse-league  *request*)))
+    (redirect (sf "/~A/games" (string-downcase (league-name league))))))
 ;;; League Detail Page ------------------------------------------------------ END
 
 ;;; Game List Page
@@ -317,159 +319,173 @@
                        :format '(:long-weekday " " :short-month " " :day " "
                                  :hour12 ":" (:min 2) :ampm))))
 
-(defun www-game-list-page (league)
-  (if (null league)
-      (www-not-found-page league)
-      (let* ((seasons (get-seasons league))
-             (games (get-games seasons)))
-        (standard-page
-         (:title "Games"
-          :league league
-          :page-id "game-list-page")
-         (if (null games)
-             (htm (:div "No games have been created for this league."))
-             (dolist (season seasons)
-               (htm
-                (:table :class "data-table"
-                        (:thead
-                         (:tr
-                          (:th (esc (season-name season)))
-                          (:th "")))
-                        (:tbody
-                         (dolist (game games)
-                           (htm
+(defun www-game-list-page ()
+  (let ((league (parse-league  *request*)))
+    (if (null league)
+        (www-not-found-page)
+        (let* ((seasons (get-seasons league))
+               (games (get-games seasons)))
+          (standard-page
+              (:title "Games"
+               :league league
+               :page-id "game-list-page")
+            (if (null games)
+                (htm (:div "No games have been created for this league."))
+                (dolist (season seasons)
+                  (htm
+                   (:table :class "data-table"
+                           (:thead
                             (:tr
-                             (:td
-                              (:a :href (sf "/~A/game/~A"
-                                            (string-downcase (league-name
-                                                              league))
-                                            (game-date-time game))
-                                  (esc (to-nice-date-time
-                                        (game-date-time game)))))
-                             (:td ""))))))))))))) ; TODO: game-state
+                             (:th (esc (season-name season)))
+                             (:th "")))
+                           (:tbody
+                            (dolist (game games)
+                              (htm
+                               (:tr
+                                (:td
+                                 (:a :href (sf "/~A/game/~A"
+                                               (string-downcase (league-name
+                                                                 league))
+                                               (game-date-time game))
+                                     (esc (to-nice-date-time
+                                           (game-date-time game)))))
+                                (:td "")))))))))))))) ; TODO: game-state
 ;;; Game List Page ---------------------------------------------------------- END
 
+;;; Game Detail Page
+(defun www-game-detail-page ()
+  (let ((league (parse-league  *request*)))
+    (if (null league)
+        (www-not-found-page)
+        (standard-page
+            (:title "Game on TODO"
+             :league league
+             :page-id "game-detail-page")
+          (:h2 "TODO: Game detail page")))))
+;;; Game Detail Page -------------------------------------------------------- END
+
 ;;; Player List Page
-(defun www-player-list-page (league)
-  (if (null league)
-      (www-not-found-page league)
-      (standard-page
-       (:title "Players"
-        :league league
-        :page-id "player-list-page")
-       (:div :id "edit-dialog" :class "dialog"
-             (:header "Editing Player")
-             (:section :class "content"
-                       (:table
-                        (:tr :class "input-row"
-                             (:td :class "label-col"
-                                  (:label :for "player-name-edit" "Name: "))
-                             (:td :class "input-col"
-                                  (:input :id "player-name-edit" :type "text")))
-                        (:tr
-                         (:td
-                          (:label :for "player-pos-edit" "Position: "))
-                         (:td
-                          (:select :id "player-pos-edit"
-                                   (dolist (pos players-positions)
-                                     (htm
-                                      (:option :value pos (esc pos)))))))
-                        (:tr
-                         (:td
-                          (:label :for "player-active-edit" "Is Active: "))
-                         (:td
-                          (:input :id "player-active-edit" :type "checkbox"))))
-                       (:div :class "actions"
-                             (:button
-                              :class "button save-btn"
-                              :data-player-id "0"
-                              :onclick "savePlayer()"
-                              "Save")
-                             (:button
-                              :class "button cancel-btn"
-                              :onclick "closeDialog()"
-                              "Cancel"))))
-       (:table :id "player-list" :class "data-table"
-               (:thead
-                (:tr
-                 (:th :class "name-col" "Player")
-                 (:th :class "position-col" :title "Position" "Pos")
-                 (:th :class "actions-col" "")))
-               (:tbody
-                (dolist (p (get-players league))
-                  (htm
-                   (:tr
-                    :class (if (player-active? p)
-                               "player-item selected"
-                               "player-item")
-                    :data-player-id (player-id p)
-                    (:td
-                     :class "player-name-col"
-                     :onclick "togglePlayerActive(this)"
-                     (:i
-                      :class (if (player-active? p)
-                                 "player-check fa fa-check-circle-o"
-                                 "player-check fa fa-circle-o")
-                      :title "When checked the player is considered active/able to play")
-                     (:span :class "player-name"
-                            (esc (fmt "~a ~a"
-                                      (player-first-name p)
-                                      (player-last-name p)))))
-                    (:td
-                     (:select :class "player-position"
-                              (dolist (pos players-positions)
-                                (htm
-                                 (:option
-                                  :value pos
-                                  :selected (if (string-equal
-                                                 pos
-                                                 (player-position p))
-                                                ""
-                                                nil)
-                                  (esc pos))))))
-                    (:td :class "action-buttons"
-                         (:button
-                          :class "button"
-                          :href "javascript:void(0)"
-                          :onclick "editPlayer(this)"
-                          (:i :class "fa fa-pencil-square-o"))))))))
-       (:section :id "random-teams"
-                 (:table :id "team1" :class "team data-table"
-                         (:thead
-                          (:tr :class "team-heading"
-                               (:th :class "team-name"
-                                    "Cripplers")
-                               (:th
-                                (:img :class "team-logo"
-                                      :src "/images/team-logos/cripplers.png"))))
-                         (:tbody :class "team-players"))
-                 (:table :id "team2" :class "team data-table"
-                         (:thead
-                          (:tr :class "team-heading"
-                               (:th :class "team-name"
-                                    "Panthers")
-                               (:th
-                                (:img :class "team-logo"
-                                      :src "/images/team-logos/panthers.png"))))
-                         (:tbody :class "team-players")))
-       (:button :id "make-teams"
-                :class "button wide-button"
-                :href "javascript:void(0)"
-                :onclick "makeTeams()"
-                :title "Select to generate random teams"
-                (:i :class "fa fa-random")
-                (:span :class "button-text" "Make Teams"))
-       (:button :id "add-player"
-                :class "button wide-button"
-                :href "javascript:void(0)"
-                :onclick "addPlayer()"
-                (:i :class "fa fa-user-plus")
-                (:span :class "button-text" "Add Player"))
-       (:button :id "pick-players"
-                :class "button wide-button"
-                :href "javascript:void(0)"
-                :onclick "pickPlayers()"
-                :title "Select to choose active players"
-                (:i :class "fa fa-check-circle-o")
-                (:span :class "button-text" "Pick Players")))))
+(defun www-player-list-page ()
+  (let ((league (parse-league  *request*)))
+        (if (null league)
+            (www-not-found-page)
+            (standard-page
+                (:title "Players"
+                 :league league
+                 :page-id "player-list-page")
+              (:div :id "edit-dialog" :class "dialog"
+                    (:header "Editing Player")
+                    (:section :class "content"
+                              (:table
+                               (:tr :class "input-row"
+                                    (:td :class "label-col"
+                                         (:label :for "player-name-edit" "Name: "))
+                                    (:td :class "input-col"
+                                         (:input :id "player-name-edit" :type "text")))
+                               (:tr
+                                (:td
+                                 (:label :for "player-pos-edit" "Position: "))
+                                (:td
+                                 (:select :id "player-pos-edit"
+                                          (dolist (pos players-positions)
+                                            (htm
+                                             (:option :value pos (esc pos)))))))
+                               (:tr
+                                (:td
+                                 (:label :for "player-active-edit" "Is Active: "))
+                                (:td
+                                 (:input :id "player-active-edit" :type "checkbox"))))
+                              (:div :class "actions"
+                                    (:button
+                                     :class "button save-btn"
+                                     :data-player-id "0"
+                                     :onclick "savePlayer()"
+                                     "Save")
+                                    (:button
+                                     :class "button cancel-btn"
+                                     :onclick "closeDialog()"
+                                     "Cancel"))))
+              (:table :id "player-list" :class "data-table"
+                      (:thead
+                       (:tr
+                        (:th :class "name-col" "Player")
+                        (:th :class "position-col" :title "Position" "Pos")
+                        (:th :class "actions-col" "")))
+                      (:tbody
+                       (dolist (p (get-players league))
+                         (htm
+                          (:tr
+                           :class (if (player-active? p)
+                                      "player-item selected"
+                                      "player-item")
+                           :data-player-id (player-id p)
+                           (:td
+                            :class "player-name-col"
+                            :onclick "togglePlayerActive(this)"
+                            (:i
+                             :class (if (player-active? p)
+                                        "player-check fa fa-check-circle-o"
+                                        "player-check fa fa-circle-o")
+                             :title "When checked the player is considered active/able to play")
+                            (:span :class "player-name"
+                                   (esc (fmt "~a ~a"
+                                             (player-first-name p)
+                                             (player-last-name p)))))
+                           (:td
+                            (:select :class "player-position"
+                                     (dolist (pos players-positions)
+                                       (htm
+                                        (:option
+                                         :value pos
+                                         :selected (if (string-equal
+                                                        pos
+                                                        (player-position p))
+                                                       ""
+                                                       nil)
+                                         (esc pos))))))
+                           (:td :class "action-buttons"
+                                (:button
+                                 :class "button"
+                                 :href "javascript:void(0)"
+                                 :onclick "editPlayer(this)"
+                                 (:i :class "fa fa-pencil-square-o"))))))))
+              (:section :id "random-teams"
+                        (:table :id "team1" :class "team data-table"
+                                (:thead
+                                 (:tr :class "team-heading"
+                                      (:th :class "team-name"
+                                           "Cripplers")
+                                      (:th
+                                       (:img :class "team-logo"
+                                             :src "/images/team-logos/cripplers.png"))))
+                                (:tbody :class "team-players"))
+                        (:table :id "team2" :class "team data-table"
+                                (:thead
+                                 (:tr :class "team-heading"
+                                      (:th :class "team-name"
+                                           "Panthers")
+                                      (:th
+                                       (:img :class "team-logo"
+                                             :src "/images/team-logos/panthers.png"))))
+                                (:tbody :class "team-players")))
+              (:button :id "make-teams"
+                       :class "button wide-button"
+                       :href "javascript:void(0)"
+                       :onclick "makeTeams()"
+                       :title "Select to generate random teams"
+                       (:i :class "fa fa-random")
+                       (:span :class "button-text" "Make Teams"))
+              (:button :id "add-player"
+                       :class "button wide-button"
+                       :href "javascript:void(0)"
+                       :onclick "addPlayer()"
+                       (:i :class "fa fa-user-plus")
+                       (:span :class "button-text" "Add Player"))
+              (:button :id "pick-players"
+                       :class "button wide-button"
+                       :href "javascript:void(0)"
+                       :onclick "pickPlayers()"
+                       :title "Select to choose active players"
+                       (:i :class "fa fa-check-circle-o")
+                       (:span :class "button-text" "Pick Players"))))))
 ;;; Player List Page -------------------------------------------------------- END
