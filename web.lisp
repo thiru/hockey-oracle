@@ -1,21 +1,23 @@
 (in-package :hockey-oracle.web)
 
 ;;; General
-(defvar web-app nil "Contains the web-server instance")
+(defvar main-acceptor nil "The global web-server instance.")
 
 (defparameter league-agnostic-paths
   '("" "deps" "images" "scripts" "styles" "about" "leagues" "test-server-error"))
 
-(defun create-server (port)
-  "Creates the web server on the specified port."
-  (let* ((root-dir (asdf:system-relative-pathname :hockey-oracle "public/"))
-         (web-app (make-instance
-                    'easy-acceptor
-                    :port port
-                    :document-root root-dir
-                    :access-log-destination "~/tbnl-access.log"
-                    :message-log-destination "~/tbnl-message.log")))
-    web-app))
+(defun create-acceptor (&key (port 9090) debug)
+  "Creates an 'easy-acceptor' which will listen on the specified port."
+  (make-instance 'easy-acceptor
+                 :port port
+                 :document-root (asdf:system-relative-pathname
+                                 :hockey-oracle "public/")
+                 :access-log-destination (if debug
+                                             *standard-output*
+                                             "~/tbnl-access.log")
+                 :message-log-destination (if debug
+                                              *standard-output*
+                                              "~/tbnl-message.log")))
 
 (defun start-server! (&key (port 9090) debug)
   "Starts the web server.
@@ -26,19 +28,18 @@
      out, and the following hunchentoot special variable settings:
      * *CATCH-ERRORS-P* => NIL
      * *SHOW-LISP-ERRORS-P* => T
-   Side-effects: sets the special variable web-app to the created acceptor."
-  (setf web-app (create-server port))
+   Side-effects: sets the special variable main-acceptor to the created
+   acceptor."
+  (setf main-acceptor (create-acceptor :port port :debug debug))
   (when debug
     (setf *catch-errors-p* nil)
-    (setf *show-lisp-errors-p* t)
-    (setf (acceptor-access-log-destination web-app) *standard-output*)
-    (setf (acceptor-message-log-destination web-app) *standard-output*))
-  (start web-app))
+    (setf *show-lisp-errors-p* t))
+  (start main-acceptor))
 
 (defun stop-server ()
-  "Stops the web server referenced by the special variable web-app."
-  (if web-app
-    (stop web-app :soft t)))
+  "Stops the web server referenced by the special variable main-acceptor."
+  (if main-acceptor
+    (stop main-acceptor :soft t)))
 
 (defun send-error-email (message)
   "Sends an email indicating a server error occurred."
