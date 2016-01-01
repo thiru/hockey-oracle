@@ -141,7 +141,7 @@
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/games$"
                                      (lambda ()
                                        (base-web-page 'www-game-list-page)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/game/[0-9-]+$"
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/games/[0-9-]+$"
                                      (lambda ()
                                        (base-web-page 'www-game-detail-page)))
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/players$"
@@ -377,7 +377,7 @@
                         (htm
                          (:tr
                           (:td
-                           (:a :href (sf "/~A/game/~A"
+                           (:a :href (sf "/~A/games/~A"
                                          (string-downcase (league-name
                                                            league))
                                          (game-date-time game))
