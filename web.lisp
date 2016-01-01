@@ -59,14 +59,46 @@
 ;;; General ----------------------------------------------------------------- END
 
 ;;; Utils
+(defmacro safe-parse-int (str &key (fallback 0))
+  "Lenient parsing of 'str'."
+  `(if (empty? ,str)
+       ,fallback
+       (or (parse-integer ,str :junk-allowed t) ,fallback)))
+
 (defun based-on-path? (path base-path)
   "Determine whether 'path' is based on 'base-path'."
   (let ((path-segs (split-sequence #\/
                                    path
                                    :remove-empty-subseqs t)))
     (or (string-equal (first path-segs) base-path)
-        (string-equal (second path-segs) base-path)))
-  )
+        (string-equal (second path-segs) base-path))))
+
+(defun to-nice-date-time (date-time-str)
+  "Formats a date/time to a user-friendly form. 'date-time-str' is expected to
+   be a string of the form 'year4-month2-day2-hour2-min2'. Any missing segments
+   are replaced with '1'."
+  (let* ((time-segs (split-sequence #\- date-time-str :remove-empty-subseqs t))
+         (timestamp (encode-timestamp 0 ; Nanoseconds
+                                      0 ; Seconds
+                                      ; Minute
+                                      (safe-parse-int (nth 4 time-segs)
+                                                      :fallback 1)
+                                      ; Hour
+                                      (safe-parse-int (nth 3 time-segs)
+                                                      :fallback 1)
+                                      ; Day
+                                      (safe-parse-int (nth 2 time-segs)
+                                                      :fallback 1)
+                                      ; Month
+                                      (safe-parse-int (nth 1 time-segs)
+                                                      :fallback 1)
+                                      ; Year
+                                      (safe-parse-int (nth 0 time-segs)
+                                                      :fallback 1))))
+    (format-timestring nil
+                       timestamp
+                       :format '(:long-weekday " " :short-month " " :day " "
+                                 :hour12 ":" (:min 2) :ampm))))
 
 (defun parse-league (req)
   "Parses the request path to obtain the league defined as the first segment.
@@ -305,20 +337,6 @@
 ;;; League Detail Page ------------------------------------------------------ END
 
 ;;; Game List Page
-(defun to-nice-date-time (date-time-str)
-  "Formats a date/time to a user-friendly form. 'date-time-str' is expected to
-   be a string of the form 'year4-month2-day2-hour2-min2'."
-  (let* ((year (parse-integer date-time-str :start 0 :end 4))
-         (month (parse-integer date-time-str :start 5 :end 7))
-         (day (parse-integer date-time-str :start 8 :end 10))
-         (hour (parse-integer date-time-str :start 11 :end 13))
-         (minute (parse-integer date-time-str :start 14 :end 16))
-         (timestamp (encode-timestamp 0 0 minute hour day month year)))
-    (format-timestring nil
-                       timestamp
-                       :format '(:long-weekday " " :short-month " " :day " "
-                                 :hour12 ":" (:min 2) :ampm))))
-
 (defun www-game-list-page ()
   (let ((league (parse-league  *request*)))
     (if (null league)
