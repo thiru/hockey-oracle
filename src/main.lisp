@@ -1,14 +1,11 @@
 (in-package :hockey-oracle)
 
-(defvar app-version (uiop:read-file-form "version.lisp-expr"))
-(defvar app-updated (uiop:read-file-form "date-updated.lisp-expr"))
-
 ;;; Utils
 (defun empty? (val)
-  "Determine whether 'val' is essentially empty. I.e. is nil, an empty sequence
-  or empty string."
+  "Determine whether 'val' is considered empty. I.e. is an empty sequence
+  or string, and is not an atom."
   (or (null val)
-      (= 0 (length val))))
+      (and (not (atom val)) (= 0 (length val)))))
 
 (defun get-secure-key (key)
   "Gets a secure key by calling the 'pass' program."

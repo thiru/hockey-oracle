@@ -2,11 +2,7 @@
 
 ;;; General
 (defvar main-acceptor nil "The global web-server instance.")
-(defvar static-files-dir (asdf:system-relative-pathname
-                          :hockey-oracle "public/"))
-
-(defparameter league-agnostic-paths
-  '("" "deps" "images" "scripts" "styles" "about" "leagues" "test-server-error"))
+(defvar static-files-dir (merge-pathnames "www/" base-dir))
 
 (defun create-acceptor (&key (port 9090) debug)
   "Creates an 'easy-acceptor' which will listen on the specified port."
@@ -75,17 +71,16 @@
 
 (defun to-nice-date-time (date-time-str)
   "Formats a date/time to a user-friendly form. 'date-time-str' is expected to
-   be a string of the form 'year4-month2-day2-hour2-min2'. Any missing segments
-   are replaced with '1'."
+   be a string of the form 'year4-month2-day2-hour2-min2'."
   (let* ((time-segs (split-sequence #\- date-time-str :remove-empty-subseqs t))
          (timestamp (encode-timestamp 0 ; Nanoseconds
                                       0 ; Seconds
                                       ; Minute
                                       (safe-parse-int (nth 4 time-segs)
-                                                      :fallback 1)
+                                                      :fallback 0)
                                       ; Hour
                                       (safe-parse-int (nth 3 time-segs)
-                                                      :fallback 1)
+                                                      :fallback 0)
                                       ; Day
                                       (safe-parse-int (nth 2 time-segs)
                                                       :fallback 1)
@@ -98,7 +93,7 @@
     (format-timestring nil
                        timestamp
                        :format '(:long-weekday " " :short-month " " :day " "
-                                 :hour12 ":" (:min 2) :ampm))))
+                                 :year " " :hour12 ":" (:min 2) :ampm))))
 
 (defun parse-league (req)
   "Parses the request path to obtain the league defined as the first segment.
@@ -132,28 +127,28 @@
             (create-regex-dispatcher "^/$" 'www-home-page)
             (create-regex-dispatcher "^/about$"
                                      (lambda ()
-                                       (base-web-page 'www-about-page
+                                       (base-league-page 'www-about-page
                                                       :require-league? nil)))
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/about$"
                                      (lambda ()
-                                       (base-web-page 'www-about-page)))
+                                       (base-league-page 'www-about-page)))
             (create-regex-dispatcher "^/leagues$" 'www-league-list-page)
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/games$"
                                      (lambda ()
-                                       (base-web-page 'www-game-list-page)))
+                                       (base-league-page 'www-game-list-page)))
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/games/[0-9-]+$"
                                      (lambda ()
-                                       (base-web-page 'www-game-detail-page)))
+                                       (base-league-page 'www-game-detail-page)))
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/players$"
                                      (lambda ()
-                                       (base-web-page 'www-player-list-page)))
+                                       (base-league-page 'www-player-list-page)))
             (create-regex-dispatcher "^/test-server-error$"
                                      'www-test-server-error)
             (create-regex-dispatcher "^/test-not-found$"
                                      'www-not-found-page)
             (create-regex-dispatcher "^/[a-zA-Z-]+$"
                                      (lambda ()
-                                       (base-web-page 'www-league-detail-page)))
+                                       (base-league-page 'www-league-detail-page)))
             ))
 ;;; Routes ------------------------------------------------------------------ END
 
@@ -256,7 +251,7 @@
 ;;; Template Page ----------------------------------------------------------- END
 
 ;;; Base Page
-(defun base-web-page (actual-page &key (require-league? t))
+(defun base-league-page (actual-page &key (require-league? t))
   (let ((league (parse-league *request*)))
     (if (and require-league? (null league))
         (www-not-found-page)
@@ -322,10 +317,10 @@
     (:table :class "brief-table"
             (:tr
              (:td "Version")
-             (:td (fmt "~a" app-version)))
+             (:td (fmt "~a" version)))
             (:tr
              (:td "Last Updated")
-             (:td (fmt "~a" app-updated)))
+             (:td (fmt "~a" (to-nice-date-time updated))))
             (:tr
              (:td "License")
              (:td

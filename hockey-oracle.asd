@@ -1,6 +1,18 @@
 ;;;; Hockey Oracle build configuration
 
-(asdf:defsystem :hockey-oracle
+(in-package :cl-user)
+
+(defpackage :hockey-oracle.system
+  (:use :asdf :cl :uiop)
+  (:documentation "Hockey Oracle build configuration.")
+  (:export
+    :base-dir
+    :updated
+    :version))
+
+(in-package :hockey-oracle.system)
+
+(defsystem :hockey-oracle
   :version (:read-file-form "version.lisp-expr")
   :description "An aid for pick-up hockey enthusiasts"
   :author "Thirushanth Thirunavukarasu <thiru0130@gmail.com>"
@@ -8,10 +20,14 @@
   :serial t
   :depends-on (:bordeaux-threads :cl-redis :cl-smtp :cl-who :glu :hunchentoot
                :local-time :split-sequence)
-  :components ((:static-file "README.md")
-               (:static-file "LICENSE")
-               (:static-file "EULA")
-               (:file "package")
-               (:file "main")
-               (:file "web")))
+  :components ((:file "src/package")
+               (:file "src/main")
+               (:file "src/web")))
 
+(defvar base-dir *default-pathname-defaults*)
+(defvar version
+  (read-file-form (system-relative-pathname :hockey-oracle
+                                            "version.lisp-expr")))
+(defvar updated
+  (read-file-form (system-relative-pathname :hockey-oracle
+                                            "date-updated.lisp-expr")))

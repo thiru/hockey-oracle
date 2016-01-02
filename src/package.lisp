@@ -1,11 +1,11 @@
 ;;;; Hockey Oracle package definitions
 
+(in-package :cl-user)
+
 (defpackage :hockey-oracle
-  (:use :cl :glu :asdf :redis)
-  (:documentation "Hockey Oracle core domain/API")
+  (:use :cl :glu :redis)
+  (:documentation "Hockey Oracle core domain.")
   (:export
-    :app-version
-    :app-updated
     :empty?
     :league
     :league-id
@@ -39,9 +39,9 @@
     :get-secure-key))
 
 (defpackage :hockey-oracle.web
-  (:use :hockey-oracle :cl :asdf :glu :cl-who :hunchentoot :local-time
-   :split-sequence)
-  (:documentation "Hockey Oracle web interface")
+  (:use :cl :cl-who :glu :hockey-oracle :hockey-oracle.system :hunchentoot
+        :local-time :split-sequence)
+  (:documentation "Hockey Oracle web interface.")
   (:export
     :web-app
     :start-server!
