@@ -2,7 +2,7 @@
 
 (in-package :hockey-oracle.app)
 
-(defparameter base-dir *default-pathname-defaults*)
+(defparameter base-dir (system-relative-pathname :hockey-oracle ""))
 (defparameter version
   (read-file-form (system-relative-pathname :hockey-oracle
                                             "version.lisp-expr")))

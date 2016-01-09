@@ -1,4 +1,6 @@
-(in-package :hockey-oracle)
+;;;; Core domain.
+
+(in-package :hockey-oracle.core)
 
 ;;; Utils
 (defun empty? (val)

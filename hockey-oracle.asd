@@ -12,5 +12,5 @@
                :local-time :split-sequence)
   :components ((:file "src/package")
                (:file "src/app")
-               (:file "src/main")
+               (:file "src/core")
                (:file "src/web")))

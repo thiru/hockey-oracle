@@ -1,3 +1,5 @@
+;;;; Web-specific functionality.
+
 (in-package :hockey-oracle.web)
 
 ;;; General

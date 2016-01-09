@@ -10,7 +10,7 @@
      :updated
      :version))
 
-(defpackage :hockey-oracle
+(defpackage :hockey-oracle.core
   (:use :cl :glu :redis)
   (:documentation "Hockey Oracle core domain.")
   (:export
@@ -47,11 +47,10 @@
     :get-secure-key))
 
 (defpackage :hockey-oracle.web
-  (:use :cl :cl-who :glu :hockey-oracle :hockey-oracle.app :hunchentoot
+  (:use :cl :cl-who :glu :hockey-oracle.app :hockey-oracle.core :hunchentoot
         :local-time :split-sequence)
   (:documentation "Hockey Oracle web interface.")
   (:export
     :web-app
     :start-server!
     :stop-server))
-
