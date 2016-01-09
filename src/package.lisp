@@ -2,6 +2,14 @@
 
 (in-package :cl-user)
 
+(defpackage :hockey-oracle.app
+  (:use :asdf :cl :uiop)
+  (:documentation "Hockey Oracle build configuration.")
+  (:export
+     :base-dir
+     :updated
+     :version))
+
 (defpackage :hockey-oracle
   (:use :cl :glu :redis)
   (:documentation "Hockey Oracle core domain.")
@@ -39,7 +47,7 @@
     :get-secure-key))
 
 (defpackage :hockey-oracle.web
-  (:use :cl :cl-who :glu :hockey-oracle :hockey-oracle.system :hunchentoot
+  (:use :cl :cl-who :glu :hockey-oracle :hockey-oracle.app :hunchentoot
         :local-time :split-sequence)
   (:documentation "Hockey Oracle web interface.")
   (:export
