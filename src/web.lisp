@@ -38,7 +38,7 @@
 (defun stop-server ()
   "Stops the web server referenced by the special variable main-acceptor."
   (if main-acceptor
-    (stop main-acceptor :soft t)))
+      (stop main-acceptor :soft t)))
 
 (defun send-error-email (message)
   "Sends an email indicating a server error occurred."
@@ -77,19 +77,19 @@
   (let* ((time-segs (split-sequence #\- date-time-str :remove-empty-subseqs t))
          (timestamp (encode-timestamp 0 ; Nanoseconds
                                       0 ; Seconds
-                                      ; Minute
+                                      ;; Minute
                                       (safe-parse-int (nth 4 time-segs)
                                                       :fallback 0)
-                                      ; Hour
+                                      ;; Hour
                                       (safe-parse-int (nth 3 time-segs)
                                                       :fallback 0)
-                                      ; Day
+                                      ;; Day
                                       (safe-parse-int (nth 2 time-segs)
                                                       :fallback 1)
-                                      ; Month
+                                      ;; Month
                                       (safe-parse-int (nth 1 time-segs)
                                                       :fallback 1)
-                                      ; Year
+                                      ;; Year
                                       (safe-parse-int (nth 0 time-segs)
                                                       :fallback 1))))
     (format-timestring nil
@@ -130,7 +130,7 @@
             (create-regex-dispatcher "^/about$"
                                      (lambda ()
                                        (base-league-page 'www-about-page
-                                                      :require-league? nil)))
+                                                         :require-league? nil)))
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/about$"
                                      (lambda ()
                                        (base-league-page 'www-about-page)))
@@ -247,7 +247,7 @@
                                                                    "about")
                                                    "active"
                                                    nil)
-                                     :href "/about" "About"))))))))
+                                        :href "/about" "About"))))))))
              (:main :id ,page-id
                     ,@body)))))
 ;;; Template Page ----------------------------------------------------------- END
@@ -264,24 +264,24 @@
 (defun www-not-found-page ()
   (setf (return-code*) +http-not-found+)
   (standard-page
-      (:title "Not Found"
-       :page-id "not-found-page")
-    (:h2 "Not Found")
-    (:p "The page or resource you requested could not be found.")
-    (:a :href "/" "Go back to the home page")))
+   (:title "Not Found"
+    :page-id "not-found-page")
+   (:h2 "Not Found")
+   (:p "The page or resource you requested could not be found.")
+   (:a :href "/" "Go back to the home page")))
 
 (defmethod acceptor-status-message (acceptor (http-status-code (eql 404)) &key)
   (www-not-found-page))
 
 (defun www-server-error-page (league)
   (standard-page
-      (:title "Server Error"
-       :league league
-       :page-id "server-error-page")
-    (:h2 "Server Error")
-    (:p "Sorry, it looks like something unexpected happened on the server.")
-    (:p "An administrator has been notified of the error.")
-    (:a :href "/" "Go back to the home page")))
+   (:title "Server Error"
+    :league league
+    :page-id "server-error-page")
+   (:h2 "Server Error")
+   (:p "Sorry, it looks like something unexpected happened on the server.")
+   (:p "An administrator has been notified of the error.")
+   (:a :href "/" "Go back to the home page")))
 
 (defmethod acceptor-status-message (acceptor (http-status-code (eql 500)) &key)
   (bt:make-thread (lambda () (send-error-email "A <b>server</b> error occurred.")))
@@ -292,10 +292,10 @@
   (log-message* :warning "Test error page \(warning log level).")
   (log-message* :info "Test error page \(info log level).")
   (error "This is an intentional error for testing purposes.")
-  ; The following should never be displayed
+  ;; The following should never be displayed
   (standard-page
-    (:title "Test Server Error")
-    (:h2 "Test Server Error")))
+   (:title "Test Server Error")
+   (:h2 "Test Server Error")))
 ;;; Error Pages ------------------------------------------------------------- END
 
 ;;; Home Page
@@ -306,45 +306,45 @@
 ;;; About Page
 (defun www-about-page (league)
   (standard-page
-      (:title "About"
-       :league league
-       :page-id "about-page")
-    (:p
-     "The Hockey Oracle is a simple app that generates teams by randomly "
-     "selecting from a pool of active players.")
-    (:p
-     (:span "Please note this is an")
-     (:b "alpha")
-     (:span "version of the website with very limited functionality."))
-    (:table :class "brief-table"
-            (:tr
-             (:td "Version")
-             (:td (fmt "~a" version)))
-            (:tr
-             (:td "Last Updated")
-             (:td (fmt "~a" (to-nice-date-time updated))))
-            (:tr
-             (:td "License")
-             (:td
-              (:a :href "https://www.gnu.org/licenses/gpl-2.0.html" "GPL v2")))
-            (:tr
-             (:td "Copyright")
-             (:td "2014-2015 Thirushanth Thirunavukarasu")))))
+   (:title "About"
+    :league league
+    :page-id "about-page")
+   (:p
+    "The Hockey Oracle is a simple app that generates teams by randomly "
+    "selecting from a pool of active players.")
+   (:p
+    (:span "Please note this is an")
+    (:b "alpha")
+    (:span "version of the website with very limited functionality."))
+   (:table :class "brief-table"
+           (:tr
+            (:td "Version")
+            (:td (fmt "~a" version)))
+           (:tr
+            (:td "Last Updated")
+            (:td (fmt "~a" (to-nice-date-time updated))))
+           (:tr
+            (:td "License")
+            (:td
+             (:a :href "https://www.gnu.org/licenses/gpl-2.0.html" "GPL v2")))
+           (:tr
+            (:td "Copyright")
+            (:td "2014-2015 Thirushanth Thirunavukarasu")))))
 ;;; About Page -------------------------------------------------------------- END
 
 ;;; League List Page
 (defun www-league-list-page ()
   (standard-page
-    (:title "Leagues"
-     :page-id "league-list-page")
-    (:h2 "Choose your league:")
-    (:ul :class "simple-list"
-         (dolist (league (get-all-leagues))
-           (htm
-            (:li
-              (:a :class "button wide-button"
-                  :href (string-downcase (league-name league))
-                  (esc (league-name league)))))))))
+   (:title "Leagues"
+    :page-id "league-list-page")
+   (:h2 "Choose your league:")
+   (:ul :class "simple-list"
+        (dolist (league (get-all-leagues))
+          (htm
+           (:li
+            (:a :class "button wide-button"
+                :href (string-downcase (league-name league))
+                (esc (league-name league)))))))))
 ;;; League List Page -------------------------------------------------------- END
 
 ;;; League Detail Page
@@ -357,39 +357,39 @@
   (let* ((seasons (get-seasons league))
          (games (get-games seasons)))
     (standard-page
-        (:title "Games"
-         :league league
-         :page-id "game-list-page")
-      (if (null games)
-          (htm (:div "No games have been created for this league."))
-          (dolist (season seasons)
-            (htm
-             (:table :class "data-table"
-                     (:thead
-                      (:tr
-                       (:th (esc (season-name season)))
-                       (:th "")))
-                     (:tbody
-                      (dolist (game games)
-                        (htm
-                         (:tr
-                          (:td
-                           (:a :href (sf "/~A/games/~A"
-                                         (string-downcase (league-name
-                                                           league))
-                                         (game-date-time game))
-                               (esc (to-nice-date-time
-                                     (game-date-time game)))))
-                          (:td "")))))))))))) ; TODO: game-state
+     (:title "Games"
+      :league league
+      :page-id "game-list-page")
+     (if (null games)
+         (htm (:div "No games have been created for this league."))
+         (dolist (season seasons)
+           (htm
+            (:table :class "data-table"
+                    (:thead
+                     (:tr
+                      (:th (esc (season-name season)))
+                      (:th "")))
+                    (:tbody
+                     (dolist (game games)
+                       (htm
+                        (:tr
+                         (:td
+                          (:a :href (sf "/~A/games/~A"
+                                        (string-downcase (league-name
+                                                          league))
+                                        (game-date-time game))
+                              (esc (to-nice-date-time
+                                    (game-date-time game)))))
+                         (:td "")))))))))))) ; TODO: game-state
 ;;; Game List Page ---------------------------------------------------------- END
 
 ;;; Game Detail Page
 (defun www-game-detail-page (league)
   (standard-page
-      (:title "Game on TODO"
-       :league league
-       :page-id "game-detail-page")
-    (:h2 "TODO: Game detail page")))
+   (:title "Game on TODO"
+    :league league
+    :page-id "game-detail-page")
+   (:h2 "TODO: Game detail page")))
 ;;; Game Detail Page -------------------------------------------------------- END
 
 ;;; Player List Page
