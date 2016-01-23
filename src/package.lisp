@@ -11,7 +11,7 @@
    :version))
 
 (defpackage :hockey-oracle.core
-  (:use :cl :glu :redis)
+  (:use :cl :glu :redis :split-sequence)
   (:documentation "Hockey Oracle core domain.")
   (:export
    :league

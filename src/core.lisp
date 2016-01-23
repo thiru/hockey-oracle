@@ -7,12 +7,14 @@
   "Gets a secure key by calling the 'pass' program."
   (uiop:run-program (sf "pass ~A" key) :output '(:string :stripped t)))
 
-(defun parse-id (key)
-  "Parses an integer id from a redis key. The key is expected to end with a
-   colon and a series of numbers, specifying the key."
-  (let* ((last-idx (position #\: key :from-end t)))
-    (if (null last-idx) (error "'key' does not have a colon."))
-    (parse-integer key :start (1+ last-idx))))
+(defun parse-id (key &key idx)
+  "Parses an integer id from a redis key. If 'idx' is non-null it specifies the
+   index to retrieve the id from, after the key has been split between colons.
+   If 'idx' is null the last segment of the key is retrieved."
+  (let* ((key-segs (split-sequence #\: key)))
+    (if (null idx)
+        (parse-integer (last1 key-segs))
+        (parse-integer (nth idx key-segs)))))
 
 (defun to-bool (redis-val)
   "Converts the given redis value to bool."
@@ -55,60 +57,33 @@
                  :active? (to-bool (red-hget league-key "active?")))))
 ;;; Leagues ----------------------------------------------------------------- END
 
-;;; Seasons
-(defstruct season
-  (id 0)
-  (name "")
-  (start-date "")
-  (end-date ""))
-
-(defun get-seasons (league)
-  "Gets all seasons for the specified league."
-  (if league
-      (redis:with-persistent-connection ()
-        (let* ((season-ids (red-smembers (sf "leagues:seasons:~A"
-                                             (league-id league))))
-               (seasons '()))
-          (dolist (season-id season-ids)
-            (push (new-season-from-db (sf "season:~A" season-id)) seasons))
-          (sort seasons #'string< :key #'season-start-date)))))
-
-(defun new-season-from-db (season-key)
-  "Create a season struct from a database record."
-  (let ((id (parse-id season-key)))
-    (make-season :id id
-                 :name (red-hget season-key "name")
-                 :start-date (red-hget season-key "start-date")
-                 :end-date (red-hget season-key "end-date"))))
-;;; Seasons ----------------------------------------------------------------- END
-
 ;;; Games
 (defstruct game
-  (id 0)
-  (date-time "")
-  (progress ""))
+  (date-time nil)
+  (progress nil)
+  (home-score 0)
+  (away-score 0)
+  (confirms '()))
 
-(defun get-games (seasons)
-  "Get all games belonging to the given seasons."
-  (if seasons
+(defun get-games (league)
+  "Get all games belonging to the given league."
+  (if league
       (redis:with-persistent-connection ()
-        (let* ((game-keys '())
-               (game-ids '())
+        (let* ((game-keys (red-keys (sf "leagues:~A:games:*" (-> league id))))
                (games '()))
-          (dolist (season seasons)
-            (push (sf "seasons:games:~A" (season-id season)) game-keys))
           (dolist (game-key game-keys)
-            (setf game-ids (append game-ids (red-smembers game-key))))
-          (dolist (game-id game-ids)
-            (push (new-game-from-db (sf "game:~A" game-id)) games))
-          (sort games #'string< :key #'game-date-time)))))
+            (push (new-game-from-db game-key) games))
+          (sort games #'string< :key #'game-date-time)
+          ))))
 
 (defun new-game-from-db (game-key)
   "Create a game struct from a database record."
-  (let ((id (parse-id game-key)))
-    (make-game :id id
-               :date-time (red-hget game-key "date-time")
-               :progress (red-hget game-key "progress"))))
+  (let ((date-time (last1 (split-sequence #\: game-key))))
+    (make-game :date-time date-time
+               :progress (red-hget game-key "progress")
+               :home-score (parse-integer (red-hget game-key "home-score"))
+               :away-score (parse-integer (red-hget game-key "away-score"))
+               :confirms (red-hget game-key "confirms"))))
 ;;; Games ------------------------------------------------------------------- END
 
 ;;; Players

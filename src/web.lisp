@@ -356,33 +356,27 @@
 
 ;;; Game List Page
 (defun www-game-list-page (league)
-  (let* ((seasons (get-seasons league))
-         (games (get-games seasons)))
+  (let* ((games (get-games league)))
     (standard-page
-     (:title "Games"
-      :league league
-      :page-id "game-list-page")
-     (if (null games)
-         (htm (:div "No games have been created for this league."))
-         (dolist (season seasons)
-           (htm
-            (:table :class "data-table"
-                    (:thead
-                     (:tr
-                      (:th (esc (season-name season)))
-                      (:th "")))
-                    (:tbody
-                     (dolist (game games)
-                       (htm
-                        (:tr
-                         (:td
-                          (:a :href (sf "/~A/games/~A"
-                                        (string-downcase (league-name
-                                                          league))
-                                        (game-date-time game))
-                              (esc (to-nice-date-time
-                                    (game-date-time game)))))
-                         (:td "")))))))))))) ; TODO: game-state
+        (:title "Games"
+         :league league
+         :page-id "game-list-page")
+      (if (null games)
+          (htm (:div "No games have been created for this league."))
+          (htm
+           (:table :class "data-table"
+                   (:tbody
+                    (dolist (game games)
+                      (htm
+                       (:tr
+                        (:td
+                         (:a :href (sf "/~A/games/~A"
+                                       (string-downcase (league-name
+                                                         league))
+                                       (game-date-time game))
+                             (esc (to-nice-date-time
+                                   (game-date-time game)))))
+                        (:td ""))))))))))) ; TODO: game-state
 ;;; Game List Page ---------------------------------------------------------- END
 
 ;;; Game Detail Page
