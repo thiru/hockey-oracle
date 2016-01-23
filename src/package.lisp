@@ -14,7 +14,6 @@
   (:use :cl :glu :redis)
   (:documentation "Hockey Oracle core domain.")
   (:export
-   :empty?
    :league
    :league-id
    :league-name

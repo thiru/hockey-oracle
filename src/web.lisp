@@ -71,6 +71,10 @@
     (or (string-equal (first path-segs) base-path)
         (string-equal (second path-segs) base-path))))
 
+(defun path-segments (req)
+  "Gets a list of path segments, excluding query parameters."
+  (split-sequence #\/ (script-name* req) :remove-empty-subseqs t))
+
 (defun to-nice-date-time (date-time-str)
   "Formats a date/time to a user-friendly form. 'date-time-str' is expected to
    be a string of the form 'year4-month2-day2-hour2-min2'."
@@ -100,9 +104,7 @@
 (defun parse-league (req)
   "Parses the request path to obtain the league defined as the first segment.
    The league is returned."
-  (let* ((path (script-name* req))
-         (path-segs (split-sequence #\/ path
-                                    :remove-empty-subseqs t))
+  (let* ((path-segs (path-segments req))
          (league-name (first path-segs)))
     (if (not (empty? league-name))
         (get-league :name league-name))))
@@ -173,7 +175,7 @@
                     :content "IE=edge")
              (:meta :name "viewport"
                     :content "width=device-width, initial-scale=1")
-             (:title ,(format nil "~a - Hockey Oracle" title))
+             (:title ,(sf "~a - Hockey Oracle" title))
              (:link :rel "shortcut icon"
                     :href "/images/favicon.ico")
              (:link

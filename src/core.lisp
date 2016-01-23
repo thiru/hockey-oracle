@@ -3,15 +3,16 @@
 (in-package :hockey-oracle.core)
 
 ;;; Utils
-(defun empty? (val)
-  "Determine whether 'val' is considered empty. I.e. is an empty sequence
-  or string, and is not an atom."
-  (or (null val)
-      (and (not (atom val)) (= 0 (length val)))))
-
 (defun get-secure-key (key)
   "Gets a secure key by calling the 'pass' program."
   (uiop:run-program (sf "pass ~A" key) :output '(:string :stripped t)))
+
+(defun parse-id (key)
+  "Parses an integer id from a redis key. The key is expected to end with a
+   colon and a series of numbers, specifying the key."
+  (let* ((last-idx (position #\: key :from-end t)))
+    (if (null last-idx) (error "'key' does not have a colon."))
+    (parse-integer key :start (1+ last-idx))))
 
 (defun to-bool (redis-val)
   "Converts the given redis value to bool."
@@ -33,7 +34,7 @@
     (let* ((league-keys (red-keys "league:*"))
            (leagues nil))
       (dolist (league-key league-keys)
-        (push (create-league-from-db league-key) leagues))
+        (push (new-league-from-db league-key) leagues))
       (sort leagues #'string< :key #'league-name))))
 
 (defun get-league (&key id name)
@@ -45,9 +46,9 @@
             (find name leagues :test #'string-equal :key #'league-name)
             (find id leagues :test #'= :key #'league-id)))))
 
-(defun create-league-from-db (league-key)
+(defun new-league-from-db (league-key)
   "Create a league struct from a database record."
-  (let ((id (parse-integer league-key :start 7)))
+  (let ((id (parse-id league-key)))
     (make-league :id id
                  :name (red-hget league-key "name")
                  :created (red-hget league-key "created")
@@ -69,12 +70,12 @@
                                              (league-id league))))
                (seasons '()))
           (dolist (season-id season-ids)
-            (push (create-season-from-db (sf "season:~A" season-id)) seasons))
+            (push (new-season-from-db (sf "season:~A" season-id)) seasons))
           (sort seasons #'string< :key #'season-start-date)))))
 
-(defun create-season-from-db (season-key)
+(defun new-season-from-db (season-key)
   "Create a season struct from a database record."
-  (let ((id (parse-integer season-key :start 7)))
+  (let ((id (parse-id season-key)))
     (make-season :id id
                  :name (red-hget season-key "name")
                  :start-date (red-hget season-key "start-date")
@@ -99,12 +100,12 @@
           (dolist (game-key game-keys)
             (setf game-ids (append game-ids (red-smembers game-key))))
           (dolist (game-id game-ids)
-            (push (create-game-from-db (sf "game:~A" game-id)) games))
+            (push (new-game-from-db (sf "game:~A" game-id)) games))
           (sort games #'string< :key #'game-date-time)))))
 
-(defun create-game-from-db (game-key)
+(defun new-game-from-db (game-key)
   "Create a game struct from a database record."
-  (let ((id (parse-integer game-key :start 5)))
+  (let ((id (parse-id game-key)))
     (make-game :id id
                :date-time (red-hget game-key "date-time")
                :progress (red-hget game-key "progress"))))
@@ -118,15 +119,7 @@
   (position "")
   (active? t))
 
-(defmethod player-activate ((p player))
-  "Activate the given player."
-  (setf (player-active? p) T))
-
-(defmethod player-deactivate ((p player))
-  "Deactivate the given player."
-  (setf (player-active? p) NIL))
-
-(defvar players-positions '("C" "D" "G" "LW" "RW"))
+(defparameter players-positions '("C" "D" "G" "LW" "RW"))
 
 (defun get-all-players ()
   "Gets a list of all players sorted by first name."
@@ -136,7 +129,7 @@
     (let* ((player-keys (red-keys "player:*"))
            (players nil))
       (dolist (player-key player-keys)
-        (push (create-player-from-db player-key) players))
+        (push (new-player-from-db player-key) players))
       (sort players #'string< :key #'player-first-name))))
 
 (defun get-players (league)
@@ -149,12 +142,12 @@
                                              (league-id league))))
                (players '()))
           (dolist (player-id player-ids)
-            (push (create-player-from-db (sf "player:~A" player-id)) players))
+            (push (new-player-from-db (sf "player:~A" player-id)) players))
           (sort players #'string< :key #'player-first-name)))))
 
-(defun create-player-from-db (player-key)
+(defun new-player-from-db (player-key)
   "Create a player struct from a database record."
-  (let ((id (parse-integer player-key :start 7)))
+  (let ((id (parse-id player-key)))
     (make-player :id id
                  :first-name (red-hget player-key "first-name")
                  :last-name (red-hget player-key "last-name")
