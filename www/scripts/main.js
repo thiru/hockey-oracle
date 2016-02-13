@@ -6,16 +6,7 @@ $(document).ready(function() {
     // Do nothing
 });
 
-function togglePlayerActive(ele)
-{
-  $(ele).parents(".player-item").toggleClass("selected");
-  $(ele).find("i.player-check")
-        .toggleClass("fa-check-circle-o")
-        .toggleClass("fa-circle-o");
-}
-
-function makeTeams()
-{
+function makeTeams() {
   var activePlayersRes = getActivePlayers();
   if (activePlayersRes.failed()) {
     alert(activePlayersRes.msg);
@@ -27,7 +18,8 @@ function makeTeams()
     alert(teamsRes.msg);
     return;
   }
-  $("#player-list").hide();
+  $("#confirmed-players-section").hide();
+  $("#unconfirmed-players-section").hide();
   $("#add-player").hide();
   populateTeams(teamsRes.data);
   $("#random-teams").show();
@@ -36,13 +28,11 @@ function makeTeams()
   function getActivePlayers() {
     var players = [];
 
-    $("#player-list .player-item.selected")
+    $("#confirmed-players .player-item")
       .each(function() {
-        var player = {};
-        player.id = parseInt($(this).attr("data-player-id"));
-        player.name = $(this).find(".player-name").text().trim();
-        player.position = $(this).find(".player-position :selected").val();
-        players.push(player);
+        var player = $(this).data();
+        if (player && player.name)
+          players.push(player);
     });
 
     if (!players.length)
@@ -115,17 +105,79 @@ function makeTeams()
     });
 
     function playerHtml(player) {
-      return "<tr class='player-item'><td>" + player.name + "</td>" +
-             "<td>" + player.position + "</td></tr>";
+        var item = $("#random-teams .template-player-item .player-item")
+                    .first().clone();
+        item.find(".player-name").text(player.name);
+        item.find(".player-position").text(player.position);
+        return item;
     }
   }
 }
 
+function positionChanged(ele) {
+    var playerEle = $(ele).parents(".player-item");
+    playerEle.data().position = $(ele).val();
+}
+
+function confirmPlayer(ele) {
+    var currPlayerEle = $(ele).parents(".player-item");
+    var player = currPlayerEle.data();
+    var moveToEle =
+        $("#confirmed-players-section .template-player-item .player-item")
+            .first().clone();
+
+    moveToEle.data(player);
+    moveToEle.find(".player-name").text(player.name);
+    moveToEle.find(".confirm-time").text(player.responseTime);
+    moveToEle.find(".player-position").val(player.position);
+
+    moveToEle.appendTo("#confirmed-players");
+    currPlayerEle.remove();
+
+    $("#confirmed-heading .true").removeClass("hidden");
+    $("#confirmed-heading .false").addClass("hidden");
+    $("#confirmed-players").show();
+    $("#make-teams").show();
+
+    var unconfirmedPlayers = $("#unconfirmed-players .player-item");
+    if (unconfirmedPlayers.length <= 0)
+        $("#unconfirmed-players-section").hide();
+}
+
+function unconfirmPlayer(ele) {
+    var currPlayerEle = $(ele).parents(".player-item");
+    var player = currPlayerEle.data();
+    var moveToEle =
+        $("#unconfirmed-players-section .template-player-item .player-item")
+            .first().clone();
+
+    moveToEle.data(player);
+    moveToEle.find(".player-name").text(player.name);
+    moveToEle.find(".confirm-type").text(player.confirmType);
+    moveToEle.find(".confirm-reason").text(player.reason);
+    moveToEle.find(".confirm-time").text(player.responseTime);
+
+    moveToEle.appendTo("#unconfirmed-players");
+    currPlayerEle.remove();
+
+    var confirmedPlayers = $("#confirmed-players .player-item");
+    if (confirmedPlayers.length <= 0) {
+        $("#confirmed-heading .true").addClass("hidden");
+        $("#confirmed-heading .false").removeClass("hidden");
+        $("#confirmed-players").hide();
+        $("#make-teams").hide();
+    }
+    else {
+        $("#unconfirmed-players-section").show();
+    }
+}
+
 function pickPlayers() {
-  $("#random-teams").hide();
-  $("#pick-players").hide();
-  $("#player-list").show();
-  $("#add-player").show();
+    $("#random-teams").hide();
+    $("#pick-players").hide();
+    $("#confirmed-players-section").show();
+    $("#unconfirmed-players-section").show();
+    $("#add-player").show();
 }
 
 function editClick(ev) {
@@ -134,20 +186,20 @@ function editClick(ev) {
 
 function addPlayer() {
   $("#edit-dialog .save-btn").attr("data-player-id", 0);
-  $("#player-name-edit").val("Extra 1");
+  $("#player-name-edit").val("Extra");
   $("#player-pos-edit option").removeAttr("selected");
-  $("#player-active-edit").prop("checked", true);
+  $("#player-active-edit").prop("checked", true); // TODO: obsolete
   $("#overlay").show();
   $("#edit-dialog").show();
   $("#player-name-edit").focus().select();
 }
 
 function editPlayer(ele) {
-  var playerRow = $(ele).parents("#player-list .player-item");
+  var playerRow = $(ele).parents("#confirmed-players .player-item");
   var playerId = playerRow.attr("data-player-id");
   var currName = playerRow.find(".player-name").text().trim();
   var currPos = playerRow.find(".player-position :selected").val();
-  var currActive = playerRow.hasClass("selected");
+  var currActive = true; // TODO: obsolete
 
   $("#player-name-edit").val(currName);
   $("#player-pos-edit").val(currPos);
@@ -161,67 +213,64 @@ function editPlayer(ele) {
 }
 
 function savePlayer() {
+  var player = {};
+
   // Determine player ID
-  var playerId = parseInt($("#edit-dialog .save-btn").attr("data-player-id"));
-  if (playerId < 0) {
-    alert("Invalid player ID");
+  player.playerId = parseInt($("#edit-dialog .save-btn").attr("data-player-id"));
+  if (player.playerId < 0) {
+    alert("Invalid player id. Expected non-negative but was: " +
+          player.playerId + " .");
     return;
   }
 
   // Get player name
-  var name = $("#player-name-edit").val().trim();
-  if (!name || !name.length) {
-    alert("Player name can't be blank");
+  player.name = $("#player-name-edit").val().trim();
+  if (!player.name || !player.name.length) {
+    alert("Player name can't be blank.");
     return;
   }
 
   // Get player position
-  var position = $("#player-pos-edit :selected").val();
-
-  // Get player active state
-  var isActive = $("#player-active-edit").is(":checked");
+  player.position = $("#player-pos-edit :selected").val();
 
   // If we're adding a new player
-  if (playerId == 0) {
-    var newPlayerRow = $("#player-list .player-item").first().clone();
+  if (player.playerId == 0) {
+      var newPlayerRow =
+          $("#confirmed-players-section .template-player-item .player-item")
+            .first().clone();
 
     var maxPlayerId = -1;
-    $("#player-list .player-item").each(function() {
+    $("#confirmed-players .player-item").each(function() {
       var id = parseInt($(this).attr("data-player-id"));
       if (id > maxPlayerId)
         maxPlayerId = id;
     });
-    newPlayerRow.attr("data-player-id", maxPlayerId + 1);
-    newPlayerRow.addClass("selected");
-    newPlayerRow.find("i.player-check")
-                .addClass("fa-check-circle-o")
-                .removeClass("fa-circle-o");
-    newPlayerRow.find(".player-name").text(name);
-    newPlayerRow.find(".player-position").val(position);
-    newPlayerRow.appendTo("#player-list");
+    player.playerId = maxPlayerId + 1;
+
+    if (maxPlayerId < 0)
+      maxPlayerId = 1;
+
+    newPlayerRow.data(player);
+    newPlayerRow.find(".player-name").text(player.name);
+    newPlayerRow.find(".confirm-time").text(player.responseTime);
+    newPlayerRow.find(".player-position").val(player.position);
+
+    newPlayerRow.appendTo("#confirmed-players");
   }
   // Otherwise we're editing an existing player
   else {
     var playerRow =
-      $("#player-list .player-item[data-player-id=" + playerId + "]");
+      $("#confirmed-players .player-item[data-player-id=" + playerId + "]");
     playerRow.find(".player-name").text(name);
     playerRow.find(".player-position").val(position);
-    if (isActive) {
-      playerRow.addClass("selected");
-      playerRow.find("i.player-check")
-               .addClass("fa-check-circle-o")
-               .removeClass("fa-circle-o");
-    }
-    else {
-      playerRow.removeClass("selected");
-      playerRow.find("i.player-check")
-               .addClass("fa-circle-o")
-               .removeClass("fa-check-circle-o");
-    }
   }
 
   $("#edit-dialog").hide();
   $("#overlay").hide();
+  $("#confirmed-players").show();
+  $("#confirmed-heading .true").removeClass("hidden");
+  $("#confirmed-heading .false").addClass("hidden");
+  $("#make-teams").show();
 }
 
 function closeDialog() {

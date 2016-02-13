@@ -11,14 +11,17 @@
 
 body
 {
+  background: #FFF;
   color: #555; /* VAR COMMON-TEXT-COLOUR */
   margin: 0;
   padding: 0;
 }
 
-body
-{
-  background: #FFF;
+@media screen and (max-width: 480px) {
+  main
+  {
+    font-size: 0.6em;
+  }
 }
 
 h2, h3, h4, h5, h6
@@ -41,6 +44,12 @@ a:hover
   text-decoration: underline;
 }
 
+.clear-fix
+{
+    clear: both;
+    display: block;
+}
+
 .active
 {
   color: #0F83BC; /* VAR BLUE-HEADING */
@@ -57,37 +66,27 @@ a:hover
 .col-4 { width: 25%; }
 .col-5 { width: 20%; }
 
-.data-table
+.data-list
 {
-  border-collapse: collapse;
-  border-spacing: 0;
-  width: 100%;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
 }
-.data-table thead tr
+.data-list li
 {
-  background: #0F83BC; /* VAR BLUE-HEADING */
-  color: white;
+    padding: 0.5em;
 }
-.data-table th
-{
-  padding: 0.75em 1em;
-  text-align: left;
-}
-.data-table td
-{
-  padding: 0.5em 1em;
-}
-.data-table tr:nth-child(even)
-{
-  background: #F5F5F5;
-}
-.data-table .selected
+.data-list li .selected
 {
   font-weight: bold;
 }
-.data-table tbody tr:hover
+.data-list li:hover
 {
   background: #D3FCFF;
+}
+.data-list li:nth-child(even)
+{
+  background: #F5F5F5;
 }
 
 .brief-table td
@@ -290,80 +289,114 @@ main
 }
 
 /*******************************
-      Player list page
+           Game page
 *******************************/
 
-/* Edit dialog spacing */
-#player-list-page #edit-dialog .label-col > *
+#game-detail-page #confirmed-heading,
+#game-detail-page #unconfirmed-heading
+{
+  background: #0F83BC; /* VAR BLUE-HEADING */
+  color: white;
+  margin: 1em 0 0 0;
+  padding: 0.3em;
+}
+
+/* Edit dialog formatting */
+#game-detail-page #edit-dialog .label-col > *
 {
   padding-right: 2em;
 }
-#player-list-page #edit-dialog .input-col > *
+#game-detail-page #edit-dialog .input-col > *
 {
   width: 100%;
 }
-#player-list-page #edit-dialog td
+#game-detail-page #edit-dialog td
 {
   padding-bottom: 0.5em;
 }
-#player-list-page input[type="checkbox"]
+#game-detail-page #edit-dialog input[type="checkbox"]
 {
   margin: 0;
 }
-#player-list-page #edit-dialog .actions
+#game-detail-page #edit-dialog .actions
 {
   margin-top: 1em;
   text-align: right;
 }
 
-/* Leave space after players table */
-#player-list-page #player-list
+#game-detail-page .template-player-item
+{
+    display: none;
+}
+
+/* Leave space after player listings */
+#game-detail-page #confirmed-players,
+#game-detail-page #unconfirmed-players
 {
   margin-bottom: 1em;
 }
 
-/* Define player table column widths */
-#player-list-page #player-list .name-col
+/* Define players listing column widths */
+#game-detail-page #confirmed-players .player-name,
+#game-detail-page #unconfirmed-players .player-name
 {
-  width: 80%;
+    display: inline-block;
+    font-size: 1.2em;
+    font-weight: bold;
 }
-#player-list-page #player-list .position-col
+#game-detail-page #confirmed-players .confirm-type,
+#game-detail-page #unconfirmed-players .confirm-type
 {
-  width: 10%;
+    display: inline-block;
+    color: #777;
+    margin-left: 0.5em;
+    text-transform: uppercase;
 }
-#player-list-page #player-list .actions-col
+#game-detail-page #confirmed-players .player-position,
+#game-detail-page #unconfirmed-players .player-position
 {
-  width: 10%;
+    display: block;
+    float: right;
+    margin: 0 1em 0.5em 0.5em;
 }
-
-/* Add more space after player checkbox */
-#player-list-page .player-check
+#game-detail-page #confirmed-players .confirm-btn-toggle,
+#game-detail-page #unconfirmed-players .confirm-btn-toggle
 {
-  display: inline-block;
-  padding-right: 0.3em;
+    display: block;
+    float: right;
+    margin: 0 0 0.5em 0.5em;
 }
-
-/* Make entire name column clickable */
-#player-list-page .player-item .player-name-col
+#game-detail-page #confirmed-players .confirm-btn-toggle .button,
+#game-detail-page #unconfirmed-players .confirm-btn-toggle .button
 {
-  cursor: pointer;
+    font-size: 1em;
+}
+#game-detail-page #confirmed-players .confirm-reason,
+#game-detail-page #unconfirmed-players .confirm-reason
+{
+    color: #777;
+    display: block;
+    font-size: 0.8em;
+    margin: 0.2em 0 0 0;
+}
+#game-detail-page #confirmed-players .confirm-time,
+#game-detail-page #unconfirmed-players .confirm-time
+{
+    color: #777;
+    display: block;
+    font-size: 0.6em;
+    font-style: italic;
+    margin: 0.5em 0 0 0;
 }
 
 /* Don't initially show the random team elements */
-#player-list-page #random-teams,
-#player-list-page #pick-players
+#game-detail-page #random-teams,
+#game-detail-page #pick-players
 {
   display: none;
 }
 
-/* Make the name column take up most of the space */
-#player-list-page .data-table th:first-child,
-#player-list-page .data-table td:first-child
-{
-  width: 80%;
-}
-
-#player-list-page .team-heading
+#game-detail-page .team-heading
 {
   background: #0F83BC; /* VAR BLUE-HEADING */
   color: white;
@@ -372,20 +405,31 @@ main
 }
 
 /* Leave space below each team */
-#player-list-page .team
+#game-detail-page .team
 {
-  margin-bottom: 1em;
+    margin-bottom: 1em;
+    min-height: 10em;
+    position: relative;
 }
 
-/* Space out 'accept question' buttons */
-#player-list-page .accept-question .button
+#game-detail-page #random-teams .player-name
 {
-  margin-right: 0.5em;
-  font-size: 0.8em;
+    display: block;
+    float: left;
+}
+#game-detail-page #random-teams .player-position
+{
+    display: block;
+    float: right;
 }
 
+/* TODO */
 /* Logo sizing */
-#player-list-page .team-logo
+#game-detail-page .team-logo
 {
-  max-height: 2em;
+    left: 40%;
+    max-height: 8em;
+    opacity: 0.4;
+    position: absolute;
+    top: 3em;
 }

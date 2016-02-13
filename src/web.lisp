@@ -6,6 +6,8 @@
 (defvar main-acceptor nil "The global web-server instance.")
 (defvar static-files-dir (merge-pathnames "www/" base-dir))
 
+(setf (html-mode) :HTML5)
+
 (defun create-acceptor (&key (port 9090) debug)
   "Creates an 'easy-acceptor' which will listen on the specified port."
   (make-instance 'easy-acceptor
@@ -57,6 +59,11 @@
 ;;; General ----------------------------------------------------------------- END
 
 ;;; Utils
+(defmacro html-snippet (root-tag)
+  "Generate HTML given a single root HTML tag."
+  `(with-html-output-to-string (*standard-output* nil :indent t)
+     ,root-tag))
+
 (defmacro safe-parse-int (str &key (fallback 0))
   "Lenient parsing of 'str'."
   `(if (empty? ,str)
@@ -75,31 +82,40 @@
   "Gets a list of path segments, excluding query parameters."
   (split-sequence #\/ (script-name* req) :remove-empty-subseqs t))
 
-(defun to-nice-date-time (date-time-str)
+(defun pretty-date-time (date-time-str &optional mode)
   "Formats a date/time to a user-friendly form. 'date-time-str' is expected to
-   be a string of the form 'year4-month2-day2-hour2-min2'."
-  (let* ((time-segs (split-sequence #\- date-time-str :remove-empty-subseqs t))
-         (timestamp (encode-timestamp 0 ; Nanoseconds
-                                      0 ; Seconds
-                                      ;; Minute
-                                      (safe-parse-int (nth 4 time-segs)
-                                                      :fallback 0)
-                                      ;; Hour
-                                      (safe-parse-int (nth 3 time-segs)
-                                                      :fallback 0)
-                                      ;; Day
-                                      (safe-parse-int (nth 2 time-segs)
-                                                      :fallback 1)
-                                      ;; Month
-                                      (safe-parse-int (nth 1 time-segs)
-                                                      :fallback 1)
-                                      ;; Year
-                                      (safe-parse-int (nth 0 time-segs)
-                                                      :fallback 1))))
-    (format-timestring nil
-                       timestamp
-                       :format '(:long-weekday " " :short-month " " :day " "
-                                 :year " " :hour12 ":" (:min 2) :ampm))))
+   be a string of the form 'year4-month2-day2-hour2-min2'. 'mode' can be one
+   of: 'full 'short."
+  (if (empty? date-time-str)
+      ""
+      (let* ((format-desc '())
+             (time-segs (split-sequence #\- date-time-str
+                                        :remove-empty-subseqs t))
+             (timestamp (encode-timestamp 0 ; Nanoseconds
+                                          0 ; Seconds
+                                          ;; Minute
+                                          (safe-parse-int (nth 4 time-segs)
+                                                          :fallback 0)
+                                          ;; Hour
+                                          (safe-parse-int (nth 3 time-segs)
+                                                          :fallback 0)
+                                          ;; Day
+                                          (safe-parse-int (nth 2 time-segs)
+                                                          :fallback 1)
+                                          ;; Month
+                                          (safe-parse-int (nth 1 time-segs)
+                                                          :fallback 1)
+                                          ;; Year
+                                          (safe-parse-int (nth 0 time-segs)
+                                                          :fallback 1))))
+
+        (if (eq 'short mode)
+            (setf format-desc '(:short-weekday " " :short-month " " :day " "
+                                :hour12 ":" (:min 2) :ampm))
+            (setf format-desc '(:long-weekday " " :short-month " " :day " "
+                                :year " @ " :hour12 ":" (:min 2) :ampm)))
+
+        (format-timestring nil timestamp :format format-desc))))
 
 (defun parse-league (req)
   "Parses the request path to obtain the league defined as the first segment.
@@ -175,7 +191,7 @@
                     :content "IE=edge")
              (:meta :name "viewport"
                     :content "width=device-width, initial-scale=1")
-             (:title ,(sf "~a - Hockey Oracle" title))
+             (:title (fmt "~A - Hockey Oracle" ,title))
              (:link :rel "shortcut icon"
                     :href "/images/favicon.ico")
              (:link
@@ -324,7 +340,7 @@
             (:td (fmt "~a" version)))
            (:tr
             (:td "Last Updated")
-            (:td (fmt "~a" (to-nice-date-time updated))))
+            (:td (fmt "~a" (pretty-date-time updated))))
            (:tr
             (:td "License")
             (:td
@@ -374,18 +390,207 @@
                                        (string-downcase (league-name
                                                          league))
                                        (game-date-time game))
-                             (esc (to-nice-date-time
+                             (esc (pretty-date-time
                                    (game-date-time game)))))
                         (:td ""))))))))))) ; TODO: game-state
 ;;; Game List Page ---------------------------------------------------------- END
 
 ;;; Game Detail Page
 (defun www-game-detail-page (league)
-  (standard-page
-   (:title "Game on TODO"
-    :league league
-    :page-id "game-detail-page")
-   (:h2 "TODO: Game detail page")))
+  (let* ((game-time (last1 (path-segments *request*)))
+         (friendly-game-time (pretty-date-time game-time))
+         (game (get-game league game-time)))
+    (standard-page
+        (:title (fmt "Game on ~a" friendly-game-time)
+         :league league
+         :page-id "game-detail-page")
+      (:div :id "edit-dialog" :class "dialog"
+            (:header "Editing Player")
+            (:section :class "content"
+                      (:table
+                       (:tr :class "input-row"
+                            (:td :class "label-col"
+                                 (:label :for "player-name-edit" "Name: "))
+                            (:td :class "input-col"
+                                 (:input :id "player-name-edit" :type "text")))
+                       (:tr
+                        (:td
+                         (:label :for "player-pos-edit" "Position: "))
+                        (:td
+                         (:select :id "player-pos-edit"
+                                  (dolist (pos players-positions)
+                                    (htm
+                                     (:option :value pos (esc pos)))))))
+                       (:tr
+                        (:td
+                         (:label :for "player-active-edit" "Is Active: "))
+                        (:td
+                         (:input :id "player-active-edit" :type "checkbox"))))
+                      (:div :class "actions"
+                            (:button
+                             :class "button save-btn"
+                             :data-player-id "0"
+                             :onclick "savePlayer()"
+                             "Save")
+                            (:button
+                             :class "button cancel-btn"
+                             :onclick "closeDialog()"
+                             "Cancel"))))
+      (:section
+       :id "confirmed-players-section"
+       (:h1 (esc friendly-game-time))
+       (:h2 :id "confirmed-heading"
+            (:span :class (if (confirmed-players game) "true" "true hidden")
+                   "Confirmed to play")
+            (:span :class (if (confirmed-players game) "false hidden" "false")
+                   "No players confirmed to play"))
+       (:ul :class "template-player-item"
+            (:li :class "player-item"
+                 (:span :class "player-name" "")
+                 (:span :class "confirm-type" "&nbsp;")
+                 (:span :class "confirm-btn-toggle"
+                        (:button :class "button"
+                                 :onclick "unconfirmPlayer(this)"
+                                 :title "Move to \"Not playing...\" section"
+                                 (:i :class "fa fa-thumbs-down")))
+                 (:select :class "player-position"
+                          :onchange "positionChanged(this)"
+                          (dolist (pos players-positions)
+                            (htm
+                             (:option :value pos
+                                      :selected nil
+                                      (esc pos)))))
+                 (:span :class "confirm-info"
+                        (:span :class "confirm-reason" "")
+                        (:span :class "confirm-time" :title "Date confirmed" ""))
+                 (:span :class "clear-fix")))
+       (:ul :id "confirmed-players"
+            :class (if (confirmed-players game)
+                       "data-list"
+                       "data-list hidden")
+            (dolist (pc (confirmed-players game))
+              (htm
+               (:li :class "player-item"
+                    :data-id (player-id (-> pc player))
+                    :data-name (player-name (-> pc player))
+                    :data-position (player-position (-> pc player))
+                    :data-confirm-type (esc (sf "(~A)"
+                                                (game-confirm-confirm-type pc)))
+                    :data-reason (esc (game-confirm-reason pc))
+                    :data-response-time (pretty-date-time
+                                         (game-confirm-date-time pc)
+                                         'short)
+                    (:span :class "player-name"
+                           (esc (player-name (-> pc player))))
+                    (:span :class "confirm-type" "&nbsp;")
+                    (:span :class "confirm-btn-toggle"
+                           (:button :class "button"
+                                    :onclick "unconfirmPlayer(this)"
+                                    :title "Move to \"Not playing...\" section"
+                                    (:i :class "fa fa-thumbs-down")))
+                    (:select :class "player-position"
+                             :onchange "positionChanged(this)"
+                             (dolist (pos players-positions)
+                               (htm
+                                (:option
+                                 :value pos
+                                 :selected (if (string-equal
+                                                pos
+                                                (player-position
+                                                 (-> pc player)))
+                                               ""
+                                               nil)
+                                 (esc pos)))))
+                    (:span :class "confirm-info"
+                           (:span :class "confirm-reason" "")
+                           (:span :class "confirm-time"
+                                  :title "Date confirmed"
+                                  (esc (pretty-date-time
+                                        (game-confirm-date-time pc)
+                                        'short))))
+                    (:span :class "clear-fix"))))))
+      (:section :id "random-teams"
+                (:ul :class "template-player-item"
+                     (:li :class "player-item"
+                          (:span :class "player-name")
+                          (:span :class "player-position")
+                          (:span :class "clear-fix")))
+                (:div :id "team1" :class "team"
+                      (:img :class "team-logo" :src "/images/team-logos/cripplers.png")
+                      (:h2 :class "team-heading" "Cripplers")
+                      (:ul :class "team-players data-list"))
+                (:div :id "team2" :class "team"
+                      (:img :class "team-logo" :src "/images/team-logos/panthers.png")
+                      (:h2 :class "team-heading" "Panthers")
+                      (:ul :class "team-players data-list")))
+      (:section
+       :id "unconfirmed-players-section"
+       (:h2 :id "unconfirmed-heading" "Not playing or undecided")
+       (:ul :class "template-player-item"
+            (:li :class "player-item"
+                 (:span :class "player-name" "")
+                 (:span :class "confirm-type" "&nbsp;")
+                 (:span :class "confirm-btn-toggle"
+                        (:button :class "button"
+                                 :onclick "confirmPlayer(this)"
+                                 :title "Move to \"Confirmed...\" section"
+                                 (:i :class "fa fa-thumbs-up")))
+                 (:span :class "player-position" "&nbsp;")
+                 (:span :class "confirm-info"
+                        (:span :class "confirm-reason" "")
+                        (:span :class "confirm-time" :title "Date confirmed" ""))
+                 (:span :class "clear-fix")))
+       (:ul :id "unconfirmed-players"
+            :class (if (unconfirmed-players game)
+                       "data-list"
+                       "data-list hidden")
+            (dolist (pc (unconfirmed-players game))
+              (htm
+               (:li :class "player-item"
+                    :data-id (player-id (-> pc player))
+                    :data-name (player-name (-> pc player))
+                    :data-position (player-position (-> pc player))
+                    :data-confirm-type (esc (sf "(~A)"
+                                                (game-confirm-confirm-type pc)))
+                    :data-reason (esc (game-confirm-reason pc))
+                    :data-response-time (pretty-date-time
+                                         (game-confirm-date-time pc) 'short)
+                    (:span :class "player-name" (esc (player-name (-> pc player))))
+                    (:span :class "confirm-type"
+                           (esc (sf "(~A)" (game-confirm-confirm-type pc))))
+                    (:span :class "confirm-btn-toggle"
+                           (:button :class "button"
+                                    :onclick "confirmPlayer(this)"
+                                    :title "Move to \"Confirmed...\" section"
+                                    (:i :class "fa fa-thumbs-up")))
+                    (:span :class "player-position" "&nbsp;")
+                    (:span :class "confirm-reason"
+                           (esc (game-confirm-reason pc)))
+                    (:span :class "confirm-time"
+                           :title "Date confirmed"
+                           (esc (pretty-date-time
+                                 (game-confirm-date-time pc)
+                                 'short)))
+                    (:span :class "clear-fix"))))))
+      (:button :id "make-teams"
+               :class (if (confirmed-players game)
+                          "button wide-button"
+                          "button wide-button hidden")
+               :onclick "makeTeams()"
+               :title "Generate random teams"
+               (:i :class "fa fa-random")
+               (:span :class "button-text" "Make Teams"))
+      (:button :id "add-player"
+               :class "button wide-button"
+               :onclick "addPlayer()"
+               (:i :class "fa fa-user-plus")
+               (:span :class "button-text" "Add Player"))
+      (:button :id "pick-players"
+               :class "button wide-button"
+               :onclick "pickPlayers()"
+               :title "Choose players"
+               (:i :class "fa fa-check-circle-o")
+               (:span :class "button-text" "Pick Players")))))
 ;;; Game Detail Page -------------------------------------------------------- END
 
 ;;; Player List Page
@@ -429,8 +634,8 @@
    (:table :id "player-list" :class "data-table"
            (:thead
             (:tr
-             (:th :class "name-col" "Player")
-             (:th :class "position-col" :title "Position" "Pos")
+             (:th :class "player-name" "Player")
+             (:th :class "player-position" :title "Position" "Pos")
              (:th :class "actions-col" "")))
            (:tbody
             (dolist (p (get-players league))
@@ -441,7 +646,7 @@
                            "player-item")
                 :data-player-id (player-id p)
                 (:td
-                 :class "player-name-col"
+                 :class "player-name"
                  :onclick "togglePlayerActive(this)"
                  (:i
                   :class (if (player-active? p)
@@ -449,9 +654,7 @@
                              "player-check fa fa-circle-o")
                   :title "When checked the player is considered active/able to play")
                  (:span :class "player-name"
-                        (esc (fmt "~a ~a"
-                                  (player-first-name p)
-                                  (player-last-name p)))))
+                        (esc (player-name p))))
                 (:td
                  (:select :class "player-position"
                           (dolist (pos players-positions)
@@ -508,5 +711,6 @@
             :onclick "pickPlayers()"
             :title "Select to choose active players"
             (:i :class "fa fa-check-circle-o")
-            (:span :class "button-text" "Pick Players"))))
+            (:span :class "button-text" "Pick Players"))
+    ))
 ;;; Player List Page -------------------------------------------------------- END
