@@ -66,6 +66,14 @@ a:hover
 .col-4 { width: 25%; }
 .col-5 { width: 20%; }
 
+.big-blue-heading
+{
+  background: #0F83BC; /* VAR BLUE-HEADING */
+  color: white;
+  margin: 1em 0 0 0;
+  padding: 0.3em;
+}
+
 .data-list
 {
     list-style-type: none;
@@ -289,17 +297,29 @@ main
 }
 
 /*******************************
-           Game page
+        Game list page
 *******************************/
 
-#game-detail-page #confirmed-heading,
-#game-detail-page #unconfirmed-heading
+#game-list-page .data-list
 {
-  background: #0F83BC; /* VAR BLUE-HEADING */
-  color: white;
-  margin: 1em 0 0 0;
-  padding: 0.3em;
+    font-size: 1.5em;
 }
+
+#game-list-page .data-list .game-date
+{
+    display: block;
+    float: left;
+}
+
+#game-list-page .data-list .game-state
+{
+    display: block;
+    float: right;
+}
+
+/*******************************
+        Game detail page
+*******************************/
 
 /* Edit dialog formatting */
 #game-detail-page #edit-dialog .label-col > *
