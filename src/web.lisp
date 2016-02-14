@@ -381,7 +381,7 @@
       (if (and (empty? started-games) (empty? unstarted-games))
           (htm (:div "No games have been created for this league."))
           (htm
-           (:h2 :class "big-blue-heading" "Schedule")
+           (:h2 :class "blue-heading" "Schedule")
            (:ul :class "data-list"
                 (dolist (game unstarted-games)
                   (htm
@@ -393,7 +393,7 @@
                         (esc (pretty-date-time (game-date-time game))))
                     (:span :class "game-state" "")
                     (:span :class "clear-fix")))))
-           (:h2 :class "big-blue-heading" "Scores")
+           (:h2 :class "blue-heading" "Scores")
            (:ul :class "data-list"
                 (dolist (game (reverse started-games))
                   (htm
@@ -471,7 +471,7 @@
        :id "confirmed-players-section"
        (:h1 (esc friendly-game-time))
        (:h2 :id "confirmed-heading"
-            :class "big-blue-heading"
+            :class (if (confirmed-players game) "blue-heading" "grey-heading")
             (:span :class (if (confirmed-players game) "true" "true hidden")
                    "Confirmed to play")
             (:span :class (if (confirmed-players game) "false hidden" "false")
@@ -557,7 +557,7 @@
                       (:ul :class "team-players data-list")))
       (:section
        :id "unconfirmed-players-section"
-       (:h2 :id "unconfirmed-heading" :class "big-blue-heading"
+       (:h2 :id "unconfirmed-heading" :class "blue-heading"
             "Not playing or undecided")
        (:ul :class "template-player-item"
             (:li :class "player-item"

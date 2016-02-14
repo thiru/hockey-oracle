@@ -134,6 +134,8 @@ function confirmPlayer(ele) {
     moveToEle.appendTo("#confirmed-players");
     currPlayerEle.remove();
 
+    $("#confirmed-heading").addClass("blue-heading")
+                           .removeClass("grey-heading");
     $("#confirmed-heading .true").removeClass("hidden");
     $("#confirmed-heading .false").addClass("hidden");
     $("#confirmed-players").show();
@@ -162,6 +164,8 @@ function unconfirmPlayer(ele) {
 
     var confirmedPlayers = $("#confirmed-players .player-item");
     if (confirmedPlayers.length <= 0) {
+        $("#confirmed-heading").removeClass("blue-heading")
+                               .addClass("grey-heading");
         $("#confirmed-heading .true").addClass("hidden");
         $("#confirmed-heading .false").removeClass("hidden");
         $("#confirmed-players").hide();
@@ -268,6 +272,8 @@ function savePlayer() {
   $("#edit-dialog").hide();
   $("#overlay").hide();
   $("#confirmed-players").show();
+  $("#confirmed-heading").removeClass("grey-heading")
+                         .addClass("blue-heading");
   $("#confirmed-heading .true").removeClass("hidden");
   $("#confirmed-heading .false").addClass("hidden");
   $("#make-teams").show();
