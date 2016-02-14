@@ -155,7 +155,7 @@
 (defun unconfirmed-players (game)
   "Gets PLAYER's that have not confirmed, are not able to play, or are unsure of
    being able to player for the given game, as a list of GAME-CONFIRM structs."
-  (let* ((unconfirmed (remove-if (lambda (x) (string-equal 'yes
+  (let* ((unconfirmed (remove-if (lambda (x) (string-equal "Playing"
                                                            (-> x confirm-type)))
                                  (-> game confirms))))
     (dolist (p (get-players (game-league game)))
@@ -231,7 +231,7 @@
 
 (defun new-game-confirm (plist)
   "The key of PLIST is expected to be a player id and the value a list of the
-   form: (YES/NO/MAYBE DATE-TIME REASON). REASON is optional."
+   form: (CONFIRM-TYPE DATE-TIME REASON). REASON is optional."
   (let ((game-confirms '()))
     (doplist (player-id confirm-info plist)
              (push (make-game-confirm :player (get-player player-id)
