@@ -66,6 +66,11 @@ a:hover
 .col-4 { width: 25%; }
 .col-5 { width: 20%; }
 
+.uppercase
+{
+    text-transform: uppercase;
+}
+
 .blue-heading
 {
   background: #0F83BC; /* VAR BLUE-HEADING */
@@ -338,6 +343,11 @@ main
 /*******************************
         Game detail page
 *******************************/
+
+#game-detail-page #time-status
+{
+    font-size: 1.7em;
+}
 
 /* Edit dialog formatting */
 #game-detail-page #edit-dialog .label-col > *

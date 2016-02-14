@@ -430,11 +430,21 @@
 (defun www-game-detail-page (league)
   (let* ((game-time (last1 (path-segments *request*)))
          (friendly-game-time (pretty-date-time game-time))
-         (game (get-game league game-time)))
+         (game (get-game league game-time))
+         (show-confirm-inputs
+           (or (empty? (game-progress game))
+               (string-equal "in-progress" (game-progress game)))))
     (standard-page
         (:title (fmt "Game on ~a" friendly-game-time)
          :league league
          :page-id "game-detail-page")
+      (:h1 :id "time-status"
+       (:span (esc friendly-game-time))
+       (if (not (empty? (game-progress game)))
+           (htm
+            (:span " - ")
+            (:span :class "uppercase"
+                   (esc (game-progress game))))))
       (:div :id "edit-dialog" :class "dialog"
             (:header "Editing Player")
             (:section :class "content"
@@ -469,7 +479,6 @@
                              "Cancel"))))
       (:section
        :id "confirmed-players-section"
-       (:h1 (esc friendly-game-time))
        (:h2 :id "confirmed-heading"
             :class (if (confirmed-players game) "blue-heading" "grey-heading")
             (:span :class (if (confirmed-players game) "true" "true hidden")
