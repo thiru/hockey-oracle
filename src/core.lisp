@@ -90,6 +90,40 @@
                  :active? (to-bool (red-hget league-key "active?")))))
 ;;; Leagues ----------------------------------------------------------------- END
 
+;;; Teams
+(defstruct team
+  "Defines a hockey team."
+  (id 0)
+  (name "")
+  (logo ""))
+
+(defun get-teams (league)
+  "Gets teams belonging to the given LEAGUE."
+  (check-type league league)
+  (if league
+      (redis:with-persistent-connection ()
+        (let* ((team-ids (red-smembers (sf "leagues:~A:teams" (-> league id))))
+               (teams '()))
+          (dolist (team-id team-ids)
+            (push (new-team-from-db (sf "team:~A" team-id)) teams))
+          (sort teams #'string< :key #'team-name)))))
+
+(defun get-team (id)
+  "Get TEAM with the given id."
+  (if id
+      (let ((key (sf "team:~A" id)))
+        (redis:with-persistent-connection ()
+          (if (red-exists key)
+              (new-team-from-db (sf "team:~A" id)))))))
+
+(defun new-team-from-db (team-key)
+  "Create a TEAM struct from the given redis key."
+  (let ((id (parse-id team-key)))
+    (make-team :id id
+               :name (red-hget team-key "name")
+               :logo (red-hget team-key "logo"))))
+;;; Teams ------------------------------------------------------------------- END
+
 ;;; Games
 (defstruct game
   "Describes a hockey game.
@@ -98,13 +132,13 @@
    * PROGRESS: is the state of the game, and one of:
      * NIL (not yet started)
      * IN-PROGRESS
-     * COMPLETE
-   * HOME-SCORE: current score of the home team
-   * AWAY-SCORE: current score of the away team
+     * FINAL
    * CONFIRMS: list of GAME-CONFIRM structs"
   (league nil)
   (date-time nil)
   (progress nil)
+  (home-team nil)
+  (away-team nil)
   (home-score 0)
   (away-score 0)
   (confirms '()))
@@ -150,16 +184,21 @@
   (confirm-type nil)
   (reason ""))
 
-(defparameter confirm-types '(yes no maybe))
-
-(defun get-games (league)
+(defun get-games (league &key exclude-started exclude-unstarted)
   "Get all GAME's belonging to the given LEAGUE."
   (if league
       (redis:with-persistent-connection ()
         (let* ((game-keys (red-keys (sf "leagues:~A:games:*" (-> league id))))
                (games '()))
           (dolist (game-key game-keys)
-            (push (new-game-from-db game-key league) games))
+            (let ((game (new-game-from-db game-key league)))
+              (cond (exclude-started
+                     (if (empty? (game-progress game))
+                         (push game games)))
+                    (exclude-unstarted
+                     (if (not (empty? (game-progress game)))
+                         (push game games)))
+                    (t (push game games)))))
           (sort games #'string< :key #'game-date-time)))))
 
 (defun get-game (league date-time)
@@ -179,6 +218,12 @@
     (make-game :league league
                :date-time date-time
                :progress (red-hget game-key "progress")
+               :home-team (new-team-from-db (sf "team:~A"
+                                                (red-hget game-key
+                                                          "home-team")))
+               :away-team (new-team-from-db (sf "team:~A"
+                                                (red-hget game-key
+                                                          "away-team")))
                :home-score (parse-integer (red-hget game-key "home-score"))
                :away-score (parse-integer (red-hget game-key "away-score"))
                :confirms (new-game-confirm

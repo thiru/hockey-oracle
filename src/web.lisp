@@ -372,17 +372,18 @@
 
 ;;; Game List Page
 (defun www-game-list-page (league)
-  (let* ((games (get-games league)))
+  (let* ((started-games (get-games league :exclude-unstarted t))
+         (unstarted-games (get-games league :exclude-started t)))
     (standard-page
         (:title "Games"
          :league league
          :page-id "game-list-page")
-      (if (null games)
+      (if (and (empty? started-games) (empty? unstarted-games))
           (htm (:div "No games have been created for this league."))
           (htm
-           (:h2 :class "big-blue-heading" "Upcoming games")
+           (:h2 :class "big-blue-heading" "Schedule")
            (:ul :class "data-list"
-                (dolist (game games)
+                (dolist (game unstarted-games)
                   (htm
                    (:li
                     (:a :class "game-date"
@@ -391,7 +392,38 @@
                                   (game-date-time game))
                         (esc (pretty-date-time (game-date-time game))))
                     (:span :class "game-state" "")
-                    (:span :class "clear-fix"))))))))))
+                    (:span :class "clear-fix")))))
+           (:h2 :class "big-blue-heading" "Scores")
+           (:ul :class "data-list"
+                (dolist (game (reverse started-games))
+                  (htm
+                   (:li
+                    (:div :class "game-date"
+                          (:a
+                           :href (sf "/~A/games/~A"
+                                     (string-downcase (league-name league))
+                                     (game-date-time game))
+                           (esc (pretty-date-time (game-date-time game)))))
+                    (:div :class "game-score"
+                          (:div
+                           (:img :class "team-logo"
+                                 :src (sf "/images/team-logos/~A"
+                                          (team-logo (game-away-team game))))
+                           (:span :class "team-name"
+                                  (esc (sf "~A"
+                                           (team-name (game-away-team game)))))
+                           (:span :class "score"
+                                  (esc (sf "~A" (game-away-score game)))))
+                          (:div
+                           (:img :class "team-logo"
+                                 :src (sf "/images/team-logos/~A"
+                                          (team-logo (game-home-team game))))
+                           (:span :class "team-name"
+                                  (esc (sf "~A"
+                                           (team-name (game-home-team game)))))
+                           (:span :class "score"
+                                  (esc (sf "~A" (game-home-score game))))))
+                    (:div :class "clear-fix"))))))))))
 ;;; Game List Page ---------------------------------------------------------- END
 
 ;;; Game Detail Page

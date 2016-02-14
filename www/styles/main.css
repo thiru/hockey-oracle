@@ -302,19 +302,30 @@ main
 
 #game-list-page .data-list
 {
-    font-size: 1.5em;
+    font-size: 1.2em;
 }
 
 #game-list-page .data-list .game-date
 {
-    display: block;
     float: left;
 }
-
-#game-list-page .data-list .game-state
+#game-list-page .data-list .game-score
 {
-    display: block;
     float: right;
+}
+#game-list-page .data-list .game-score .team-logo
+{
+    width: 1.5em;
+    vertical-align: middle;
+}
+#game-list-page .data-list .game-score .team-name
+{
+    margin-right: 2em;
+}
+#game-list-page .data-list .game-score .score
+{
+    float: right;
+    text-align: right;
 }
 
 /*******************************
@@ -443,7 +454,6 @@ main
     float: right;
 }
 
-/* TODO */
 /* Logo sizing */
 #game-detail-page .team-logo
 {

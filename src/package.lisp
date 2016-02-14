@@ -33,6 +33,8 @@
    :game-id
    :game-date-time
    :game-progress
+   :game-home-team
+   :game-away-team
    :game-home-score
    :game-away-score
    :game-confirms
@@ -58,6 +60,13 @@
    :get-all-players
    :get-players
    :get-player
+   :team
+   :make-team
+   :team-id
+   :team-name
+   :team-logo
+   :get-teams
+   :get-team
    :get-secure-key))
 
 (defpackage :hockey-oracle.web
