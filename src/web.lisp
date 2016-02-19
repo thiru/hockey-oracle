@@ -84,32 +84,13 @@
   "Gets a list of path segments, excluding query parameters."
   (split-sequence #\/ (script-name* req) :remove-empty-subseqs t))
 
-(defun pretty-date-time (date-time-str &optional mode)
-  "Formats a date/time to a user-friendly form. 'date-time-str' is expected to
-   be a string of the form 'year4-month2-day2-hour2-min2'. 'mode' can be one
-   of: 'full 'short."
-  (if (empty? date-time-str)
+(defun pretty-time (time-str &optional mode)
+  "Formats a date/time to a user-friendly form. 'time-str' is expected to be a
+   timestamp readable by LOCAL-TIME. MODE can be FULL or SHORT."
+  (if (empty? time-str)
       ""
       (let* ((format-desc '())
-             (time-segs (split-sequence #\- date-time-str
-                                        :remove-empty-subseqs t))
-             (timestamp (encode-timestamp 0 ; Nanoseconds
-                                          0 ; Seconds
-                                          ;; Minute
-                                          (safe-parse-int (nth 4 time-segs)
-                                                          :fallback 0)
-                                          ;; Hour
-                                          (safe-parse-int (nth 3 time-segs)
-                                                          :fallback 0)
-                                          ;; Day
-                                          (safe-parse-int (nth 2 time-segs)
-                                                          :fallback 1)
-                                          ;; Month
-                                          (safe-parse-int (nth 1 time-segs)
-                                                          :fallback 1)
-                                          ;; Year
-                                          (safe-parse-int (nth 0 time-segs)
-                                                          :fallback 1))))
+             (timestamp (parse-timestring time-str)))
 
         (if (eq 'short mode)
             (setf format-desc '(:short-weekday " " :short-month " " :day " "
@@ -400,7 +381,7 @@
             (:td (fmt "~a" version)))
            (:tr
             (:td "Last Updated")
-            (:td (fmt "~a" (pretty-date-time updated))))
+            (:td (fmt "~a" (pretty-time updated))))
            (:tr
             (:td "License")
             (:td
@@ -455,8 +436,8 @@
                     (:a :class "game-date"
                         :href (sf "/~A/games/~A"
                                   (string-downcase (league-name league))
-                                  (game-date-time game))
-                        (esc (pretty-date-time (game-date-time game))))
+                                  (game-id game))
+                        (esc (pretty-time (game-time game))))
                     (:span :class "game-state" "")
                     (:span :class "clear-fix")))))
            (:h2 :class "blue-heading" "Scores")
@@ -468,8 +449,8 @@
                           (:a
                            :href (sf "/~A/games/~A"
                                      (string-downcase (league-name league))
-                                     (game-date-time game))
-                           (esc (pretty-date-time (game-date-time game)))))
+                                     (game-id game))
+                           (esc (pretty-time (game-time game)))))
                     (:div :class "game-score"
                           (:div
                            (:img :class "team-logo"
@@ -494,19 +475,18 @@
 
 ;;; Game Detail Page
 (defun www-game-detail-page (&key player league)
-  (let* ((game-time (last1 (path-segments *request*)))
-         (friendly-game-time (pretty-date-time game-time))
-         (game (get-game league game-time))
+  (let* ((game-id (last1 (path-segments *request*)))
+         (game (get-game league game-id))
          (show-confirm-inputs
            (or (empty? (game-progress game))
                (string-equal "in-progress" (game-progress game)))))
     (standard-page
-        (:title (fmt "Game on ~a" friendly-game-time)
+        (:title (fmt "Game on ~a" (pretty-time (game-time game)))
          :player player
          :league league
          :page-id "game-detail-page")
       (:h1 :id "time-status"
-       (:span (esc friendly-game-time))
+           (:span (esc (pretty-time (game-time game))))
        (if (not (empty? (game-progress game)))
            (htm
             (:span " - ")
@@ -588,8 +568,8 @@
                     :data-confirm-type (esc (sf "(~A)"
                                                 (game-confirm-confirm-type pc)))
                     :data-reason (esc (game-confirm-reason pc))
-                    :data-response-time (pretty-date-time
-                                         (game-confirm-date-time pc)
+                    :data-response-time (pretty-time
+                                         (game-confirm-time pc)
                                          'short)
                     (:span :class "player-name"
                            (esc (player-name (-> pc player))))
@@ -616,8 +596,8 @@
                            (:span :class "confirm-reason" "")
                            (:span :class "confirm-time"
                                   :title "Date confirmed"
-                                  (esc (pretty-date-time
-                                        (game-confirm-date-time pc)
+                                  (esc (pretty-time
+                                        (game-confirm-time pc)
                                         'short))))
                     (:span :class "clear-fix"))))))
       (:section :id "random-teams"
@@ -665,8 +645,8 @@
                     :data-confirm-type (esc (sf "(~A)"
                                                 (game-confirm-confirm-type pc)))
                     :data-reason (esc (game-confirm-reason pc))
-                    :data-response-time (pretty-date-time
-                                         (game-confirm-date-time pc) 'short)
+                    :data-response-time (pretty-time
+                                         (game-confirm-time pc) 'short)
                     (:span :class "player-name" (esc (player-name (-> pc player))))
                     (:span :class "confirm-type"
                            (esc (sf "(~A)" (game-confirm-confirm-type pc))))
@@ -680,8 +660,8 @@
                            (esc (game-confirm-reason pc)))
                     (:span :class "confirm-time"
                            :title "Date confirmed"
-                           (esc (pretty-date-time
-                                 (game-confirm-date-time pc)
+                           (esc (pretty-time
+                                 (game-confirm-time pc)
                                  'short)))
                     (:span :class "clear-fix"))))))
       (:button :id "make-teams"

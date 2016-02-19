@@ -143,15 +143,16 @@
 ;;; Games
 (defstruct game
   "Describes a hockey game.
-   * DATE-TIME: date/time of the game
+   * TIME: date/time of the game
      * This also acts as a unique identifier within the scope of a league
    * PROGRESS: is the state of the game, and one of:
      * NIL (not yet started)
      * IN-PROGRESS
      * FINAL
    * CONFIRMS: list of GAME-CONFIRM structs"
+  (id 0)
   (league nil)
-  (date-time nil)
+  (time nil)
   (progress nil)
   (home-team nil)
   (away-team nil)
@@ -187,7 +188,7 @@
 (defstruct game-confirm
   "Describes the confirmation state of a player for a game.
    * PLAYER: the respective PLAYER
-   * DATE-TIME: when the PLAYER made a response
+   * TIME: when the PLAYER made a response
    * CONFIRM-TYPE:
      * Playing
      * Can't play
@@ -196,7 +197,7 @@
    * REASON: typically a description of why a player is unable/unsure of
      playing"
   (player nil)
-  (date-time "")
+  (time "")
   (confirm-type nil)
   (reason ""))
 
@@ -215,24 +216,25 @@
                      (if (not (empty? (game-progress game)))
                          (push game games)))
                     (t (push game games)))))
-          (sort games #'string< :key #'game-date-time)))))
+          (sort games #'string< :key #'game-time)))))
 
-(defun get-game (league date-time)
-  "Get the GAME with the given LEAGUE and date/time."
-  (if (or (empty? league) (empty? date-time))
+(defun get-game (league game-id)
+  "Get the GAME with the given LEAGUE and GAME-ID."
+  (if (or (empty? league) (null game-id))
       nil
       (redis:with-persistent-connection ()
         (let* ((game-key (sf "leagues:~A:games:~A"
                              (-> league id)
-                             date-time)))
+                             game-id)))
           (if (redis:red-exists game-key)
               (new-game-from-db game-key league))))))
 
 (defun new-game-from-db (game-key league)
   "Create a GAME struct based on the given redis key."
-  (let ((date-time (last1 (split-sequence #\: game-key))))
-    (make-game :league league
-               :date-time date-time
+  (let ((id (parse-id game-key)))
+    (make-game :id id
+               :league league
+               :time (red-hget game-key "time")
                :progress (red-hget game-key "progress")
                :home-team (new-team-from-db (sf "team:~A"
                                                 (red-hget game-key
@@ -247,12 +249,12 @@
 
 (defun new-game-confirm (plist)
   "The key of PLIST is expected to be a player id and the value a list of the
-   form: (CONFIRM-TYPE DATE-TIME REASON). REASON is optional."
+   form: (CONFIRM-TYPE TIME REASON). REASON is optional."
   (let ((game-confirms '()))
     (doplist (player-id confirm-info plist)
              (push (make-game-confirm :player (get-player player-id)
                                       :confirm-type (first1 confirm-info)
-                                      :date-time (second1 confirm-info "")
+                                      :time (second1 confirm-info "")
                                       :reason (third1 confirm-info ""))
                    game-confirms))
     game-confirms))

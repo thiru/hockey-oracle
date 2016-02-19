@@ -33,7 +33,7 @@
    :get-seasons
    :game
    :game-id
-   :game-date-time
+   :game-time
    :game-progress
    :game-home-team
    :game-away-team
@@ -45,7 +45,7 @@
    :game-confirm
    :make-game-confirm
    :game-confirm-player
-   :game-confirm-date-time
+   :game-confirm-time
    :game-confirm-confirm-type
    :game-confirm-reason
    :confirmed-players
