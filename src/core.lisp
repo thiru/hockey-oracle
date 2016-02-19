@@ -2,6 +2,8 @@
 
 (in-package :hockey-oracle.core)
 
+(defvar *the-random-state* (make-random-state t))
+
 ;;; Utils
 (defun first1 (obj)
   "Gets the first item in OBJ if it's a list, otherwise OBJ is simply returned."
@@ -47,6 +49,20 @@
 (defun to-bool (redis-val)
   "Converts the given redis value to a bool."
   (plusp (parse-integer redis-val)))
+
+;; Based on hunchentoot/hunchentools
+(defun random-string (&optional (n 32) (base 36))
+  "Return a random number \(as a string) with N digits and base BASE."
+  (with-output-to-string (s)
+    (dotimes (i n)
+      (format s "~VR" base
+              (random base *the-random-state*)))))
+
+(defun gen-hash (str)
+  "Generate a hash of STR."
+  (ironclad:byte-array-to-hex-string
+   (ironclad:digest-sequence :sha256
+                             (ironclad:ascii-string-to-byte-array str))))
 ;;; Utils ------------------------------------------------------------------- END
 
 ;;; Leagues
@@ -99,7 +115,7 @@
 
 (defun get-teams (league)
   "Gets teams belonging to the given LEAGUE."
-  (check-type league league)
+  (check-type league LEAGUE)
   (if league
       (redis:with-persistent-connection ()
         (let* ((team-ids (red-smembers (sf "leagues:~A:teams" (-> league id))))
@@ -247,10 +263,12 @@
   "Describes a player/user.
    * ID: unique identifier (across all leagues)
    * NAME: his/her name
+   * AUTH: current authentication token
    * POSITION: default position
    * ACTIVE?: whether active/able to play"
   (id 0)
   (name "")
+  (auth "")
   (position "")
   (active? t))
 
@@ -282,14 +300,39 @@
 
 (defun get-player (id)
   "Gets the PLAYER with the given id."
+  (if id
+      (redis:with-persistent-connection ()
+        (new-player-from-db (sf "player:~A" id)))))
+
+(defun get-auth-player (auth-token)
+  "Gets the PLAYER with the given authentication token (if any)."
   (redis:with-persistent-connection ()
-    (new-player-from-db (sf "player:~A" id))))
+    (get-player (red-hget "auths" auth-token))))
+
+; TODO: Wrap DB updates in transaction
+(defun reset-player-auth (player)
+  "Reset the authentication token of PLAYER.
+   RETURNS:
+   * The new auth token
+   * The random string that was hashed to generate the auth token"
+  (check-type player PLAYER)
+  (if player
+      (let* ((rnd-str (random-string))
+             (new-auth (gen-hash rnd-str))
+             (player-key (sf "player:~A" (player-id player))))
+        (redis:with-persistent-connection ()
+          (when (red-exists player-key)
+            (red-hset player-key "auth" new-auth)
+            (red-hdel "auths" (player-auth player))
+            (red-hset "auths" new-auth (player-id player))
+            (values new-auth rnd-str))))))
 
 (defun new-player-from-db (player-key)
   "Create a PLAYER struct from the given redis key."
   (let ((id (parse-id player-key)))
     (make-player :id id
                  :name (red-hget player-key "name")
+                 :auth (red-hget player-key "auth")
                  :position (red-hget player-key "position")
                  :active? (red-sismember "players:active" id))))
 ;;; Players ----------------------------------------------------------------- END

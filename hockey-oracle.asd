@@ -9,7 +9,7 @@
   :license "GPLv2"
   :serial t
   :depends-on (:alexandria :bordeaux-threads :cl-redis :cl-smtp :cl-who :glu
-               :hunchentoot :local-time :split-sequence)
+               :hunchentoot :ironclad :local-time :split-sequence)
   :components ((:file "src/package")
                (:file "src/app")
                (:file "src/core")

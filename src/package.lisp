@@ -14,6 +14,8 @@
   (:use :alexandria :cl :glu :redis :split-sequence)
   (:documentation "Hockey Oracle core domain.")
   (:export
+   :random-string
+   :gen-hash
    :league
    :make-league
    :league-id
@@ -60,6 +62,8 @@
    :get-all-players
    :get-players
    :get-player
+   :get-auth-player
+   :reset-player-auth
    :team
    :make-team
    :team-id

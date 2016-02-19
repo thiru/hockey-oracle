@@ -202,13 +202,16 @@ main
   max-width: 1200px;
   margin: 0 auto;
 }
+#top-heading a
+{
+    color: white;
+}
 #top-heading .logo
 {
   height: 35px; /* VAR TOP-BANNER-HEIGHT */
 }
 #top-heading .title
 {
-  color: white;
   display: inline-block;
   font-size: 1em;
   left: 55px;

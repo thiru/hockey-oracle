@@ -3,6 +3,7 @@
 (in-package :hockey-oracle.web)
 
 ;;; General
+(defvar *debug* t)
 (defvar main-acceptor nil "The global web-server instance.")
 (defvar static-files-dir (merge-pathnames "www/" base-dir))
 
@@ -29,8 +30,9 @@
      out, and the following hunchentoot special variable settings:
      * *CATCH-ERRORS-P* => NIL
      * *SHOW-LISP-ERRORS-P* => T
-   Side-effects: sets the special variable main-acceptor to the created
-   acceptor."
+   Side-effects: sets the special variable MAIN-ACCEPTOR to the created
+   acceptor, and *DEBUG* to the value of DEBUG."
+  (setf *debug* debug)
   (setf main-acceptor (create-acceptor :port port :debug debug))
   (when debug
     (setf *catch-errors-p* nil)
@@ -152,7 +154,10 @@
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/about$"
                                      (lambda ()
                                        (base-league-page 'www-about-page)))
-            (create-regex-dispatcher "^/leagues$" 'www-league-list-page)
+            (create-regex-dispatcher "^/leagues$"
+                                     (lambda ()
+                                       (base-league-page 'www-league-list-page
+                                                         :require-league? nil)))
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/games$"
                                      (lambda ()
                                        (base-league-page 'www-game-list-page)))
@@ -163,17 +168,23 @@
                                      (lambda ()
                                        (base-league-page 'www-player-list-page)))
             (create-regex-dispatcher "^/test-server-error$"
-                                     'www-test-server-error)
+                                     (lambda ()
+                                       (base-league-page
+                                        'www-test-server-error
+                                        :require-league? nil)))
             (create-regex-dispatcher "^/test-not-found$"
-                                     'www-not-found-page)
+                                     (lambda ()
+                                       (base-league-page
+                                        'www-not-found-page
+                                        :require-league? nil)))
             (create-regex-dispatcher "^/[a-zA-Z-]+$"
                                      (lambda ()
-                                       (base-league-page 'www-league-detail-page)))
-            ))
+                                       (base-league-page
+                                        'www-league-detail-page)))))
 ;;; Routes ------------------------------------------------------------------ END
 
 ;;; Template Page
-(defmacro standard-page ((&key title page-id league) &body body)
+(defmacro standard-page ((&key title page-id league player) &body body)
   "Creates a standard page layout.
    @param title
      Specifies the title of a page.
@@ -214,9 +225,16 @@
              (:div :id "overlay" "&nbsp;")
              (:div :id "top-shade")
              (:header :id "top-heading"
-                      (if ,league
-                          (htm (:div :id "league-name-header"
-                                     (esc (league-name ,league)))))
+                      (:div :id "league-name-header"
+                            (if ,player
+                                (htm
+                                 (:a :href (sf "/players/~A"
+                                               (player-id ,player))
+                                     (esc (player-name ,player)))))
+                            (if ,league
+                                (htm
+                                 (:span " - ")
+                                 (:span (esc (league-name ,league))))))
                       (:a :href "/"
                           (:img
                            :alt "logo"
@@ -272,28 +290,67 @@
 
 ;;; Base Page
 (defun base-league-page (actual-page &key (require-league? t))
-  (let ((league (parse-league *request*)))
-    (if (and require-league? (null league))
-        (www-not-found-page)
-        (funcall actual-page league))))
+  (let* ((league (parse-league *request*))
+         (me-query (get-parameter "me"))
+         (user-cookie (cookie-in "user"))
+         (me-query-hash (if (not (empty? me-query)) (gen-hash me-query)))
+         (me-query-hash2 (if (not (empty? me-query)) (gen-hash me-query-hash)))
+         (user-cookie-hash (if (not (empty? user-cookie)) (gen-hash user-cookie)))
+         (player (get-auth-player (or me-query-hash2 user-cookie-hash))))
+    (log-message* :debug
+                  "=== ME-QUERY ~A === ME-QUERY-HASH ~A === ME-QUERY-HASH2 ~A === COOKIE ~A === COOKIE-HASH ~A ===~%"
+                  me-query
+                  me-query-hash
+                  me-query-hash2
+                  user-cookie
+                  user-cookie-hash)
+    (if (and me-query player)
+        (set-cookie "user" :value me-query-hash
+                           ;; Expire a month from now
+                           :max-age (* 60 60 24 30)
+                           :path "/"
+                           :secure (not *debug*)
+                           :http-only t))
+    ;; Load player from cookie incase an invalid 'me' query was given
+    (if (and (null player) user-cookie)
+        (setf player (get-auth-player user-cookie-hash)))
+    (cond ((and require-league? (null league))
+           (www-not-found-page :player player))
+          ((and require-league? (null player))
+           (www-not-authorised-page))
+          (t (funcall actual-page :player player :league league)))))
 ;;; Base Page --------------------------------------------------------------- END
 
 ;;; Error Pages
-(defun www-not-found-page ()
+(defun www-not-found-page (&key player league)
   (setf (return-code*) +http-not-found+)
   (standard-page
-   (:title "Not Found"
-    :page-id "not-found-page")
-   (:h2 "Not Found")
-   (:p "The page or resource you requested could not be found.")
-   (:a :href "/" "Go back to the home page")))
+      (:title "Not Found"
+       :player player
+       :league league
+       :page-id "not-found-page")
+    (:h2 "Not Found")
+    (:p "The page or resource you requested could not be found.")
+    (:a :href "/" "Go back to the home page")))
+
+(defun www-not-authorised-page (&key player league)
+  (setf (return-code*) +http-forbidden+)
+  (standard-page
+      (:title "Not Authorised"
+       :player player
+       :league league
+       :page-id "not-authorised-page")
+    (:h2 "Not Authorised")
+    (:p "Sorry but you do not have permission to view the page or resource you requested.")
+    (:a :href "/" "Go back to the home page")))
 
 (defmethod acceptor-status-message (acceptor (http-status-code (eql 404)) &key)
-  (www-not-found-page))
+  (base-league-page #'www-not-found-page :require-league? nil))
 
-(defun www-server-error-page (league)
+(defun www-server-error-page (&key player league)
   (standard-page
    (:title "Server Error"
+    :player player
     :league league
     :page-id "server-error-page")
    (:h2 "Server Error")
@@ -305,26 +362,29 @@
   (bt:make-thread (lambda () (send-error-email "A <b>server</b> error occurred.")))
   (www-server-error-page nil))
 
-(defun www-test-server-error ()
+(defun www-test-server-error (&key player league)
   (log-message* :error "Test error page \(error log level).")
   (log-message* :warning "Test error page \(warning log level).")
   (log-message* :info "Test error page \(info log level).")
   (error "This is an intentional error for testing purposes.")
   ;; The following should never be displayed
   (standard-page
-   (:title "Test Server Error")
+      (:title "Test Server Error"
+       :player player
+       :league league)
    (:h2 "Test Server Error")))
 ;;; Error Pages ------------------------------------------------------------- END
 
 ;;; Home Page
-(defun www-home-page ()
+(defun www-home-page (&key player league)
   (redirect "/leagues"))
 ;;; Home Page --------------------------------------------------------------- END
 
 ;;; About Page
-(defun www-about-page (league)
+(defun www-about-page (&key player league)
   (standard-page
    (:title "About"
+    :player player
     :league league
     :page-id "about-page")
    (:p
@@ -351,9 +411,11 @@
 ;;; About Page -------------------------------------------------------------- END
 
 ;;; League List Page
-(defun www-league-list-page ()
+(defun www-league-list-page (&key player league)
   (standard-page
    (:title "Leagues"
+    :player player
+    :league league
     :page-id "league-list-page")
    (:h2 "Choose your league:")
    (:ul :class "simple-list"
@@ -366,16 +428,20 @@
 ;;; League List Page -------------------------------------------------------- END
 
 ;;; League Detail Page
-(defun www-league-detail-page (league)
-  (redirect (sf "/~A/games" (string-downcase (league-name league)))))
+(defun www-league-detail-page (&key player league)
+  (redirect (sf "/~A/games~A"
+                (string-downcase (league-name league))
+                (if (query-string*)
+                    (sf "?~A" (query-string*)) ""))))
 ;;; League Detail Page ------------------------------------------------------ END
 
 ;;; Game List Page
-(defun www-game-list-page (league)
+(defun www-game-list-page (&key player league)
   (let* ((started-games (get-games league :exclude-unstarted t))
          (unstarted-games (get-games league :exclude-started t)))
     (standard-page
         (:title "Games"
+         :player player
          :league league
          :page-id "game-list-page")
       (if (and (empty? started-games) (empty? unstarted-games))
@@ -427,7 +493,7 @@
 ;;; Game List Page ---------------------------------------------------------- END
 
 ;;; Game Detail Page
-(defun www-game-detail-page (league)
+(defun www-game-detail-page (&key player league)
   (let* ((game-time (last1 (path-segments *request*)))
          (friendly-game-time (pretty-date-time game-time))
          (game (get-game league game-time))
@@ -436,6 +502,7 @@
                (string-equal "in-progress" (game-progress game)))))
     (standard-page
         (:title (fmt "Game on ~a" friendly-game-time)
+         :player player
          :league league
          :page-id "game-detail-page")
       (:h1 :id "time-status"
@@ -445,6 +512,9 @@
             (:span " - ")
             (:span :class "uppercase"
                    (esc (game-progress game))))))
+      (:section
+       :id "confirm-inputs"
+       (:p "You answered YES/NO/MAYBE (TODO)"))
       (:div :id "edit-dialog" :class "dialog"
             (:header "Editing Player")
             (:section :class "content"
@@ -636,9 +706,10 @@
 ;;; Game Detail Page -------------------------------------------------------- END
 
 ;;; Player List Page
-(defun www-player-list-page (league)
+(defun www-player-list-page (&key player league)
   (standard-page
    (:title "Players"
+    :player player
     :league league
     :page-id "player-list-page")
    (:div :id "edit-dialog" :class "dialog"
