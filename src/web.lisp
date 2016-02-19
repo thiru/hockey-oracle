@@ -478,211 +478,213 @@
   (let* ((game-id (last1 (path-segments *request*)))
          (game (get-game league game-id))
          (show-confirm-inputs
-           (or (empty? (game-progress game))
-               (string-equal "in-progress" (game-progress game)))))
-    (standard-page
-        (:title (fmt "Game on ~a" (pretty-time (game-time game)))
-         :player player
-         :league league
-         :page-id "game-detail-page")
-      (:h1 :id "time-status"
-           (:span (esc (pretty-time (game-time game))))
-       (if (not (empty? (game-progress game)))
-           (htm
-            (:span " - ")
-            (:span :class "uppercase"
-                   (esc (game-progress game))))))
-      (:section
-       :id "confirm-inputs"
-       (:p "You answered YES/NO/MAYBE (TODO)"))
-      (:div :id "edit-dialog" :class "dialog"
-            (:header "Editing Player")
-            (:section :class "content"
-                      (:table
-                       (:tr :class "input-row"
-                            (:td :class "label-col"
-                                 (:label :for "player-name-edit" "Name: "))
-                            (:td :class "input-col"
-                                 (:input :id "player-name-edit" :type "text")))
-                       (:tr
-                        (:td
-                         (:label :for "player-pos-edit" "Position: "))
-                        (:td
-                         (:select :id "player-pos-edit"
-                                  (dolist (pos players-positions)
-                                    (htm
-                                     (:option :value pos (esc pos)))))))
-                       (:tr
-                        (:td
-                         (:label :for "player-active-edit" "Is Active: "))
-                        (:td
-                         (:input :id "player-active-edit" :type "checkbox"))))
-                      (:div :class "actions"
-                            (:button
-                             :class "button save-btn"
-                             :data-player-id "0"
-                             :onclick "savePlayer()"
-                             "Save")
-                            (:button
-                             :class "button cancel-btn"
-                             :onclick "closeDialog()"
-                             "Cancel"))))
-      (:section
-       :id "confirmed-players-section"
-       (:h2 :id "confirmed-heading"
-            :class (if (confirmed-players game) "blue-heading" "grey-heading")
-            (:span :class (if (confirmed-players game) "true" "true hidden")
-                   "Confirmed to play")
-            (:span :class (if (confirmed-players game) "false hidden" "false")
-                   "No players confirmed to play"))
-       (:ul :class "template-player-item"
-            (:li :class "player-item"
-                 (:span :class "player-name" "")
-                 (:span :class "confirm-type" "&nbsp;")
-                 (:span :class "confirm-btn-toggle"
-                        (:button :class "button"
-                                 :onclick "unconfirmPlayer(this)"
-                                 :title "Move to \"Not playing...\" section"
-                                 (:i :class "fa fa-thumbs-down")))
-                 (:select :class "player-position"
-                          :onchange "positionChanged(this)"
-                          (dolist (pos players-positions)
-                            (htm
-                             (:option :value pos
-                                      :selected nil
-                                      (esc pos)))))
-                 (:span :class "confirm-info"
-                        (:span :class "confirm-reason" "")
-                        (:span :class "confirm-time" :title "Date confirmed" ""))
-                 (:span :class "clear-fix")))
-       (:ul :id "confirmed-players"
-            :class (if (confirmed-players game)
-                       "data-list"
-                       "data-list hidden")
-            (dolist (pc (confirmed-players game))
-              (htm
-               (:li :class "player-item"
-                    :data-id (player-id (-> pc player))
-                    :data-name (player-name (-> pc player))
-                    :data-position (player-position (-> pc player))
-                    :data-confirm-type (esc (sf "(~A)"
-                                                (game-confirm-confirm-type pc)))
-                    :data-reason (esc (game-confirm-reason pc))
-                    :data-response-time (pretty-time
-                                         (game-confirm-time pc)
-                                         'short)
-                    (:span :class "player-name"
-                           (esc (player-name (-> pc player))))
-                    (:span :class "confirm-type" "&nbsp;")
-                    (:span :class "confirm-btn-toggle"
-                           (:button :class "button"
-                                    :onclick "unconfirmPlayer(this)"
-                                    :title "Move to \"Not playing...\" section"
-                                    (:i :class "fa fa-thumbs-down")))
-                    (:select :class "player-position"
-                             :onchange "positionChanged(this)"
-                             (dolist (pos players-positions)
-                               (htm
-                                (:option
-                                 :value pos
-                                 :selected (if (string-equal
-                                                pos
-                                                (player-position
-                                                 (-> pc player)))
-                                               ""
-                                               nil)
-                                 (esc pos)))))
-                    (:span :class "confirm-info"
-                           (:span :class "confirm-reason" "")
-                           (:span :class "confirm-time"
-                                  :title "Date confirmed"
-                                  (esc (pretty-time
-                                        (game-confirm-time pc)
-                                        'short))))
-                    (:span :class "clear-fix"))))))
-      (:section :id "random-teams"
-                (:ul :class "template-player-item"
-                     (:li :class "player-item"
-                          (:span :class "player-name")
-                          (:span :class "player-position")
-                          (:span :class "clear-fix")))
-                (:div :id "team1" :class "team"
-                      (:img :class "team-logo" :src "/images/team-logos/cripplers.png")
-                      (:h2 :class "team-heading" "Cripplers")
-                      (:ul :class "team-players data-list"))
-                (:div :id "team2" :class "team"
-                      (:img :class "team-logo" :src "/images/team-logos/panthers.png")
-                      (:h2 :class "team-heading" "Panthers")
-                      (:ul :class "team-players data-list")))
-      (:section
-       :id "unconfirmed-players-section"
-       (:h2 :id "unconfirmed-heading" :class "blue-heading"
-            "Not playing or undecided")
-       (:ul :class "template-player-item"
-            (:li :class "player-item"
-                 (:span :class "player-name" "")
-                 (:span :class "confirm-type" "&nbsp;")
-                 (:span :class "confirm-btn-toggle"
-                        (:button :class "button"
-                                 :onclick "confirmPlayer(this)"
-                                 :title "Move to \"Confirmed...\" section"
-                                 (:i :class "fa fa-thumbs-up")))
-                 (:span :class "player-position" "&nbsp;")
-                 (:span :class "confirm-info"
-                        (:span :class "confirm-reason" "")
-                        (:span :class "confirm-time" :title "Date confirmed" ""))
-                 (:span :class "clear-fix")))
-       (:ul :id "unconfirmed-players"
-            :class (if (unconfirmed-players game)
-                       "data-list"
-                       "data-list hidden")
-            (dolist (pc (unconfirmed-players game))
-              (htm
-               (:li :class "player-item"
-                    :data-id (player-id (-> pc player))
-                    :data-name (player-name (-> pc player))
-                    :data-position (player-position (-> pc player))
-                    :data-confirm-type (esc (sf "(~A)"
-                                                (game-confirm-confirm-type pc)))
-                    :data-reason (esc (game-confirm-reason pc))
-                    :data-response-time (pretty-time
-                                         (game-confirm-time pc) 'short)
-                    (:span :class "player-name" (esc (player-name (-> pc player))))
-                    (:span :class "confirm-type"
-                           (esc (sf "(~A)" (game-confirm-confirm-type pc))))
-                    (:span :class "confirm-btn-toggle"
-                           (:button :class "button"
-                                    :onclick "confirmPlayer(this)"
-                                    :title "Move to \"Confirmed...\" section"
-                                    (:i :class "fa fa-thumbs-up")))
-                    (:span :class "player-position" "&nbsp;")
-                    (:span :class "confirm-reason"
-                           (esc (game-confirm-reason pc)))
-                    (:span :class "confirm-time"
-                           :title "Date confirmed"
-                           (esc (pretty-time
-                                 (game-confirm-time pc)
-                                 'short)))
-                    (:span :class "clear-fix"))))))
-      (:button :id "make-teams"
-               :class (if (confirmed-players game)
-                          "button wide-button"
-                          "button wide-button hidden")
-               :onclick "makeTeams()"
-               :title "Generate random teams"
-               (:i :class "fa fa-random")
-               (:span :class "button-text" "Make Teams"))
-      (:button :id "add-player"
-               :class "button wide-button"
-               :onclick "addPlayer()"
-               (:i :class "fa fa-user-plus")
-               (:span :class "button-text" "Add Player"))
-      (:button :id "pick-players"
-               :class "button wide-button"
-               :onclick "pickPlayers()"
-               :title "Choose players"
-               (:i :class "fa fa-check-circle-o")
-               (:span :class "button-text" "Pick Players")))))
+           (and game
+                (string-equal "in-progress" (game-progress game)))))
+    (if (null game)
+        (www-not-found-page :player player :league league)
+        (standard-page
+            (:title (fmt "Game on ~a" (pretty-time (game-time game)))
+             :player player
+             :league league
+             :page-id "game-detail-page")
+          (:h1 :id "time-status"
+               (:span (esc (pretty-time (game-time game))))
+               (if (not (empty? (game-progress game)))
+                   (htm
+                    (:span " - ")
+                    (:span :class "uppercase"
+                           (esc (game-progress game))))))
+          (:section
+           :id "confirm-inputs"
+           (:p "You answered YES/NO/MAYBE (TODO)"))
+          (:div :id "edit-dialog" :class "dialog"
+                (:header "Editing Player")
+                (:section :class "content"
+                          (:table
+                           (:tr :class "input-row"
+                                (:td :class "label-col"
+                                     (:label :for "player-name-edit" "Name: "))
+                                (:td :class "input-col"
+                                     (:input :id "player-name-edit" :type "text")))
+                           (:tr
+                            (:td
+                             (:label :for "player-pos-edit" "Position: "))
+                            (:td
+                             (:select :id "player-pos-edit"
+                                      (dolist (pos players-positions)
+                                        (htm
+                                         (:option :value pos (esc pos)))))))
+                           (:tr
+                            (:td
+                             (:label :for "player-active-edit" "Is Active: "))
+                            (:td
+                             (:input :id "player-active-edit" :type "checkbox"))))
+                          (:div :class "actions"
+                                (:button
+                                 :class "button save-btn"
+                                 :data-player-id "0"
+                                 :onclick "savePlayer()"
+                                 "Save")
+                                (:button
+                                 :class "button cancel-btn"
+                                 :onclick "closeDialog()"
+                                 "Cancel"))))
+          (:section
+           :id "confirmed-players-section"
+           (:h2 :id "confirmed-heading"
+                :class (if (confirmed-players game) "blue-heading" "grey-heading")
+                (:span :class (if (confirmed-players game) "true" "true hidden")
+                       "Confirmed to play")
+                (:span :class (if (confirmed-players game) "false hidden" "false")
+                       "No players confirmed to play"))
+           (:ul :class "template-player-item"
+                (:li :class "player-item"
+                     (:span :class "player-name" "")
+                     (:span :class "confirm-type" "&nbsp;")
+                     (:span :class "confirm-btn-toggle"
+                            (:button :class "button"
+                                     :onclick "unconfirmPlayer(this)"
+                                     :title "Move to \"Not playing...\" section"
+                                     (:i :class "fa fa-thumbs-down")))
+                     (:select :class "player-position"
+                              :onchange "positionChanged(this)"
+                              (dolist (pos players-positions)
+                                (htm
+                                 (:option :value pos
+                                          :selected nil
+                                          (esc pos)))))
+                     (:span :class "confirm-info"
+                            (:span :class "confirm-reason" "")
+                            (:span :class "confirm-time" :title "Date confirmed" ""))
+                     (:span :class "clear-fix")))
+           (:ul :id "confirmed-players"
+                :class (if (confirmed-players game)
+                           "data-list"
+                           "data-list hidden")
+                (dolist (pc (confirmed-players game))
+                  (htm
+                   (:li :class "player-item"
+                        :data-id (player-id (-> pc player))
+                        :data-name (player-name (-> pc player))
+                        :data-position (player-position (-> pc player))
+                        :data-confirm-type (esc (sf "(~A)"
+                                                    (game-confirm-confirm-type pc)))
+                        :data-reason (esc (game-confirm-reason pc))
+                        :data-response-time (pretty-time
+                                             (game-confirm-time pc)
+                                             'short)
+                        (:span :class "player-name"
+                               (esc (player-name (-> pc player))))
+                        (:span :class "confirm-type" "&nbsp;")
+                        (:span :class "confirm-btn-toggle"
+                               (:button :class "button"
+                                        :onclick "unconfirmPlayer(this)"
+                                        :title "Move to \"Not playing...\" section"
+                                        (:i :class "fa fa-thumbs-down")))
+                        (:select :class "player-position"
+                                 :onchange "positionChanged(this)"
+                                 (dolist (pos players-positions)
+                                   (htm
+                                    (:option
+                                     :value pos
+                                     :selected (if (string-equal
+                                                    pos
+                                                    (player-position
+                                                     (-> pc player)))
+                                                   ""
+                                                   nil)
+                                     (esc pos)))))
+                        (:span :class "confirm-info"
+                               (:span :class "confirm-reason" "")
+                               (:span :class "confirm-time"
+                                      :title "Date confirmed"
+                                      (esc (pretty-time
+                                            (game-confirm-time pc)
+                                            'short))))
+                        (:span :class "clear-fix"))))))
+          (:section :id "random-teams"
+                    (:ul :class "template-player-item"
+                         (:li :class "player-item"
+                              (:span :class "player-name")
+                              (:span :class "player-position")
+                              (:span :class "clear-fix")))
+                    (:div :id "team1" :class "team"
+                          (:img :class "team-logo" :src "/images/team-logos/cripplers.png")
+                          (:h2 :class "team-heading" "Cripplers")
+                          (:ul :class "team-players data-list"))
+                    (:div :id "team2" :class "team"
+                          (:img :class "team-logo" :src "/images/team-logos/panthers.png")
+                          (:h2 :class "team-heading" "Panthers")
+                          (:ul :class "team-players data-list")))
+          (:section
+           :id "unconfirmed-players-section"
+           (:h2 :id "unconfirmed-heading" :class "blue-heading"
+                "Not playing or undecided")
+           (:ul :class "template-player-item"
+                (:li :class "player-item"
+                     (:span :class "player-name" "")
+                     (:span :class "confirm-type" "&nbsp;")
+                     (:span :class "confirm-btn-toggle"
+                            (:button :class "button"
+                                     :onclick "confirmPlayer(this)"
+                                     :title "Move to \"Confirmed...\" section"
+                                     (:i :class "fa fa-thumbs-up")))
+                     (:span :class "player-position" "&nbsp;")
+                     (:span :class "confirm-info"
+                            (:span :class "confirm-reason" "")
+                            (:span :class "confirm-time" :title "Date confirmed" ""))
+                     (:span :class "clear-fix")))
+           (:ul :id "unconfirmed-players"
+                :class (if (unconfirmed-players game)
+                           "data-list"
+                           "data-list hidden")
+                (dolist (pc (unconfirmed-players game))
+                  (htm
+                   (:li :class "player-item"
+                        :data-id (player-id (-> pc player))
+                        :data-name (player-name (-> pc player))
+                        :data-position (player-position (-> pc player))
+                        :data-confirm-type (esc (sf "(~A)"
+                                                    (game-confirm-confirm-type pc)))
+                        :data-reason (esc (game-confirm-reason pc))
+                        :data-response-time (pretty-time
+                                             (game-confirm-time pc) 'short)
+                        (:span :class "player-name" (esc (player-name (-> pc player))))
+                        (:span :class "confirm-type"
+                               (esc (sf "(~A)" (game-confirm-confirm-type pc))))
+                        (:span :class "confirm-btn-toggle"
+                               (:button :class "button"
+                                        :onclick "confirmPlayer(this)"
+                                        :title "Move to \"Confirmed...\" section"
+                                        (:i :class "fa fa-thumbs-up")))
+                        (:span :class "player-position" "&nbsp;")
+                        (:span :class "confirm-reason"
+                               (esc (game-confirm-reason pc)))
+                        (:span :class "confirm-time"
+                               :title "Date confirmed"
+                               (esc (pretty-time
+                                     (game-confirm-time pc)
+                                     'short)))
+                        (:span :class "clear-fix"))))))
+          (:button :id "make-teams"
+                   :class (if (confirmed-players game)
+                              "button wide-button"
+                              "button wide-button hidden")
+                   :onclick "makeTeams()"
+                   :title "Generate random teams"
+                   (:i :class "fa fa-random")
+                   (:span :class "button-text" "Make Teams"))
+          (:button :id "add-player"
+                   :class "button wide-button"
+                   :onclick "addPlayer()"
+                   (:i :class "fa fa-user-plus")
+                   (:span :class "button-text" "Add Player"))
+          (:button :id "pick-players"
+                   :class "button wide-button"
+                   :onclick "pickPlayers()"
+                   :title "Choose players"
+                   (:i :class "fa fa-check-circle-o")
+                   (:span :class "button-text" "Pick Players"))))))
 ;;; Game Detail Page -------------------------------------------------------- END
 
 ;;; Player List Page
