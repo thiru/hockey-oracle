@@ -2,7 +2,9 @@
 
 (in-package :hockey-oracle.core)
 
+;;; Global Variables
 (defvar *the-random-state* (make-random-state t))
+;;; Global Variables -------------------------------------------------------- END
 
 ;;; Utils
 (defun first1 (obj)
@@ -61,7 +63,7 @@
 (defun gen-hash (str)
   "Generate a hash of STR."
   (ironclad:byte-array-to-hex-string
-   (ironclad:digest-sequence :sha256
+   (ironclad:digest-sequence :sha512
                              (ironclad:ascii-string-to-byte-array str))))
 ;;; Utils ------------------------------------------------------------------- END
 
