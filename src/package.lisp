@@ -14,6 +14,14 @@
   (:use :alexandria :cl :glu :redis :split-sequence)
   (:documentation "Hockey Oracle core domain.")
   (:export
+   :levels
+   :r
+   :r-level
+   :r-message
+   :r-data
+   :new-r
+   :succeeded?
+   :failed?
    :random-string
    :gen-hash
    :league
@@ -42,14 +50,17 @@
    :game-confirms
    :get-game
    :get-games
+   :confirm-types
    :game-confirm
    :make-game-confirm
    :game-confirm-player
    :game-confirm-time
    :game-confirm-confirm-type
    :game-confirm-reason
+   :game-confirm-for
    :confirmed-players
    :unconfirmed-players
+   :save-game-confirm
    :player
    :make-player
    :player-id
@@ -74,8 +85,8 @@
    :get-secure-key))
 
 (defpackage :hockey-oracle.web
-  (:use :cl :cl-who :glu :hockey-oracle.app :hockey-oracle.core :hunchentoot
-        :local-time :split-sequence)
+  (:use :alexandria :cl :cl-who :glu :hockey-oracle.app :hockey-oracle.core
+        :hunchentoot :local-time :split-sequence)
   (:documentation "Hockey Oracle web interface.")
   (:export
    :web-app

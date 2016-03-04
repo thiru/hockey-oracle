@@ -50,6 +50,19 @@ a:hover
     display: block;
 }
 
+.success
+{
+    color: green;
+}
+.warning
+{
+    color: orange;
+}
+.error, .fatal
+{
+    color: red;
+}
+
 .active
 {
   color: #0F83BC; /* VAR BLUE-HEADING */
@@ -138,6 +151,7 @@ a:hover
   box-shadow: 1px 1px 2px #888;
   cursor: pointer;
   color: white;
+  font-weight: bold;
   padding: 0.3em 0.7em;
   text-align: center;
   transition: all 0.3s ease 0s;
@@ -160,7 +174,6 @@ a:hover
 {
   display: block;
   font-size: 1.2em;
-  font-weight: bold;
   margin-bottom: 0.5em;
   padding: 0.3em;
   width: 100%;
@@ -350,6 +363,28 @@ main
 #game-detail-page #time-status
 {
     font-size: 1.7em;
+}
+
+#game-detail-page #confirm-inputs
+{
+    background-color: #FFF2CC;
+    border-radius: 0.3em;
+    padding: 1em;
+}
+
+#game-detail-page #reason-input
+{
+    margin: 0.5em 0;
+    width: 100%;
+}
+#game-detail-page #save-confirm-group #reason-input-info
+{
+    float: left;
+    font-size: 0.8em;
+}
+#game-detail-page #save-confirm-group .button
+{
+    float: right;
 }
 
 /* Edit dialog formatting */

@@ -7,6 +7,30 @@
 ;;; Global Variables -------------------------------------------------------- END
 
 ;;; Utils
+(defparameter levels '(:success 2 :info 1 :debug 0 :warning -1 :error -2 :fatal -3))
+
+(defstruct r
+  "Encapsulates a 'result' indicating the success/failure stated of a function
+   or operation. An optional DATA object includes the 'natural' return type of
+   the function."
+  (level :info)
+  (message "")
+  (data nil))
+
+(defun new-r (level &optional msg data)
+  "Creates a new R."
+  (make-r :level (find level levels) :message msg :data data))
+
+(defun succeeded? (obj)
+  "Determine whether OBJ represents a 'successful' object."
+  (typecase obj
+    (r (>= (or (getf levels (r-level obj)) -1) 0))
+    (t obj)))
+
+(defun failed? (obj)
+  "Determine whether OBJ represents a 'failed' object."
+  (not (succeeded? obj)))
+
 (defun first1 (obj)
   "Gets the first item in OBJ if it's a list, otherwise OBJ is simply returned."
   (if (listp obj) (first obj) obj))
@@ -162,11 +186,18 @@
   (away-score 0)
   (confirms '()))
 
+(defun game-confirm-for (game player)
+  "Get GAME-CONFIRM (if any) for PLAYER for the game GAME."
+  (if game
+      (find (player-id player)
+            (game-confirms game)
+            :key (lambda (x) (player-id (game-confirm-player x))))))
+
 (defun confirmed-players (game)
   "Gets PLAYER's confirmed to play for the given GAME as a list of GAME-CONFIRM
    structs."
-  (sort (remove-if (complement (lambda (x)
-                                 (string-equal 'Playing (-> x confirm-type))))
+  (sort (remove-if (complement (lambda (x) (string-equal :playing
+                                                         (-> x confirm-type))))
                    (-> game confirms))
         #'string<
         :key (lambda (x) (player-name (game-confirm-player x)))))
@@ -174,14 +205,14 @@
 (defun unconfirmed-players (game)
   "Gets PLAYER's that have not confirmed, are not able to play, or are unsure of
    being able to player for the given game, as a list of GAME-CONFIRM structs."
-  (let* ((unconfirmed (remove-if (lambda (x) (string-equal "Playing"
+  (let* ((unconfirmed (remove-if (lambda (x) (string-equal :playing
                                                            (-> x confirm-type)))
                                  (-> game confirms))))
     (dolist (p (get-players (game-league game)))
       (unless (find (player-id p) (-> game confirms)
                     :key (lambda (x) (player-id (game-confirm-player x))))
         (push (make-game-confirm :player p
-                                 :confirm-type "No response")
+                                 :confirm-type :no-response)
               unconfirmed)))
     (sort unconfirmed
           #'string<
@@ -191,17 +222,18 @@
   "Describes the confirmation state of a player for a game.
    * PLAYER: the respective PLAYER
    * TIME: when the PLAYER made a response
-   * CONFIRM-TYPE:
-     * Playing
-     * Can't play
-     * Maybe
-     * No response
+   * CONFIRM-TYPE: a key value of an item in the plist CONFIRM-TYPES
    * REASON: typically a description of why a player is unable/unsure of
      playing"
   (player nil)
   (time "")
   (confirm-type nil)
   (reason ""))
+
+(defparameter confirm-types '(:no-response "No response"
+                              :maybe "Maybe"
+                              :cant-play "Can't play"
+                              :playing "Playing"))
 
 (defun get-games (league &key exclude-started exclude-unstarted)
   "Get all GAME's belonging to the given LEAGUE."
@@ -231,6 +263,56 @@
           (if (redis:red-exists game-key)
               (new-game-from-db game-key league))))))
 
+;; TODO: transactify
+(defun save-game-confirm (game player confirm-type &optional reason)
+  "Save the game confirm details for the game GAME and player PLAYER. If REASON
+   is NIL it is not updated, therefore keeping any previous value.
+   Returns an R, with an updated GAME object if successful."
+  (check-type game GAME)
+  (check-type player PLAYER)
+  (if (empty? confirm-type)
+      (return-from save-game-confirm
+        (new-r :error "No confirm-type provided.")))
+  (if (null (find confirm-type confirm-types :test #'string-equal))
+      (return-from save-game-confirm
+        (new-r :error (sf "Invalid confirm-type, '~A'." confirm-type))))
+  (let* ((new-gcs nil))
+    (setf game (get-game (game-league game) (game-id game))) ; Get latest game info
+    (dolist (gc (game-confirms game))
+      (let* ((p-id (player-id (game-confirm-player gc)))
+             (p-to-update? (= (player-id player)
+                              (player-id (game-confirm-player gc)))))
+        (setf (getf new-gcs p-id)
+              ;; NOTE: Seem to have to surround each string value in quotes in order
+              ;; to be able to read it back in
+              (list
+               (if p-to-update?
+                   confirm-type
+                   (game-confirm-confirm-type gc))
+               (sf "\"~A\""
+                   (if p-to-update?
+                       (local-time:now)
+                       (game-confirm-time gc)))
+               (sf "\"~A\""
+                   (if (and p-to-update? (not (null reason)))
+                       reason
+                       (game-confirm-reason gc)))))))
+    (dolist (p (get-players (game-league game)))
+      (if (and (not (getf new-gcs (player-id p)))
+               (= (player-id p) (player-id player)))
+          (setf (getf new-gcs (player-id p))
+                (list
+                 confirm-type
+                 (sf "\"~A\"" (local-time:now))
+                 (sf "\"~A\"" (or reason ""))))))
+    (redis:with-persistent-connection ()
+      (red-hset (sf "leagues:~A:games:~A"
+                    (league-id (game-league game))
+                    (game-id game))
+                "confirms"
+                new-gcs))
+    (new-r :success "" (get-game (game-league game) (game-id game)))))
+
 (defun new-game-from-db (game-key league)
   "Create a GAME struct based on the given redis key."
   (let ((id (parse-id game-key)))
@@ -255,7 +337,9 @@
   (let ((game-confirms '()))
     (doplist (player-id confirm-info plist)
              (push (make-game-confirm :player (get-player player-id)
-                                      :confirm-type (first1 confirm-info)
+                                      :confirm-type (find (first1 confirm-info)
+                                                          confirm-types
+                                                          :test #'string-equal)
                                       :time (second1 confirm-info "")
                                       :reason (third1 confirm-info ""))
                    game-confirms))
