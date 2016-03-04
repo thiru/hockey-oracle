@@ -2,10 +2,6 @@
 
 (in-package :hockey-oracle.core)
 
-;;; Global Variables
-(defvar *the-random-state* (make-random-state t))
-;;; Global Variables -------------------------------------------------------- END
-
 ;;; Utils
 (defparameter levels '(:success 2 :info 1 :debug 0 :warning -1 :error -2 :fatal -3))
 
@@ -76,13 +72,9 @@
   "Converts the given redis value to a bool."
   (plusp (parse-integer redis-val)))
 
-;; Based on hunchentoot/hunchentools
-(defun random-string (&optional (n 32) (base 36))
-  "Return a random number \(as a string) with N digits and base BASE."
-  (with-output-to-string (s)
-    (dotimes (i n)
-      (format s "~VR" base
-              (random base *the-random-state*)))))
+(defun random-string (&optional (n 16))
+  "Return a random hex string with N digits."
+  (ironclad:byte-array-to-hex-string (ironclad:make-random-salt n)))
 
 (defun gen-hash (str)
   "Generate a hash of STR."
