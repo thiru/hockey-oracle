@@ -76,11 +76,12 @@
   "Return a random hex string with N digits."
   (ironclad:byte-array-to-hex-string (ironclad:make-random-salt n)))
 
-(defun gen-hash (str)
+(defun gen-hash (str &optional salt)
   "Generate a hash of STR."
   (ironclad:byte-array-to-hex-string
    (ironclad:digest-sequence :sha512
-                             (ironclad:ascii-string-to-byte-array str))))
+                             (ironclad:ascii-string-to-byte-array
+                              (sf "~A~A" str (or salt ""))))))
 ;;; Utils ------------------------------------------------------------------- END
 
 ;;; Leagues
@@ -343,12 +344,18 @@
   "Describes a player/user.
    * ID: unique identifier (across all leagues)
    * NAME: his/her name
-   * AUTH: current authentication token
+   * AUTH: current authentication (hashed and salted password)
+   * TEMP-AUTH: a random short-lived authentication token
+   * PERM-AUTH: a random longer-lived authentication token
+   * SALT: unique salt used in AUTH
    * POSITION: default position
    * ACTIVE?: whether active/able to play"
   (id 0)
   (name "")
   (auth "")
+  (perm-auth "")
+  (temp-auth "")
+  (salt "")
   (position "")
   (active? t))
 
@@ -378,34 +385,60 @@
             (push (new-player-from-db (sf "player:~A" player-id)) players))
           (sort players #'string< :key #'player-name)))))
 
-(defun get-player (id)
-  "Gets the PLAYER with the given id."
+(defun get-player (id &key pwd perm-auth temp-auth)
+  "Gets the PLAYER with the given ID. If PWD is non-null it is compared against
+   PLAYER-AUTH, and only returned if they match. If PERM-AUTH is non-null it is
+   compared against PLAYER-PERM-AUTH, and only returned if they match. If
+   TEMP-AUTH is non-null it is compared against PLAYER-TEMP-AUTH, and only
+   returned if non-null."
   (if id
-      (redis:with-persistent-connection ()
-        (new-player-from-db (sf "player:~A" id)))))
+      (let* ((player-key (sf "player:~A" id))
+             (player nil))
+        (redis:with-persistent-connection ()
+          (when (red-exists player-key)
+            (setf player (new-player-from-db player-key))
+            (cond (pwd
+                   (if (string= (player-auth player)
+                                (gen-hash pwd (player-salt player)))
+                       player))
+                  (perm-auth
+                   (if (string= (player-perm-auth player) perm-auth)
+                       player))
+                  (temp-auth
+                   (if (string= (player-temp-auth player) temp-auth)
+                       player))
+                  (t player)))))))
 
-(defun get-auth-player (auth-token)
-  "Gets the PLAYER with the given authentication token (if any)."
-  (redis:with-persistent-connection ()
-    (get-player (red-hget "auths" auth-token))))
-
-; TODO: Wrap DB updates in transaction
-(defun reset-player-auth (player)
-  "Reset the authentication token of PLAYER.
-   RETURNS:
-   * The new auth token
-   * The random string that was hashed to generate the auth token"
+;; TODO: Wrap DB updates in transaction
+(defun change-player-temp-auth (player &optional new-auth)
+  "Change the temporary authentication token of PLAYER to NEW-AUTH if non-null,
+   or a random hex string otherwise. The new temporary authentication token is
+   returned if successful, otherwise NIL."
   (check-type player PLAYER)
   (if player
-      (let* ((rnd-str (random-string))
-             (new-auth (gen-hash rnd-str))
+      (let* ((player-key (sf "player:~A" (player-id player)))
+             (new-auth (or new-auth (random-string))))
+        (redis:with-persistent-connection ()
+          (when (red-exists player-key)
+            (red-hset player-key "temp-auth" new-auth)
+            new-auth)))))
+
+;; TODO: Wrap DB updates in transaction
+(defun change-player-pwd (player pwd)
+  "Change the password of PLAYER to PWD. The hashed and salted password is
+   returned if successful, otherwise NIL."
+  (check-type player PLAYER)
+  (if (and player pwd)
+      ;; Generate a new salt whenever password is changed
+      (let* ((salt (random-string))
+             (new-auth (gen-hash pwd salt))
              (player-key (sf "player:~A" (player-id player))))
         (redis:with-persistent-connection ()
           (when (red-exists player-key)
             (red-hset player-key "auth" new-auth)
-            (red-hdel "auths" (player-auth player))
-            (red-hset "auths" new-auth (player-id player))
-            (values new-auth rnd-str))))))
+            (red-hset player-key "salt" salt)
+            (red-hset player-key "perm-auth" (random-string 128))
+            new-auth)))))
 
 (defun new-player-from-db (player-key)
   "Create a PLAYER struct from the given redis key."
@@ -413,6 +446,9 @@
     (make-player :id id
                  :name (red-hget player-key "name")
                  :auth (red-hget player-key "auth")
+                 :perm-auth (red-hget player-key "perm-auth")
+                 :temp-auth (red-hget player-key "temp-auth")
+                 :salt (red-hget player-key "salt")
                  :position (red-hget player-key "position")
                  :active? (red-sismember "players:active" id))))
 ;;; Players ----------------------------------------------------------------- END

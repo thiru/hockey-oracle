@@ -171,29 +171,49 @@
 (defun base-league-page (actual-page &key (require-league? t))
   (let* ((league (parse-league *request*))
          (me-query (get-parameter "me"))
-         (user-cookie (cookie-in "user"))
-         (me-query-hash (if (not (empty? me-query)) (gen-hash me-query)))
-         (me-query-hash2 (if (not (empty? me-query)) (gen-hash me-query-hash)))
-         (user-cookie-hash (if (not (empty? user-cookie)) (gen-hash user-cookie)))
-         (player (get-auth-player (or me-query-hash2 user-cookie-hash))))
+         (perm-user-cookie (cookie-in "puser"))
+         (temp-user-cookie (cookie-in "tuser"))
+         (player-id 0)
+         (given-auth "")
+         (player nil))
     ;; TODO: remove following logging
-    (log-message* :debug
-                  "=== ME-QUERY ~A === ME-QUERY-HASH ~A === ME-QUERY-HASH2 ~A === COOKIE ~A === COOKIE-HASH ~A ===~%"
-                  me-query
-                  me-query-hash
-                  me-query-hash2
-                  user-cookie
-                  user-cookie-hash)
-    (if (and me-query player)
-        (set-cookie "user" :value me-query-hash
-                           ;; Expire a month from now
-                           :max-age (* 60 60 24 30)
-                           :path "/"
-                           :secure (not *debug*)
-                           :http-only t))
-    ;; Load player from cookie incase an invalid 'me' query was given
-    (if (and (null player) user-cookie)
-        (setf player (get-auth-player user-cookie-hash)))
+    (log-message* :debug "=== ME-QUERY: ~A ===~%" me-query)
+    (log-message* :debug "=== PERM-USER-COOKIE: ~A ===~%" perm-user-cookie)
+    (log-message* :debug "=== TEMP-USER-COOKIE: ~A ===~%" temp-user-cookie)
+    (when (not (empty? me-query))
+      (setf player-id (subseq me-query 0 (position #\- me-query)))
+      (setf given-auth (subseq me-query (1+ (or (position #\- me-query) 0))))
+      (setf player (get-player player-id :temp-auth given-auth))
+      (if player
+          (set-cookie "tuser"
+                      :value (sf "~A-~A"
+                                 (player-id player)
+                                 (player-temp-auth player))
+                      ;; Expire a month from now
+                      :max-age (* 60 60 24 30)
+                      :path "/"
+                      :secure (not *debug*)
+                      :http-only t)))
+    ;; Try to load player from long-lived cookie if player not yet found
+    ;; TODO: following when clause is untested
+    (when (and (null player) perm-user-cookie)
+      (setf player-id
+            (subseq perm-user-cookie 0 (position #\- perm-user-cookie)))
+      (setf given-auth
+            (subseq perm-user-cookie (1+ (or (position #\- perm-user-cookie)
+                                             0))))
+      (setf player (get-player player-id :perm-auth given-auth)))
+    ;; Try to load player from long-lived cookie if player not yet found
+    (when (and (null player) temp-user-cookie)
+      (setf player-id
+            (subseq temp-user-cookie 0 (position #\- temp-user-cookie)))
+      (setf given-auth
+            (subseq temp-user-cookie (1+ (or (position #\- temp-user-cookie)
+                                             0))))
+      (setf player (get-player player-id :temp-auth given-auth)))
+
+    (if (and (null player) perm-user-cookie)
+        (setf player (get-player player-id :temp-auth given-auth))) ;TODO: fix this
     (cond ((and require-league? (null league))
            (www-not-found-page :player player))
           ((and require-league? (null player))

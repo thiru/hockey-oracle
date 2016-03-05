@@ -65,6 +65,10 @@
    :make-player
    :player-id
    :player-name
+   :player-auth
+   :player-perm-auth
+   :player-temp-auth
+   :player-salt
    :player-position
    :player-active?
    :player-activate
@@ -73,8 +77,6 @@
    :get-all-players
    :get-players
    :get-player
-   :get-auth-player
-   :reset-player-auth
    :team
    :make-team
    :team-id
