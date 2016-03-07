@@ -52,6 +52,7 @@
    :get-games
    :confirm-types
    :game-confirm
+   :game-confirm-reason-max-length
    :make-game-confirm
    :game-confirm-player
    :game-confirm-time

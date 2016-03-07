@@ -223,6 +223,7 @@
   (confirm-type nil)
   (reason ""))
 
+(defparameter game-confirm-reason-max-length 500)
 (defparameter confirm-types '(:no-response "No response"
                               :maybe "Maybe"
                               :cant-play "Can't play"
@@ -269,6 +270,15 @@
   (if (null (find confirm-type confirm-types :test #'string-equal))
       (return-from save-game-confirm
         (new-r :error (sf "Invalid confirm-type, '~A'." confirm-type))))
+  (if (string-equal "final" (game-progress game))
+      (return-from save-game-confirm
+        (new-r :error
+               (sf "Can't update confirmation status for completed game."))))
+  (if (not (null reason))
+      (setf reason (subseq reason
+                           0
+                           (min game-confirm-reason-max-length
+                                (length reason)))))
   (let* ((new-gcs nil))
     (setf game (get-game (game-league game) (game-id game))) ; Get latest game info
     (dolist (gc (game-confirms game))

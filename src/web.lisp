@@ -504,7 +504,6 @@
   (let* ((game-id (last1 (path-segments *request*)))
          (game (get-game league game-id))
          (player-gc (if game (game-confirm-for game player)))
-         (confirm-reason-max 500)
          (confirm-qp (get-parameter "confirm"))
          (confirm-save-res nil)
          (show-confirm-inputs
@@ -513,13 +512,16 @@
     (if (null game)
         (www-not-found-page :player player :league league)
         (progn
-          ;; Update player's confirmation status and reload game object
-          (when confirm-qp
+          ;; Update player's confirmation status and reload game object, unless
+          ;; game is in final state
+          (when (and confirm-qp
+                     (not (string-equal "final" (game-progress game))))
             (setf confirm-save-res
                   (save-game-confirm game player confirm-qp))
             (when (succeeded? confirm-save-res)
               (setf game (r-data confirm-save-res))
               (setf player-gc (game-confirm-for game player))))
+          ;; TODO: show error case
           (standard-page
               (:title (fmt "Game on ~A" (pretty-time (game-time game)))
                :player player
@@ -557,7 +559,7 @@
                                                 player-gc))
                                  "hidden")
                  (:textarea :id "reason-input"
-                            :maxlength confirm-reason-max
+                            :maxlength game-confirm-reason-max-length
                             :onchange "reasonTextChanged(this)"
                             :onkeyup "reasonTextChanged(this)"
                             :placeholder "Enter why you&apos;re not able to play or are unsure"
@@ -565,7 +567,7 @@
                  (:div :id "save-confirm-group"
                        (:div :id "reason-input-info"
                              (fmt "~A chars left"
-                                  (- confirm-reason-max
+                                  (- game-confirm-reason-max-length
                                       (length (game-confirm-reason
                                                player-gc)))))
                        (:button :class "button"
