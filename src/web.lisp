@@ -203,7 +203,7 @@
             (subseq perm-user-cookie (1+ (or (position #\- perm-user-cookie)
                                              0))))
       (setf player (get-player player-id :perm-auth given-auth)))
-    ;; Try to load player from long-lived cookie if player not yet found
+    ;; Try to load player from short-lived cookie if player not yet found
     (when (and (null player) temp-user-cookie)
       (setf player-id
             (subseq temp-user-cookie 0 (position #\- temp-user-cookie)))
@@ -211,9 +211,6 @@
             (subseq temp-user-cookie (1+ (or (position #\- temp-user-cookie)
                                              0))))
       (setf player (get-player player-id :temp-auth given-auth)))
-
-    (if (and (null player) perm-user-cookie)
-        (setf player (get-player player-id :temp-auth given-auth))) ;TODO: fix this
     (cond ((and require-league? (null league))
            (www-not-found-page :player player))
           ((and require-league? (null player))
