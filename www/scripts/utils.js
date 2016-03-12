@@ -58,11 +58,13 @@ function escapeHtml(string) {
 }
 
 function showResult(ele, result) {
-    ele.html(result.message).addClass(result.levelName());
+    ele.html(result.message).attr("class", result.levelName());
 }
 
 function showIconResult(ele, result) {
+    var icon = result.succeeded() ? "fa-check" : "fa-exclamation-circle";
     ele.attr("title", result.message);
-    ele.html("<i class='fa fa-check " + result.levelName() + "'></i>")
+    ele.html("<i class='fa fa-check " + icon + " " + result.levelName() +
+             "'></i>")
 }
 // UI-Level ----------------------------------------------------------------- END
