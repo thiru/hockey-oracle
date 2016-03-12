@@ -500,7 +500,10 @@
 (defun www-game-detail-page (&key player league)
   (let* ((game-id (last1 (path-segments *request*)))
          (game (get-game league game-id))
-         (player-gc (if game (game-confirm-for game player)))
+         (player-gc (if game (or (game-confirm-for game player)
+                                 (make-game-confirm
+                                  :player player
+                                  :confirm-type :no-response))))
          (confirm-qp (get-parameter "confirm"))
          (confirm-save-res (new-r :info))
          (show-confirm-inputs
