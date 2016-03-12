@@ -161,7 +161,7 @@
                                        (base-league-page
                                         'www-not-found-page
                                         :require-league? nil)))
-            (create-regex-dispatcher "^/[a-zA-Z-]+$"
+            (create-regex-dispatcher "^/[a-zA-Z-]+/?$"
                                      (lambda ()
                                        (base-league-page
                                         'www-league-detail-page)))))
