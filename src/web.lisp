@@ -502,7 +502,7 @@
          (game (get-game league game-id))
          (player-gc (if game (game-confirm-for game player)))
          (confirm-qp (get-parameter "confirm"))
-         (confirm-save-res nil)
+         (confirm-save-res (new-r :info))
          (show-confirm-inputs
            (and game
                 (not (string-equal "final" (game-progress game))))))
@@ -544,12 +544,27 @@
                          :onchange "confirmTypeChanged(this)"
                          (doplist (ct-id ct-name confirm-types)
                            (htm
-                            (:option :selected (string-equal
-                                                ct-id
-                                                (game-confirm-confirm-type
-                                                 player-gc))
+                            (:option :selected
+                                     (string-equal ct-id
+                                                   (game-confirm-confirm-type
+                                                    player-gc))
                                      :value ct-id (esc ct-name)))))
-                (:span :id "confirm-type-status")
+                (:span :id "confirm-type-status"
+                       (if (succeeded? confirm-save-res)
+                           (htm
+                            (:i :class
+                                (sf "fa fa-check ~A"
+                                    (string-downcase
+                                     (r-level confirm-save-res)))
+                                :title
+                                (esc (r-message confirm-save-res))))
+                           (htm
+                            (:i :class
+                                (sf "fa fa-exclamation-circle ~A"
+                                    (string-downcase
+                                     (r-level confirm-save-res)))
+                                :title
+                                (esc (r-message confirm-save-res))))))
                 (:div :id "reason-input-group"
                       :class (if (string-equal :playing
                                                (game-confirm-confirm-type

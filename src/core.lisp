@@ -3,7 +3,12 @@
 (in-package :hockey-oracle.core)
 
 ;;; Utils
-(defparameter levels '(:success 2 :info 1 :debug 0 :warning -1 :error -2 :fatal -3))
+(defparameter levels '(:success 2
+                       :info 1
+                       :debug 0
+                       :warning -1
+                       :error -2
+                       :fatal -3))
 
 (defstruct r
   "Encapsulates a 'result' indicating the success/failure stated of a function
