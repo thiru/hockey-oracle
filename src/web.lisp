@@ -636,7 +636,7 @@
                               (:button :class "button"
                                        :onclick "unconfirmPlayer(this)"
                                        :title "Move to \"Not playing...\" section"
-                                       (:i :class "fa fa-thumbs-down")))
+                                       (:i :class "fa fa-chevron-circle-down")))
                        (:select :class "player-position"
                                 :onchange "positionChanged(this)"
                                 (dolist (pos players-positions)
@@ -674,7 +674,7 @@
                                  (:button :class "button"
                                           :onclick "unconfirmPlayer(this)"
                                           :title "Move to \"Not playing...\" section"
-                                          (:i :class "fa fa-thumbs-down")))
+                                          (:i :class "fa fa-chevron-circle-down")))
                           (:select :class "player-position"
                                    :onchange "positionChanged(this)"
                                    (dolist (pos players-positions)
@@ -709,7 +709,7 @@
                               (:button :class "button"
                                        :onclick "confirmPlayer(this)"
                                        :title "Move to \"Confirmed...\" section"
-                                       (:i :class "fa fa-thumbs-up")))
+                                       (:i :class "fa fa-chevron-circle-up")))
                        (:span :class "player-position" "&nbsp;")
                        (:span :class "confirm-info"
                               (:span :class "confirm-reason" "")
@@ -742,7 +742,7 @@
                                  (:button :class "button"
                                           :onclick "confirmPlayer(this)"
                                           :title "Move to \"Confirmed...\" section"
-                                          (:i :class "fa fa-thumbs-up")))
+                                          (:i :class "fa fa-chevron-circle-up")))
                           (:span :class "player-position" "&nbsp;")
                           (:span :class "confirm-reason"
                                  (esc (game-confirm-reason pc)))
