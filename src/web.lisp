@@ -518,7 +518,6 @@
             (when (succeeded? confirm-save-res)
               (setf game (r-data confirm-save-res))
               (setf player-gc (game-confirm-for game player))))
-          ;; TODO: show error case
           (standard-page
               (:title (fmt "Game on ~A" (pretty-time (game-time game)))
                :player player
