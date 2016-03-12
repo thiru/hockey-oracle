@@ -637,7 +637,7 @@
                        (:span :class "confirm-btn-toggle"
                               (:button :class "button"
                                        :onclick "unconfirmPlayer(this)"
-                                       :title "Move to \"Not playing...\" section"
+                                       :title "Move to \"Not playing\" section"
                                        (:i :class "fa fa-chevron-circle-down")))
                        (:select :class "player-position"
                                 :onchange "positionChanged(this)"
@@ -675,7 +675,7 @@
                           (:span :class "confirm-btn-toggle"
                                  (:button :class "button"
                                           :onclick "unconfirmPlayer(this)"
-                                          :title "Move to \"Not playing...\" section"
+                                          :title "Move to \"Not playing\" section"
                                           (:i :class "fa fa-chevron-circle-down")))
                           (:select :class "player-position"
                                    :onchange "positionChanged(this)"
@@ -710,7 +710,7 @@
                        (:span :class "confirm-btn-toggle"
                               (:button :class "button"
                                        :onclick "confirmPlayer(this)"
-                                       :title "Move to \"Confirmed...\" section"
+                                       :title "Move to \"Confirmed\" section"
                                        (:i :class "fa fa-chevron-circle-up")))
                        (:span :class "player-position" "&nbsp;")
                        (:span :class "confirm-info"
@@ -743,7 +743,7 @@
                           (:span :class "confirm-btn-toggle"
                                  (:button :class "button"
                                           :onclick "confirmPlayer(this)"
-                                          :title "Move to \"Confirmed...\" section"
+                                          :title "Move to \"Confirmed\" section"
                                           (:i :class "fa fa-chevron-circle-up")))
                           (:span :class "player-position" "&nbsp;")
                           (:span :class "confirm-reason"
