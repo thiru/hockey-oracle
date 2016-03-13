@@ -90,6 +90,7 @@
 (defpackage :hockey-oracle.web
   (:use :alexandria :cl :cl-who :glu :hockey-oracle.app :hockey-oracle.core
         :hunchentoot :local-time :split-sequence)
+  (:shadowing-import-from :glu :str)
   (:documentation "Hockey Oracle web interface.")
   (:export
    :web-app

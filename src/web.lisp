@@ -296,7 +296,7 @@
                                            "active"
                                            nil)
                                 :href (sf "/~A/games"
-                                          (string-downcase(league-name ,league)))
+                                          (string-downcase (league-name ,league)))
                                 "Games"))
                            (:li
                             (:a :class (if (based-on-path? path "players")
@@ -345,7 +345,8 @@
        :league league
        :page-id "not-authorised-page")
     (:h2 "Not Authorised")
-    (:p "Sorry but you do not have permission to view the page or resource you requested.")
+    (:p (glu:str "Sorry but you do not have permission to view the page or "
+                 "resource you requested."))
     (:a :href "/" "Go back to the home page")))
 
 (defmethod acceptor-status-message (acceptor (http-status-code (eql 404)) &key)
@@ -363,7 +364,8 @@
    (:a :href "/" "Go back to the home page")))
 
 (defmethod acceptor-status-message (acceptor (http-status-code (eql 500)) &key)
-  (bt:make-thread (lambda () (send-error-email "A <b>server</b> error occurred.")))
+  (bt:make-thread (lambda () (send-error-email
+                              "A <b>server</b> error occurred.")))
   (www-server-error-page nil))
 
 (defun www-test-server-error (&key player league)
@@ -576,7 +578,9 @@
                             :maxlength game-confirm-reason-max-length
                             :onchange "reasonTextChanged(this)"
                             :onkeyup "reasonTextChanged(this)"
-                            :placeholder "Enter why you&apos;re not able to play or are unsure"
+                            :placeholder
+                            (glu:str "Enter why you&apos;re not able to play "
+                                     "or are unsure")
                             (esc (game-confirm-reason player-gc)))
                  (:div :id "save-confirm-group"
                        (:div :id "reason-input-info"
@@ -597,7 +601,8 @@
                                   (:td :class "label-col"
                                        (:label :for "player-name-edit" "Name: "))
                                   (:td :class "input-col"
-                                       (:input :id "player-name-edit" :type "text")))
+                                       (:input :id "player-name-edit"
+                                               :type "text")))
                              (:tr
                               (:td
                                (:label :for "player-pos-edit" "Position: "))
@@ -610,7 +615,8 @@
                               (:td
                                (:label :for "player-active-edit" "Is Active: "))
                               (:td
-                               (:input :id "player-active-edit" :type "checkbox"))))
+                               (:input :id "player-active-edit"
+                                       :type "checkbox"))))
                             (:div :class "actions"
                                   (:button
                                    :class "button save-btn"
@@ -625,10 +631,16 @@
             (:section
              :id "confirmed-players-section"
              (:h2 :id "confirmed-heading"
-                  :class (if (confirmed-players game) "blue-heading" "grey-heading")
-                  (:span :class (if (confirmed-players game) "true" "true hidden")
+                  :class (if (confirmed-players game)
+                             "blue-heading"
+                             "grey-heading")
+                  (:span :class (if (confirmed-players game)
+                                    "true"
+                                    "true hidden")
                          "Confirmed to play")
-                  (:span :class (if (confirmed-players game) "false hidden" "false")
+                  (:span :class (if (confirmed-players game)
+                                    "false hidden"
+                                    "false")
                          "No players confirmed to play"))
              (:ul :class "template-player-item"
                   (:li :class "player-item"
@@ -648,7 +660,9 @@
                                             (esc pos)))))
                        (:span :class "confirm-info"
                               (:span :class "confirm-reason" "")
-                              (:span :class "confirm-time" :title "Date confirmed" ""))
+                              (:span :class "confirm-time"
+                                     :title "Date confirmed"
+                                     ""))
                        (:span :class "clear-fix")))
              (:ul :id "confirmed-players"
                   :class (if (confirmed-players game)
@@ -675,8 +689,10 @@
                           (:span :class "confirm-btn-toggle"
                                  (:button :class "button"
                                           :onclick "unconfirmPlayer(this)"
-                                          :title "Move to \"Not playing\" section"
-                                          (:i :class "fa fa-chevron-circle-down")))
+                                          :title
+                                          "Move to \"Not playing\" section"
+                                          (:i :class
+                                              "fa fa-chevron-circle-down")))
                           (:select :class "player-position"
                                    :onchange "positionChanged(this)"
                                    (dolist (pos players-positions)
@@ -715,7 +731,9 @@
                        (:span :class "player-position" "&nbsp;")
                        (:span :class "confirm-info"
                               (:span :class "confirm-reason" "")
-                              (:span :class "confirm-time" :title "Date confirmed" ""))
+                              (:span :class "confirm-time"
+                                     :title "Date confirmed"
+                                     ""))
                        (:span :class "clear-fix")))
              (:ul :id "unconfirmed-players"
                   :class (if (unconfirmed-players game)
@@ -735,7 +753,8 @@
                           :data-reason (esc (game-confirm-reason pc))
                           :data-response-time (pretty-time
                                                (game-confirm-time pc) 'short)
-                          (:span :class "player-name" (esc (player-name (-> pc player))))
+                          (:span :class "player-name"
+                                 (esc (player-name (-> pc player))))
                           (:span :class "confirm-type"
                                  (esc (sf "(~A)"
                                           (getf confirm-types
@@ -768,7 +787,8 @@
                             (:h2 :class "team-heading" "Cripplers")
                             (:ul :class "team-players data-list"))
                       (:div :id "team2" :class "team"
-                            (:img :class "team-logo" :src "/images/team-logos/panthers.png")
+                            (:img :class "team-logo"
+                                  :src "/images/team-logos/panthers.png")
                             (:h2 :class "team-heading" "Panthers")
                             (:ul :class "team-players data-list")))
             (:button :id "make-teams"
@@ -874,7 +894,8 @@
                   :class (if (player-active? p)
                              "player-check fa fa-check-circle-o"
                              "player-check fa fa-circle-o")
-                  :title "When checked the player is considered active/able to play")
+                  :title
+                  "When checked the player is considered active/able to play")
                  (:span :class "player-name"
                         (esc (player-name p))))
                 (:td
