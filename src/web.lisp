@@ -135,6 +135,9 @@
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/about$"
                                      (lambda ()
                                        (base-league-page 'www-about-page)))
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/users/[a-zA-Z0-9-]+/?$"
+                                     (lambda ()
+                                       (base-league-page 'www-user-detail-page)))
             (create-regex-dispatcher "^/leagues$"
                                      (lambda ()
                                        (base-league-page 'www-league-list-page
@@ -415,6 +418,20 @@
             (:td "Copyright")
             (:td "2014-2015 Thirushanth Thirunavukarasu")))))
 ;;; About Page -------------------------------------------------------------- END
+
+;;; User Detail Page
+(defun www-user-detail-page (&key player league)
+  (standard-page
+      (:title "User"
+       :player player
+       :league league
+       :page-id "user-detail-page")
+    (:div
+     (:i :id "user-icon" :class "fa fa-user"))
+    (:div
+     (:input :placeholder "Name" :type "text" :value (esc (player-name player))))
+    ))
+;;; User Detail Page -------------------------------------------------------- END
 
 ;;; League List Page
 (defun www-league-list-page (&key player league)

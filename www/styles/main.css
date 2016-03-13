@@ -78,6 +78,7 @@ a:hover
 .col-3 { width: 33.333%; }
 .col-4 { width: 25%; }
 .col-5 { width: 20%; }
+.col-10 { width: 10%; }
 
 .uppercase
 {
@@ -307,6 +308,15 @@ main
 .dialog .content
 {
   padding: 1em;
+}
+
+/*******************************
+        User list page
+*******************************/
+
+#user-detail-page #user-icon
+{
+    font-size:10em;
 }
 
 /*******************************
