@@ -291,7 +291,9 @@
                             (if ,league
                                 (htm
                                  (:span " - ")
-                                 (:span (esc (league-name ,league))))))
+                                 (:a :href (sf "/~(~A~)"
+                                               (league-name ,league))
+                                     (esc (league-name ,league))))))
                       (:a :href "/"
                           (:img
                            :alt "logo"
