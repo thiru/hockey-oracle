@@ -107,6 +107,28 @@
          (league-name (first path-segs)))
     (if (not (empty? league-name))
         (get-league :name league-name))))
+
+(defun set-temp-auth-cookie (player)
+  "Set the temporary/short-lived authorisation cookie."
+  (if player
+      (set-cookie "tuser"
+                  :value (sf "~A-~A"
+                             (player-id player)
+                             (player-temp-auth player))
+                  ;; Expire a month from now
+                  :max-age (* 60 60 24 30)
+                  :path "/"
+                  :secure (not *debug*)
+                  :http-only t)))
+
+(defun remove-temp-auth-cookie ()
+  "Invalidates the temporary/short-lived authorisation cookie."
+  (set-cookie "tuser"
+              :value ""
+              :max-age 0
+              :path "/"
+              :secure (not *debug*)
+              :http-only t))
 ;;; Utils ------------------------------------------------------------------- END
 
 ;;; Routes
@@ -135,7 +157,11 @@
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/about$"
                                      (lambda ()
                                        (base-league-page 'www-about-page)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/users/[a-zA-Z0-9-]+/?$"
+            (create-regex-dispatcher "^/logout/?$"
+                                     (lambda ()
+                                       (base-league-page 'www-user-logout-page
+                                                         :require-league? nil)))
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/users/me/?$"
                                      (lambda ()
                                        (base-league-page 'www-user-detail-page)))
             (create-regex-dispatcher "^/leagues$"
@@ -187,16 +213,7 @@
       (setf player-id (subseq me-query 0 (position #\- me-query)))
       (setf given-auth (subseq me-query (1+ (or (position #\- me-query) 0))))
       (setf player (get-player player-id :temp-auth given-auth))
-      (if player
-          (set-cookie "tuser"
-                      :value (sf "~A-~A"
-                                 (player-id player)
-                                 (player-temp-auth player))
-                      ;; Expire a month from now
-                      :max-age (* 60 60 24 30)
-                      :path "/"
-                      :secure (not *debug*)
-                      :http-only t)))
+      (set-temp-auth-cookie player))
     ;; Try to load player from long-lived cookie if player not yet found
     ;; TODO: following when clause is untested
     (when (and (null player) perm-user-cookie)
@@ -266,10 +283,10 @@
              (:div :id "top-shade")
              (:header :id "top-heading"
                       (:div :id "league-name-header"
-                            (if ,player
+                            (if ,league
                                 (htm
-                                 (:a :href (sf "/players/~A"
-                                               (player-id ,player))
+                                 (:a :href (sf "/~(~A~)/users/me"
+                                               (league-name ,league))
                                      (esc (player-name ,player)))))
                             (if ,league
                                 (htm
@@ -426,12 +443,26 @@
        :player player
        :league league
        :page-id "user-detail-page")
-    (:div
+    (:p
      (:i :id "user-icon" :class "fa fa-user"))
-    (:div
-     (:input :placeholder "Name" :type "text" :value (esc (player-name player))))
-    ))
+    (:p
+     (:input :placeholder "Name"
+             :type "text"
+             :value (esc (player-name player))))
+    (:p
+     (:a :class "button" :href "/logout" "Logout"))))
 ;;; User Detail Page -------------------------------------------------------- END
+
+;;; User Logout Page
+(defun www-user-logout-page (&key player league)
+  (remove-temp-auth-cookie)
+  (standard-page
+      (:title "Logout"
+       :player player
+       :league league
+       :page-id "user-logout-page")
+    (:p "Thank you, come again!")))
+;;; User Logout Page -------------------------------------------------------- END
 
 ;;; League List Page
 (defun www-league-list-page (&key player league)
