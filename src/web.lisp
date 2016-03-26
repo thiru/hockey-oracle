@@ -457,7 +457,16 @@
                (:input :placeholder "Name"
                        :title "Name"
                        :type "text"
-                       :value (esc (player-name player)))))))
+                       :value (esc (player-name player))))
+              (:p
+               (:label
+                (:span "Default Position: ")
+                (:select :id "player-pos-edit"
+                         (dolist (pos players-positions)
+                           (htm
+                            (:option :selected
+                                     (string-equal pos (player-position player))
+                             :value pos (esc pos))))))))))
 ;;; User Detail Page -------------------------------------------------------- END
 
 ;;; User Logout Page
