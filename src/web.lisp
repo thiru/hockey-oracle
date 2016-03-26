@@ -445,14 +445,19 @@
        :player player
        :league league
        :page-id "user-detail-page")
-    (:p
-     (:i :id "user-icon" :class "fa fa-user"))
-    (:p
-     (:input :placeholder "Name"
-             :type "text"
-             :value (esc (player-name player))))
-    (:p
-     (:a :class "button" :href "/logout" "Logout"))))
+    (:section :id "left-col" :class "col"
+              (:p
+               (:img :id "user-img" :src "/images/user.png"))
+              (:p
+               (:a :class "button wide-button" :href "/logout"
+                   (:i :class "fa fa-sign-out")
+                   "Logout")))
+    (:section :id "right-col" :class "col"
+              (:p
+               (:input :placeholder "Name"
+                       :title "Name"
+                       :type "text"
+                       :value (esc (player-name player)))))))
 ;;; User Detail Page -------------------------------------------------------- END
 
 ;;; User Logout Page
@@ -463,7 +468,7 @@
        :player player
        :league league
        :page-id "user-logout-page")
-    (:p "Thank you, come again!")))
+    (:h2 "Thank you, come again!")))
 ;;; User Logout Page -------------------------------------------------------- END
 
 ;;; League List Page

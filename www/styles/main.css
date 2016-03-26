@@ -314,9 +314,22 @@ main
         User list page
 *******************************/
 
-#user-detail-page #user-icon
+#user-detail-page #left-col
 {
-    font-size:10em;
+    width: 33%;
+}
+#user-detail-page #right-col
+{
+    width: 66%;
+}
+#user-detail-page #right-col input
+{
+    width: 100%;
+}
+
+#user-detail-page #user-img
+{
+    width: 100%;
 }
 
 /*******************************
