@@ -285,14 +285,15 @@
                            (min game-confirm-reason-max-length
                                 (length reason)))))
   (let* ((new-gcs nil))
-    (setf game (get-game (game-league game) (game-id game))) ; Get latest game info
+    ;; Get latest game info
+    (setf game (get-game (game-league game) (game-id game)))
     (dolist (gc (game-confirms game))
       (let* ((p-id (player-id (game-confirm-player gc)))
              (p-to-update? (= (player-id player)
                               (player-id (game-confirm-player gc)))))
         (setf (getf new-gcs p-id)
-              ;; NOTE: Seem to have to surround each string value in quotes in order
-              ;; to be able to read it back in
+              ;; NOTE: Seem to have to surround each string value in quotes in
+              ;; order to be able to read it back in
               (list
                (if p-to-update?
                    confirm-type
@@ -359,6 +360,7 @@
   "Describes a player/user.
    * ID: unique identifier (across all leagues)
    * NAME: his/her name
+   * EMAIL: email address
    * AUTH: current authentication (hashed and salted password)
    * TEMP-AUTH: a random short-lived authentication token
    * PERM-AUTH: a random longer-lived authentication token
@@ -367,6 +369,7 @@
    * ACTIVE?: whether active/able to play"
   (id 0)
   (name "")
+  (email "")
   (auth "")
   (perm-auth "")
   (temp-auth "")
@@ -375,6 +378,8 @@
   (active? t))
 
 (defparameter players-positions '("C" "D" "G" "LW" "RW"))
+(defparameter player-name-max-length 100)
+(defparameter player-email-max-length 254)
 
 (defun get-all-players ()
   "Gets a list of all PLAYER's sorted by first name."
@@ -400,7 +405,9 @@
             (push (new-player-from-db (sf "player:~A" player-id)) players))
           (sort players #'string< :key #'player-name)))))
 
-(defun get-player (id &key pwd perm-auth temp-auth)
+(defun get-player (id &key (pwd "" pwd-given?)
+                        (perm-auth "" perm-auth-given?)
+                        (temp-auth "" temp-auth-given?))
   "Gets the PLAYER with the given ID. If PWD is non-null it is compared against
    PLAYER-AUTH, and only returned if they match. If PERM-AUTH is non-null it is
    compared against PLAYER-PERM-AUTH, and only returned if they match. If
@@ -412,14 +419,14 @@
         (redis:with-persistent-connection ()
           (when (red-exists player-key)
             (setf player (new-player-from-db player-key))
-            (cond (pwd
+            (cond (pwd-given?
                    (if (string= (player-auth player)
                                 (gen-hash pwd (player-salt player)))
                        player))
-                  (perm-auth
+                  (perm-auth-given?
                    (if (string= (player-perm-auth player) perm-auth)
                        player))
-                  (temp-auth
+                  (temp-auth-given?
                    (if (string= (player-temp-auth player) temp-auth)
                        player))
                   (t player)))))))
@@ -440,26 +447,75 @@
 
 ;; TODO: Wrap DB updates in transaction
 (defun change-player-pwd (player pwd)
-  "Change the password of PLAYER to PWD. The hashed and salted password is
-   returned if successful, otherwise NIL."
+  "Change the password of PLAYER to PWD. An R object is returned including the
+   updated player, if successful."
+  (if (null player)
+      (return-from change-player-pwd
+        (new-r :error "No player provided." player)))
+  (if (empty? pwd)
+      (return-from change-player-pwd
+        (new-r :error "New password can't be empty." player)))
   (check-type player PLAYER)
-  (if (and player pwd)
-      ;; Generate a new salt whenever password is changed
-      (let* ((salt (random-string))
-             (new-auth (gen-hash pwd salt))
-             (player-key (sf "player:~A" (player-id player))))
-        (redis:with-persistent-connection ()
-          (when (red-exists player-key)
-            (red-hset player-key "auth" new-auth)
-            (red-hset player-key "salt" salt)
-            (red-hset player-key "perm-auth" (random-string 128))
-            new-auth)))))
+  ;; Generate a new salt whenever password is changed
+  (let* ((salt (random-string))
+         (new-auth (gen-hash pwd salt))
+         (player-key (sf "player:~A" (player-id player))))
+    (redis:with-persistent-connection ()
+      (if (not (red-exists player-key))
+          (return-from change-player-pwd
+            (new-r :error (sf "Player with id ~A not found."
+                              (player-id player))
+                   player)))
+      (red-hset player-key "auth" new-auth)
+      (red-hset player-key "salt" salt)
+      (red-hset player-key "perm-auth" (random-string 128)))
+    (new-r :success "Password updated!" (get-player (player-id player)))))
+
+(defun update-player (player)
+  "Update player details such as name, etc.
+   Returns an R."
+  (check-type player PLAYER)
+  (if (empty? player)
+      (return-from update-player
+        (new-r :error (sf "Failed to retrieve player with id ~A."
+                          (player-id player))
+               player)))
+  (if (> (length (player-name player)) player-name-max-length)
+      (return-from update-player
+        (new-r :error
+               (sf "Name must be less than ~A letters but was ~A letters."
+                   player-name-max-length
+                   (length (player-name player)))
+               player)))
+  (if (> (length (player-email player)) player-email-max-length)
+      (return-from update-player
+        (new-r :error
+               (sf "Email address must be less than ~A letters but was ~A letters."
+                   player-email-max-length
+                   (length (player-email player)))
+               player)))
+  (if (null (find (player-position player)
+                  players-positions
+                  :test #'string-equal))
+      (return-from update-player
+        (new-r :error
+               (sf "Invalid player position '~A'. Position must be one of: ~A."
+                   (player-position player) players-positions)
+               player)))
+  (let ((player-key (sf "player:~A" (player-id player))))
+    (redis:with-persistent-connection ()
+      (when (red-exists player-key)
+        (red-hset player-key "name" (player-name player))
+        (red-hset player-key "email" (player-email player))
+        (red-hset player-key "position" (player-position player)))))
+  (new-r :success "Update successful!" player))
 
 (defun new-player-from-db (player-key)
   "Create a PLAYER struct from the given redis key."
   (let ((id (parse-id player-key)))
     (make-player :id id
                  :name (red-hget player-key "name")
+                 :email (red-hget player-key "email")
                  :auth (red-hget player-key "auth")
                  :perm-auth (red-hget player-key "perm-auth")
                  :temp-auth (red-hget player-key "temp-auth")

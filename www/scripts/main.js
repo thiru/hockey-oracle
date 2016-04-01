@@ -4,12 +4,105 @@
 
 var page= {};
 
+// Global
 $(document).ready(function() {
     page.userId = parseInt($("html").attr("data-user"));
     page.leagueName = $("html").attr("data-league");
     page.gameId = parseInt($("#game-info").attr("data-game"));
 });
+// Global ------------------------------------------------------------------- END
 
+// User Detail Page
+$(document).ready(function() {
+    if (!$("main[id='user-detail-page']").length)
+        return;
+
+    page.saveSucceeded = false;
+
+    page.inputChanged = function() {
+        if (page.saveSucceeded)
+            return;
+
+        if (dataChanged("player-name-edit") || dataChanged("player-email-edit")
+            || dataChanged("player-pos-edit") || dataChanged("pwd-new-repeat"))
+            $("#save-btn").show();
+        else
+            $("#save-btn").hide();
+    };
+
+    page.changePwd = function() {
+        $("#pwd-group").show();
+        $("#change-pwd-btn").hide();
+    };
+
+    page.saveUser = function() {
+        var player = {};
+
+        // Get player name
+        player.name = $("#player-name-edit").val().trim();
+        if (isBlank(player.name)) {
+            alert("Player name can't be blank.");
+            return;
+        }
+
+        // Get player email
+        player.email = $("#player-email-edit").val().trim();
+
+        // Get player position
+        player.position = $("#player-pos-edit :selected").val();
+
+        var newPwd = get("pwd-new").value;
+        if (!isBlank(newPwd)) {
+            var newPwdRepeat = get("pwd-new-repeat").value;
+            if (newPwd !== newPwdRepeat) {
+                alert("New passwords don't match.");
+                return;
+            }
+
+            var currPwd = get("pwd-curr").value;
+            if (isBlank(currPwd)) {
+                alert("Original password not provided.");
+                return;
+            }
+
+            player.currentPwd = currPwd;
+            player.newPwd = newPwd;
+        }
+
+        // Saving...
+        $("#save-btn").prop("disabled", true);
+        $("#save-result")
+            .attr("class", "")
+            .html("<i class='fa fa-spinner fa-pulse'></i> Saving...");
+
+        var url = "/" + page.leagueName.toLowerCase() + "/api/users/me";
+        $.post(url, player)
+            .done(function (result) {
+                if (!result)
+                    result = new Result(-2, "No response from server.");
+                else
+                    result = _.create(Result.prototype, result);
+                page.saveSucceeded = result.succeeded();
+                showResult($("#save-result"), result);
+                $("#save-btn").prop("disabled", false);
+            })
+            .fail(function (data) {
+                var result = new Result(-2,
+                                        "Unexpected error. " + data.statusText +
+                                        " (" + data.status + ").");
+                showResult($("#save-result"), result);
+                $("#save-btn").prop("disabled", false);
+            });
+    };
+
+    $("#player-name-edit").on("input", page.inputChanged);
+    $("#player-email-edit").on("input", page.inputChanged);
+    $("#player-pos-edit").change(page.inputChanged);
+    $("#pwd-new-repeat").on("input", page.inputChanged);
+});
+// User Detail Page --------------------------------------------------------- END
+
+// Game Detail Page
 function confirmTypeChanged(ele) {
     var selectedVal = $(ele).val() || "";
     if ("PLAYING" == selectedVal.toUpperCase()) {
@@ -377,3 +470,4 @@ function closeDialog() {
   $("#overlay").hide();
   $("#edit-dialog").hide();
 }
+// Game Detail Page --------------------------------------------------------- END

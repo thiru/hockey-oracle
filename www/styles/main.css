@@ -166,6 +166,11 @@ a:hover
 {
   background: #FFAC0A; /* VAR FOCUSED-COLOUR */
 }
+.button:disabled
+{
+    background: black;
+    opacity: 0.5;
+}
 .button .button-text
 {
   padding-left: 0.2em;
@@ -311,8 +316,13 @@ main
 }
 
 /*******************************
-        User list page
+       User detail page
 *******************************/
+
+#user-detail-page br
+{
+    display: block;
+}
 
 #user-detail-page #left-col
 {

@@ -108,27 +108,34 @@
     (if (not (empty? league-name))
         (get-league :name league-name))))
 
-(defun set-temp-auth-cookie (player)
-  "Set the temporary/short-lived authorisation cookie."
+(defun set-auth-cookie (player &key perm?)
+  "Set the temporary or permanent authorisation cookie."
   (if player
-      (set-cookie "tuser"
+      (set-cookie (if perm? "puser" "tuser")
                   :value (sf "~A-~A"
                              (player-id player)
-                             (player-temp-auth player))
+                             (if perm?
+                                 (player-perm-auth player)
+                                 (player-temp-auth player)))
                   ;; Expire a month from now
                   :max-age (* 60 60 24 30)
                   :path "/"
                   :secure (not *debug*)
                   :http-only t)))
 
-(defun remove-temp-auth-cookie ()
-  "Invalidates the temporary/short-lived authorisation cookie."
-  (set-cookie "tuser"
+(defun remove-cookie (id)
+  "Removes the cookie with the specified ID."
+  (set-cookie id
               :value ""
               :max-age 0
               :path "/"
               :secure (not *debug*)
               :http-only t))
+
+(defun remove-auth-cookies ()
+  "Invalidates all authorisation cookies."
+  (remove-cookie "puser")
+  (remove-cookie "tuser"))
 ;;; Utils ------------------------------------------------------------------- END
 
 ;;; Routes
@@ -164,6 +171,9 @@
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/users/me/?$"
                                      (lambda ()
                                        (base-league-page 'www-user-detail-page)))
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/api/users/me/?$"
+                                     (lambda ()
+                                       (base-league-page 'api-user-save)))
             (create-regex-dispatcher "^/leagues$"
                                      (lambda ()
                                        (base-league-page 'www-league-list-page
@@ -213,7 +223,7 @@
       (setf player-id (subseq me-query 0 (position #\- me-query)))
       (setf given-auth (subseq me-query (1+ (or (position #\- me-query) 0))))
       (setf player (get-player player-id :temp-auth given-auth))
-      (set-temp-auth-cookie player))
+      (set-auth-cookie player))
     ;; Try to load player from long-lived cookie if player not yet found
     ;; TODO: following when clause is untested
     (when (and (null player) perm-user-cookie)
@@ -450,28 +460,105 @@
                (:img :id "user-img" :src "/images/user.png"))
               (:p
                (:a :class "button wide-button" :href "/logout"
-                   (:i :class "fa fa-sign-out")
                    "Logout")))
     (:section :id "right-col" :class "col"
               (:p
-               (:input :placeholder "Name"
+               (:input :id "player-name-edit"
+                       :data-orig-val (escape-string (player-name player))
+                       :placeholder "Name"
                        :title "Name"
                        :type "text"
-                       :value (esc (player-name player))))
+                       :value (escape-string (player-name player))))
+              (:p
+               (:input :id "player-email-edit"
+                       :data-orig-val (escape-string (player-email player))
+                       :placeholder "Email address"
+                       :title "Email address"
+                       :type "email"
+                       :value (escape-string (player-email player))))
+              (:br)
               (:p
                (:label
                 (:span "Default Position: ")
                 (:select :id "player-pos-edit"
+                         :data-orig-val (escape-string (player-position player))
                          (dolist (pos players-positions)
                            (htm
                             (:option :selected
                                      (string-equal pos (player-position player))
-                             :value pos (esc pos))))))))))
+                                     :value pos (esc pos)))))))
+              (:br)
+              (:p
+               (:button :id "change-pwd-btn"
+                        :class "button wide-button"
+                        :onclick "page.changePwd()"
+                        "Change Password"))
+              (:div :id "pwd-group"
+                    :style "display:none"
+               (:p
+                (:input :id "pwd-curr"
+                        :type "password"
+                        :placeholder "Current password"
+                        :title "Current password"))
+               (:p
+                (:input :id "pwd-new"
+                        :type "password"
+                        :placeholder "New password"
+                        :title "New password"))
+               (:p
+                (:input :id "pwd-new-repeat"
+                        :type "password"
+                        :placeholder "Repeat new password"
+                        :title "Repeat new password")))
+              (:br)
+              (:p
+               (:button :id "save-btn"
+                        :class "button wide-button"
+                        :onclick "page.saveUser()"
+                        :style "display:none"
+                        "Save"))
+              (:p :id "save-result"))))
 ;;; User Detail Page -------------------------------------------------------- END
+
+;;; User Save API
+(defun api-user-save (&key player league)
+  (setf (content-type*) "application/json")
+  (let* ((name (post-parameter "name"))
+         (email (post-parameter "email"))
+         (pos (post-parameter "position"))
+         (curr-pwd (post-parameter "currentPwd"))
+         (new-pwd (post-parameter "newPwd"))
+         (save-res nil))
+    (setf (player-name player) name)
+    (setf (player-email player) email)
+    (setf (player-position player) pos)
+    (setf save-res (update-player player))
+    ;; Basic player update failed or no password change attempted
+    (if (or (failed? save-res) (empty? new-pwd))
+        (return-from api-user-save
+          (json:encode-json-plist-to-string
+           `(level ,(r-level save-res)
+                   message ,(r-message save-res)))))
+    ;; Verify current password provided by user is correct
+    (setf player (get-player (player-id player) :pwd curr-pwd))
+    (if (null player) ; Current password incorrect
+        (return-from api-user-save
+          (json:encode-json-plist-to-string
+           `(level :error message "Current password is incorrect."))))
+    (setf save-res (change-player-pwd player new-pwd))
+    (if (failed? save-res)
+        (return-from api-user-save
+          (json:encode-json-plist-to-string
+           `(level ,(r-level save-res) message ,(r-message save-res)))))
+    (setf player (r-data save-res))
+    (set-auth-cookie player :perm? t)
+    (json:encode-json-plist-to-string
+     `(level :success message "Update successful!"))))
+;;; User Save API ----------------------------------------------------------- END
 
 ;;; User Logout Page
 (defun www-user-logout-page (&key player league)
-  (remove-temp-auth-cookie)
+  (remove-auth-cookies)
   (standard-page
       (:title "Logout"
        :player player

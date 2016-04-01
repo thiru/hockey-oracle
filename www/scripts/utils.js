@@ -40,9 +40,17 @@ Result.prototype.levelName = function()
 }
 Result.prototype.success = new Result(1, '');
 Result.prototype.failure = new Result(-2, 'An unspecified error occurred');
+
+function isBlank(text) {
+    return !text || text.trim().length <= 0;
+}
 // Language-Level ----------------------------------------------------------- END
 
 // UI-Level
+function get(id) {
+    return document.getElementById(id);
+}
+
 var entityMap = {
     "&": "&amp;",
     "<": "&lt;",
@@ -51,10 +59,24 @@ var entityMap = {
     "'": '&#39;',
     "/": '&#x2F;'
 };
-function escapeHtml(string) {
-    return String(string).replace(/[&<>"'\/]/g, function (s) {
+function escapeHtml(text) {
+    return String(text).replace(/[&<>"'\/]/g, function (s) {
         return entityMap[s];
     });
+}
+
+function dataChanged(eleId) {
+    if (isBlank(eleId))
+        return false;
+
+    var ele = document.getElementById(eleId);
+    if (!ele)
+        return false;
+
+    var currVal = (ele.value || "").trim();
+    var origVal = ele.dataset.origVal || "";
+
+    return currVal !== origVal;
 }
 
 function showResult(ele, result) {

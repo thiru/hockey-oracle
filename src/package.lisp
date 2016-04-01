@@ -66,6 +66,7 @@
    :make-player
    :player-id
    :player-name
+   :player-email
    :player-auth
    :player-perm-auth
    :player-temp-auth
@@ -78,6 +79,8 @@
    :get-all-players
    :get-players
    :get-player
+   :update-player
+   :change-player-pwd
    :team
    :make-team
    :team-id
