@@ -75,7 +75,9 @@
 
 (defun to-bool (redis-val)
   "Converts the given redis value to a bool."
-  (plusp (parse-integer redis-val)))
+  (if (empty? redis-val)
+      nil
+      (plusp (parse-integer redis-val))))
 
 (defun random-string (&optional (n 16))
   "Return a random hex string with N digits."
@@ -361,6 +363,7 @@
    * ID: unique identifier (across all leagues)
    * NAME: his/her name
    * EMAIL: email address
+   * NOTIFY-IMMEDIATELY?: notify immediately if upcoming game state changes
    * AUTH: current authentication (hashed and salted password)
    * TEMP-AUTH: a random short-lived authentication token
    * PERM-AUTH: a random longer-lived authentication token
@@ -370,6 +373,7 @@
   (id 0)
   (name "")
   (email "")
+  (notify-immediately? nil)
   (auth "")
   (perm-auth "")
   (temp-auth "")
@@ -507,6 +511,8 @@
       (when (red-exists player-key)
         (red-hset player-key "name" (player-name player))
         (red-hset player-key "email" (player-email player))
+        (red-hset player-key "notify-immediately?"
+                  (if (player-notify-immediately? player) 1 0))
         (red-hset player-key "position" (player-position player)))))
   (new-r :success "Update successful!" player))
 
@@ -516,6 +522,8 @@
     (make-player :id id
                  :name (red-hget player-key "name")
                  :email (red-hget player-key "email")
+                 :notify-immediately?
+                 (to-bool (red-hget player-key "notify-immediately?"))
                  :auth (red-hget player-key "auth")
                  :perm-auth (red-hget player-key "perm-auth")
                  :temp-auth (red-hget player-key "temp-auth")

@@ -332,7 +332,9 @@ main
 {
     width: 66%;
 }
-#user-detail-page #right-col input
+#user-detail-page #right-col input[type=email],
+#user-detail-page #right-col input[type=password],
+#user-detail-page #right-col input[type=text]
 {
     width: 100%;
 }

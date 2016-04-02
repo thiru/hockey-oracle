@@ -476,6 +476,13 @@
                        :title "Email address"
                        :type "email"
                        :value (escape-string (player-email player))))
+              (:p
+               (:label
+                :title "Notify me immediately when the state of the upcoming game changes. E.g. when a player changes their status."
+                (:input :id "player-immediate-notify-edit"
+                        :checked (player-notify-immediately? player)
+                        :type "checkbox")
+                (:span "Immediate email notifications")))
               (:br)
               (:p
                (:label
@@ -525,12 +532,15 @@
   (setf (content-type*) "application/json")
   (let* ((name (post-parameter "name"))
          (email (post-parameter "email"))
+         (notify-immediately?
+           (string-equal "true" (post-parameter "notifyImmediately")))
          (pos (post-parameter "position"))
          (curr-pwd (post-parameter "currentPwd"))
          (new-pwd (post-parameter "newPwd"))
          (save-res nil))
     (setf (player-name player) name)
     (setf (player-email player) email)
+    (setf (player-notify-immediately? player) notify-immediately?)
     (setf (player-position player) pos)
     (setf save-res (update-player player))
     ;; Basic player update failed or no password change attempted

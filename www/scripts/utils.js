@@ -73,6 +73,12 @@ function dataChanged(eleId) {
     if (!ele)
         return false;
 
+    // Special handling for checkboxes
+    if (ele.type.toLowerCase() === "checkbox") {
+        var isInitiallyChecked = !!ele.getAttribute("checked");
+        return ele.checked !== isInitiallyChecked;
+    }
+
     var currVal = (ele.value || "").trim();
     var origVal = ele.dataset.origVal || "";
 

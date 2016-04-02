@@ -23,8 +23,11 @@ $(document).ready(function() {
         if (page.saveSucceeded)
             return;
 
-        if (dataChanged("player-name-edit") || dataChanged("player-email-edit")
-            || dataChanged("player-pos-edit") || dataChanged("pwd-new-repeat"))
+        if (dataChanged("player-name-edit")
+            || dataChanged("player-email-edit")
+            || dataChanged("player-immediate-notify-edit")
+            || dataChanged("player-pos-edit")
+            || dataChanged("pwd-new-repeat"))
             $("#save-btn").show();
         else
             $("#save-btn").hide();
@@ -47,6 +50,9 @@ $(document).ready(function() {
 
         // Get player email
         player.email = $("#player-email-edit").val().trim();
+
+        // Get immediate email notifications option
+        player.notifyImmediately = get("player-immediate-notify-edit").checked;
 
         // Get player position
         player.position = $("#player-pos-edit :selected").val();
@@ -97,6 +103,7 @@ $(document).ready(function() {
 
     $("#player-name-edit").on("input", page.inputChanged);
     $("#player-email-edit").on("input", page.inputChanged);
+    $("#player-immediate-notify-edit").change(page.inputChanged);
     $("#player-pos-edit").change(page.inputChanged);
     $("#pwd-new-repeat").on("input", page.inputChanged);
 });
