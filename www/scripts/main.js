@@ -81,8 +81,7 @@ $(document).ready(function() {
             .attr("class", "")
             .html("<i class='fa fa-spinner fa-pulse'></i> Saving...");
 
-        var url = "/" + page.leagueName.toLowerCase() + "/api/users/me";
-        $.post(url, player)
+        $.post("/api/users/me", player)
             .done(function (result) {
                 if (!result)
                     result = new Result(-2, "No response from server.");
