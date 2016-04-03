@@ -451,6 +451,9 @@
 
 ;;; User Detail Page
 (defun www-user-detail-page (&key player league)
+  (if (null player)
+      (return-from www-user-detail-page
+        (www-not-found-page :player player :league league)))
   (standard-page
       (:title "User"
        :player player
@@ -572,7 +575,7 @@
   (remove-auth-cookies)
   (standard-page
       (:title "Logout"
-       :player player
+       :player nil
        :league league
        :page-id "user-logout-page")
     (:h2 "Thank you, come again!")))
