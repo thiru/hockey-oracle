@@ -241,7 +241,7 @@ main
 {
   text-decoration: none;
 }
-#league-name-header
+#top-right-heading
 {
   position: absolute;
   right: 1.7em;
@@ -287,7 +287,7 @@ main
   position: fixed;
   top: 0;
   width: 100%;
-  z-index: 10;
+  z-index: -1;
 }
 
 .dialog
@@ -313,6 +313,19 @@ main
 .dialog .content
 {
   padding: 1em;
+}
+
+/*******************************
+         Log in dialog
+*******************************/
+
+#login-dialog
+{
+    padding: 1em;
+}
+#login-dialog input
+{
+    width: 100%;
 }
 
 /*******************************

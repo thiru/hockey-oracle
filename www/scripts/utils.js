@@ -65,6 +65,11 @@ function escapeHtml(text) {
     });
 }
 
+function onEnter(event, func) {
+    if (event && func && event.keyCode === 13)
+        func();
+}
+
 function dataChanged(eleId) {
     if (isBlank(eleId))
         return false;

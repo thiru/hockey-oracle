@@ -347,7 +347,7 @@
    form: (CONFIRM-TYPE TIME REASON). REASON is optional."
   (let ((game-confirms '()))
     (doplist (player-id confirm-info plist)
-             (push (make-game-confirm :player (get-player player-id)
+             (push (make-game-confirm :player (get-player :id player-id)
                                       :confirm-type (find (first1 confirm-info)
                                                           confirm-types
                                                           :test #'string-equal)
@@ -409,31 +409,41 @@
             (push (new-player-from-db (sf "player:~A" player-id)) players))
           (sort players #'string< :key #'player-name)))))
 
-(defun get-player (id &key (pwd "" pwd-given?)
-                        (perm-auth "" perm-auth-given?)
-                        (temp-auth "" temp-auth-given?))
-  "Gets the PLAYER with the given ID. If PWD is non-null it is compared against
-   PLAYER-AUTH, and only returned if they match. If PERM-AUTH is non-null it is
-   compared against PLAYER-PERM-AUTH, and only returned if they match. If
+(defun get-player (&key
+                     (id 0 id-given?)
+                     (name "" name-given?)
+                     (pwd "" pwd-given?)
+                     (perm-auth "" perm-auth-given?)
+                     (temp-auth "" temp-auth-given?))
+  "Gets the PLAYER with the given ID or NAME. If PWD is non-null it is compared
+   against PLAYER-AUTH, and only returned if they match. If PERM-AUTH is non-null
+   it is compared against PLAYER-PERM-AUTH, and only returned if they match. If
    TEMP-AUTH is non-null it is compared against PLAYER-TEMP-AUTH, and only
    returned if non-null."
-  (if id
-      (let* ((player-key (sf "player:~A" id))
-             (player nil))
-        (redis:with-persistent-connection ()
-          (when (red-exists player-key)
-            (setf player (new-player-from-db player-key))
-            (cond (pwd-given?
-                   (if (string= (player-auth player)
-                                (gen-hash pwd (player-salt player)))
-                       player))
-                  (perm-auth-given?
-                   (if (string= (player-perm-auth player) perm-auth)
-                       player))
-                  (temp-auth-given?
-                   (if (string= (player-temp-auth player) temp-auth)
-                       player))
-                  (t player)))))))
+  (let ((player nil))
+    (cond (id-given?
+           (let* ((player-key (sf "player:~A" id)))
+             (redis:with-persistent-connection ()
+               (when (red-exists player-key)
+                 (setf player (new-player-from-db player-key))
+                 ))))
+          (name-given?
+           (let ((players (get-all-players)))
+             (setf player
+                   (find name players :test #'string-equal :key #'player-name))))
+          (t nil))
+    (if player
+        (cond (pwd-given?
+               (if (string= (player-auth player)
+                            (gen-hash pwd (player-salt player)))
+                   player))
+              (perm-auth-given?
+               (if (string= (player-perm-auth player) perm-auth)
+                   player))
+              (temp-auth-given?
+               (if (string= (player-temp-auth player) temp-auth)
+                   player))
+              (t player)))))
 
 ;; TODO: Wrap DB updates in transaction
 (defun change-player-temp-auth (player &optional new-auth)
@@ -473,7 +483,7 @@
       (red-hset player-key "auth" new-auth)
       (red-hset player-key "salt" salt)
       (red-hset player-key "perm-auth" (random-string 128)))
-    (new-r :success "Password updated!" (get-player (player-id player)))))
+    (new-r :success "Password updated!" (get-player :id (player-id player)))))
 
 (defun update-player (player)
   "Update player details such as name, etc.

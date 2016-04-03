@@ -172,6 +172,10 @@
                                      (lambda ()
                                        (base-league-page 'www-user-detail-page
                                                          :require-league? nil)))
+            (create-regex-dispatcher "^/api/login/?$"
+                                     (lambda ()
+                                       (base-league-page 'api-login
+                                                         :require-league? nil)))
             (create-regex-dispatcher "^/api/users/me/?$"
                                      (lambda ()
                                        (base-league-page 'api-user-save
@@ -224,7 +228,7 @@
     (when (not (empty? me-query))
       (setf player-id (subseq me-query 0 (position #\- me-query)))
       (setf given-auth (subseq me-query (1+ (or (position #\- me-query) 0))))
-      (setf player (get-player player-id :temp-auth given-auth))
+      (setf player (get-player :id player-id :temp-auth given-auth))
       (set-auth-cookie player))
     ;; Try to load player from long-lived cookie if player not yet found
     ;; TODO: following when clause is untested
@@ -234,7 +238,7 @@
       (setf given-auth
             (subseq perm-user-cookie (1+ (or (position #\- perm-user-cookie)
                                              0))))
-      (setf player (get-player player-id :perm-auth given-auth)))
+      (setf player (get-player :id player-id :perm-auth given-auth)))
     ;; Try to load player from short-lived cookie if player not yet found
     (when (and (null player) temp-user-cookie)
       (setf player-id
@@ -242,7 +246,7 @@
       (setf given-auth
             (subseq temp-user-cookie (1+ (or (position #\- temp-user-cookie)
                                              0))))
-      (setf player (get-player player-id :temp-auth given-auth)))
+      (setf player (get-player :id player-id :temp-auth given-auth)))
     (cond ((and require-league? (null league))
            (www-not-found-page :player player))
           ((and require-league? (null player))
@@ -294,11 +298,15 @@
              (:div :id "overlay" "&nbsp;")
              (:div :id "top-shade")
              (:header :id "top-heading"
-                      (:div :id "league-name-header"
+                      (:div :id "top-right-heading"
                             (if ,player
                                 (htm
                                  (:a :href "/users/me"
-                                     (esc (player-name ,player)))))
+                                     (esc (player-name ,player))))
+                                (htm
+                                 (:a :href "javascript:void(0)"
+                                     :onclick "page.showLogin()"
+                                     "Log in")))
                             (if ,league
                                 (htm
                                  (:span " - ")
@@ -354,6 +362,31 @@
                                                    "active"
                                                    nil)
                                         :href "/about" "About"))))))))
+             (:section :id "login-dialog"
+                       :class "dialog"
+                       (:h2 "Welcome!")
+                       (:p
+                        (:input :id "login-user-name"
+                                :onkeyup "onEnter(event, page.login)"
+                                :placeholder "User name"
+                                :title "User name"
+                                :type "text"))
+                       (:p
+                        (:input :id "login-pwd"
+                                :onkeyup "onEnter(event, page.login)"
+                                :placeholder "Password"
+                                :title "Password"
+                                :type "password"))
+                       (:p :id "login-result")
+                       (:p
+                        (:button :id "login-btn"
+                                 :class "button wide-button"
+                                 :onclick "page.login()"
+                                 "Log In"))
+                       (:p
+                        (:button :class "button wide-button"
+                                 :onclick "page.cancelLogin()"
+                                 "Cancel")))
              (:main :id ,page-id
                     ,@body)))))
 ;;; Template Page ----------------------------------------------------------- END
@@ -378,9 +411,15 @@
        :league league
        :page-id "not-authorised-page")
     (:h2 "Not Authorised")
-    (:p (glu:str "Sorry but you do not have permission to view the page or "
-                 "resource you requested."))
-    (:a :href "/" "Go back to the home page")))
+    (:p "Sorry but you do not have permission to view the page or "
+        "resource you requested.")
+    (:a :href "/" "Go back to the home page")
+    (if (null player)
+        (htm
+         (:p "Or")
+         (:button :class "button wide-button"
+                  :onclick "page.showLogin()"
+                  "Log in")))))
 
 (defmethod acceptor-status-message (acceptor (http-status-code (eql 404)) &key)
   (base-league-page #'www-not-found-page :require-league? nil))
@@ -449,6 +488,24 @@
             (:td "2014-2015 Thirushanth Thirunavukarasu")))))
 ;;; About Page -------------------------------------------------------------- END
 
+;;; Login API
+(defun api-login (&key player league)
+  (sleep 2)
+  (setf (content-type*) "application/json")
+  (let* ((name (post-parameter "name"))
+         (pwd (post-parameter "pwd"))
+         (player nil))
+    ;; Verify password provided by user is correct
+    (setf player (get-player :name name :pwd pwd))
+    (if (null player) ; Password incorrect
+        (return-from api-login
+          (json:encode-json-plist-to-string
+           `(level :error message "Incorrect login..."))))
+    (set-auth-cookie player :perm? t)
+    (json:encode-json-plist-to-string
+     `(level :success message "Login successful!"))))
+;;; Login API --------------------------------------------------------------- END
+
 ;;; User Detail Page
 (defun www-user-detail-page (&key player league)
   (if (null player)
@@ -461,10 +518,7 @@
        :page-id "user-detail-page")
     (:section :id "left-col" :class "col"
               (:p
-               (:img :id "user-img" :src "/images/user.png"))
-              (:p
-               (:a :class "button wide-button" :href "/logout"
-                   "Logout")))
+               (:img :id "user-img" :src "/images/user.png")))
     (:section :id "right-col" :class "col"
               (:p
                (:input :id "player-name-edit"
@@ -521,7 +575,9 @@
                         :type "password"
                         :placeholder "Repeat new password"
                         :title "Repeat new password")))
-              (:br)
+              (:p
+               (:a :class "button wide-button" :href "/logout"
+                   "Log out"))
               (:p
                (:button :id "save-btn"
                         :class "button wide-button"
@@ -554,7 +610,7 @@
            `(level ,(r-level save-res)
                    message ,(r-message save-res)))))
     ;; Verify current password provided by user is correct
-    (setf player (get-player (player-id player) :pwd curr-pwd))
+    (setf player (get-player :id (player-id player) :pwd curr-pwd))
     (if (null player) ; Current password incorrect
         (return-from api-user-save
           (json:encode-json-plist-to-string
@@ -574,7 +630,7 @@
 (defun www-user-logout-page (&key player league)
   (remove-auth-cookies)
   (standard-page
-      (:title "Logout"
+      (:title "Log Out"
        :player nil
        :league league
        :page-id "user-logout-page")
@@ -744,8 +800,8 @@
                             :onchange "reasonTextChanged(this)"
                             :onkeyup "reasonTextChanged(this)"
                             :placeholder
-                            (glu:str "Enter why you&apos;re not able to play "
-                                     "or are unsure")
+                            (glu:str "Please enter why you&apos;re unable to "
+                                     "play or are unsure")
                             (esc (game-confirm-reason player-gc)))
                  (:div :id "save-confirm-group"
                        (:div :id "reason-input-info"
@@ -790,7 +846,7 @@
                                    "Save")
                                   (:button
                                    :class "button cancel-btn"
-                                   :onclick "closeDialog()"
+                                   :onclick "page.closeDialog('#edit-dialog')"
                                    "Cancel"))))
             ;; Players Confirmed To Play
             (:section
@@ -1036,7 +1092,7 @@
                           "Save")
                          (:button
                           :class "button cancel-btn"
-                          :onclick "closeDialog()"
+                          :onclick "page.closeDialog('#edit-dialog')"
                           "Cancel"))))
    (:table :id "player-list" :class "data-table"
            (:thead

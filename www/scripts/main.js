@@ -9,6 +9,76 @@ $(document).ready(function() {
     page.userId = parseInt($("html").attr("data-user"));
     page.leagueName = $("html").attr("data-league");
     page.gameId = parseInt($("#game-info").attr("data-game"));
+
+    page.showDialog = function(jqId) {
+        $("#overlay").show();
+        $(jqId).show();
+    };
+    page.closeDialog = function(jqId) {
+        $("#overlay").hide();
+        $(jqId).hide();
+    };
+
+    page.showLogin = function() {
+        page.showDialog("#login-dialog");
+        $("#login-user-name").focus().select();
+    };
+    page.cancelLogin = function() {
+        page.closeDialog("#login-dialog");
+    };
+    page.login = function() {
+        $("#login-result").attr("class", "").html("");
+
+        var result = null;
+        var userName = get("login-user-name").value;
+        var pwd = get("login-pwd").value;
+
+        if (isBlank(userName))
+            result = new Result("error", "No user name provided.");
+        else if (isBlank(pwd))
+            result = new Result("error", "No password provided.");
+
+        if (result && result.failed()) {
+            showResult($("#login-result"), result);
+            return;
+        }
+
+        $("#login-result")
+            .attr("class", "")
+            .html("<i class='fa fa-spinner fa-pulse'></i> Logging in...");
+        $("#login-btn").prop("disabled", true);
+
+        $.post("/api/login", { name: userName, pwd: pwd })
+            .done(function (result) {
+                if (!result)
+                    result = new Result(-2, "No response from server.");
+                else
+                    result = _.create(Result.prototype, result);
+
+                if (result.failed())
+                    showResult($("#login-result"), result);
+                else {
+                    showResult($("#login-result"), result);
+                    setTimeout(function() {
+                        page.closeDialog("#login-dialog");
+                        if (_.endsWith(window.location.pathname.toLowerCase(),
+                                       "logout"))
+                            window.location = "/";
+                        else
+                            window.location.reload(false);
+                    }, 500);
+                }
+
+                $("#login-btn").prop("disabled", false);
+            })
+            .fail(function (data) {
+                var result = new Result(-2,
+                                        "Unexpected error. " + data.statusText +
+                                        " (" + data.status + ").");
+                showResult($("#login-result"), result);
+                $("#login-btn").prop("disabled", false);
+            });
+    };
 });
 // Global ------------------------------------------------------------------- END
 
@@ -386,8 +456,7 @@ function addPlayer() {
   $("#player-name-edit").val("Extra");
   $("#player-pos-edit option").removeAttr("selected");
   $("#player-active-edit").prop("checked", true); // TODO: obsolete
-  $("#overlay").show();
-  $("#edit-dialog").show();
+  page.showDialog("#edit-dialog");
   $("#player-name-edit").focus().select();
 }
 
@@ -404,8 +473,7 @@ function editPlayer(ele) {
 
   $("#edit-dialog .save-btn").attr("data-player-id", playerId);
 
-  $("#overlay").show();
-  $("#edit-dialog").show();
+  page.showDialog("#edit-dialog");
   $("#player-name-edit").focus().select();
 }
 
@@ -462,18 +530,12 @@ function savePlayer() {
     playerRow.find(".player-position").val(position);
   }
 
-  $("#edit-dialog").hide();
-  $("#overlay").hide();
+  page.closeDialog("#edit-dialog");
   $("#confirmed-players").show();
   $("#confirmed-heading").removeClass("grey-heading")
                          .addClass("blue-heading");
   $("#confirmed-heading .true").removeClass("hidden");
   $("#confirmed-heading .false").addClass("hidden");
   $("#make-teams").show();
-}
-
-function closeDialog() {
-  $("#overlay").hide();
-  $("#edit-dialog").hide();
 }
 // Game Detail Page --------------------------------------------------------- END
