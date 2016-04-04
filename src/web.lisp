@@ -43,21 +43,6 @@
   "Stops the web server referenced by the special variable main-acceptor."
   (if main-acceptor
       (stop main-acceptor :soft t)))
-
-(defun send-error-email (message)
-  "Sends an email indicating a server error occurred."
-  (let ((auth '()))
-    (push (get-secure-key "ho/email/pwd") auth)
-    (push (get-secure-key "ho/email/username") auth)
-    (cl-smtp:send-email (get-secure-key "ho/email/server")
-                        (get-secure-key "ho/email/reply-to")
-                        (get-secure-key "ho/email/admins")
-                        "Server Error" ""
-                        :display-name "Hockey Oracle"
-                        :html-message message :ssl :tls
-                        :port (parse-integer
-                               (get-secure-key "ho/email/ssl-port"))
-                        :authentication auth)))
 ;;; General ----------------------------------------------------------------- END
 
 ;;; Utils
@@ -436,8 +421,8 @@
    (:a :href "/" "Go back to the home page")))
 
 (defmethod acceptor-status-message (acceptor (http-status-code (eql 500)) &key)
-  (bt:make-thread (lambda () (send-error-email
-                              "A <b>server</b> error occurred.")))
+  (bt:make-thread (lambda () (send-email "Server Error"
+                                         "A <b>server error</b> occurred.")))
   (www-server-error-page nil))
 
 (defun www-test-server-error (&key player league)

@@ -54,10 +54,6 @@
          (third obj))
         (t fallback)))
 
-(defun get-secure-key (key)
-  "Gets a secure key by calling the 'pass' program."
-  (uiop:run-program (sf "pass ~A" key) :output '(:string :stripped t)))
-
 (defun parse-id (key &key idx)
   "Parses an integer id from a redis key. If IDX is non-null it specifies the
    index to retrieve the id from, after the key has been split by colons. If
@@ -541,3 +537,21 @@
                  :position (red-hget player-key "position")
                  :active? (red-sismember "players:active" id))))
 ;;; Players ----------------------------------------------------------------- END
+
+;;; Email
+(defun send-email (subject message &optional to)
+  "Sends an HTML message with the specified parameters. If TO is not specified
+   the email is sent to the administrator."
+  (redis:with-persistent-connection ()
+    (let ((username (red-hget "admin:email" "username"))
+          (pwd (red-hget "admin:email" "pwd"))
+          (server (red-hget "admin:email" "server"))
+          (reply-to (red-hget "admin:email" "reply-to")))
+      (if (empty? to)
+          (setf to (red-hget "admin:email" "admin")))
+      (cl-smtp:send-email server reply-to to subject ""
+                          :display-name "Hockey Oracle"
+                          :html-message message
+                          :ssl :tls
+                          :authentication `(,username ,pwd)))))
+;;; Email ------------------------------------------------------------------- END

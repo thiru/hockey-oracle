@@ -89,7 +89,7 @@
    :team-logo
    :get-teams
    :get-team
-   :get-secure-key))
+   :send-email))
 
 (defpackage :hockey-oracle.web
   (:use :alexandria :cl :cl-who :glu :hockey-oracle.app :hockey-oracle.core
