@@ -82,6 +82,8 @@
    :get-player
    :update-player
    :change-player-pwd
+   :reset-pwd-get-token
+   :reset-pwd-set-token
    :team
    :make-team
    :team-id

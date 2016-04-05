@@ -441,6 +441,24 @@
                    player))
               (t player)))))
 
+(defun reset-pwd-get-token (player)
+  "Get the password reset request key.
+   Returns the key if found, otherwise NIL."
+  (check-type player PLAYER)
+  (redis:with-persistent-connection ()
+    (red-get (sf "pwd-reset:player:~A" (player-id player)))))
+
+(defun reset-pwd-set-token (player)
+  "Initiate a password reset for PLAYER.
+   Returns the password reset request token."
+  (check-type player PLAYER)
+  (let* ((key (sf "pwd-reset:player:~A" (player-id player)))
+         (val (sf "~A-~A" (player-id player) (random-string))))
+    (redis:with-persistent-connection ()
+      (red-set key val)
+      (red-expire key (* 60 60 24)) ; Expire key within a day
+      val)))
+
 ;; TODO: Wrap DB updates in transaction
 (defun change-player-temp-auth (player &optional new-auth)
   "Change the temporary authentication token of PLAYER to NEW-AUTH if non-null,
@@ -469,7 +487,8 @@
   ;; Generate a new salt whenever password is changed
   (let* ((salt (random-string))
          (new-auth (gen-hash pwd salt))
-         (player-key (sf "player:~A" (player-id player))))
+         (player-key (sf "player:~A" (player-id player)))
+         (pwd-reset-key (sf "pwd-reset:player:~A" (player-id player))))
     (redis:with-persistent-connection ()
       (if (not (red-exists player-key))
           (return-from change-player-pwd
@@ -478,7 +497,9 @@
                    player)))
       (red-hset player-key "auth" new-auth)
       (red-hset player-key "salt" salt)
-      (red-hset player-key "perm-auth" (random-string 128)))
+      (red-hset player-key "perm-auth" (random-string 128))
+      (if (red-exists pwd-reset-key)
+          (red-del pwd-reset-key)))
     (new-r :success "Password updated!" (get-player :id (player-id player)))))
 
 (defun update-player (player)

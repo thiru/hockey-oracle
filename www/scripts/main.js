@@ -1,3 +1,5 @@
+// TODO: Replace alerts with inline message wherever feasible
+
 /*
  * Core domain.
  */
@@ -23,7 +25,7 @@ $(document).ready(function() {
         page.showDialog("#login-dialog");
         $("#login-user-name").focus().select();
     };
-    page.cancelLogin = function() {
+    page.closeLogin = function() {
         page.closeDialog("#login-dialog");
     };
     page.login = function() {
@@ -47,6 +49,7 @@ $(document).ready(function() {
             .attr("class", "")
             .html("<i class='fa fa-spinner fa-pulse'></i> Logging in...");
         $("#login-btn").prop("disabled", true);
+        $("#forgot-pwd").addClass("disabled");
 
         $.post("/api/login", { name: userName, pwd: pwd })
             .done(function (result) {
@@ -70,6 +73,7 @@ $(document).ready(function() {
                 }
 
                 $("#login-btn").prop("disabled", false);
+                $("#forgot-pwd").removeClass("disabled");
             })
             .fail(function (data) {
                 var result = new Result(-2,
@@ -77,8 +81,94 @@ $(document).ready(function() {
                                         " (" + data.status + ").");
                 showResult($("#login-result"), result);
                 $("#login-btn").prop("disabled", false);
+                $("#forgot-pwd").removeClass("disabled");
             });
     };
+    page.forgotPwd = function() {
+        $("#login-result").attr("class", "").html("");
+
+        var result = null;
+        var userName = get("login-user-name").value;
+
+        if (isBlank(userName))
+            result = new Result("error", "No user name provided.");
+
+        if (result && result.failed()) {
+            showResult($("#login-result"), result);
+            return;
+        }
+
+        $("#login-result")
+            .attr("class", "")
+            .html("<i class='fa fa-spinner fa-pulse'></i> " +
+                  "Requesting password reset...");
+
+        $("#login-btn").prop("disabled", true);
+        $("#forgot-pwd").addClass("disabled");
+
+        $.post("/api/forgot-password", { name: userName })
+            .done(function (result) {
+                if (!result)
+                    result = new Result(-2, "No response from server.");
+                else
+                    result = _.create(Result.prototype, result);
+
+                showResult($("#login-result"), result);
+                $("#login-btn").prop("disabled", false);
+                $("#forgot-pwd").removeClass("disabled");
+            })
+            .fail(function (data) {
+                var result = new Result(-2,
+                                        "Unexpected error. " + data.statusText +
+                                        " (" + data.status + ").");
+                showResult($("#login-result"), result);
+                $("#login-btn").prop("disabled", false);
+                $("#forgot-pwd").removeClass("disabled");
+            });
+    };
+    page.resetPwd = function() {
+        $("#save-result").attr("class", "").html("");
+
+        var player = {};
+        player.id = get("save-btn").dataset.playerId;
+        player.resetToken = get("save-btn").dataset.resetToken;
+
+        player.pwd = get("pwd-new").value;
+        if (isBlank(player.pwd)) {
+            showResult($("#save-result"),
+                       new Result("error", "Password can't be blank."));
+            return;
+        }
+
+        var newPwdRepeat = get("pwd-new-repeat").value;
+        if (player.pwd !== newPwdRepeat) {
+            showResult($("#save-result"),
+                       new Result("error", "Passwords don't match."));
+            return;
+        }
+
+        $("#save-btn").prop("disabled", true);
+        $("#save-result")
+            .html("<i class='fa fa-spinner fa-pulse'></i> Updating password...");
+
+        $.post("/api/reset-password", player)
+            .done(function (result) {
+                if (!result)
+                    result = new Result(-2, "No response from server.");
+                else
+                    result = _.create(Result.prototype, result);
+
+                showResult($("#save-result"), result);
+                $("#save-btn").prop("disabled", false);
+            })
+            .fail(function (data) {
+                var result = new Result(-2,
+                                        "Unexpected error. " + data.statusText +
+                                        " (" + data.status + ").");
+                showResult($("#save-result"), result);
+                $("#save-btn").prop("disabled", false);
+            });
+    }
 });
 // Global ------------------------------------------------------------------- END
 

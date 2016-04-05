@@ -35,6 +35,13 @@ a
   font-weight: bold;
   text-decoration: none;
 }
+a.disabled
+{
+    color: black;
+    cursor: default;
+    opacity: 0.5;
+    pointer-events: none !important;
+}
 a:focus
 {
   color: #FFAC0A; /* VAR FOCUSED-COLOUR */
@@ -66,6 +73,11 @@ a:hover
 .active
 {
   color: #0F83BC; /* VAR BLUE-HEADING */
+}
+
+.full-width
+{
+    width: 100%;
 }
 
 .col
@@ -169,6 +181,7 @@ a:hover
 .button:disabled
 {
     background: black;
+    cursor: default;
     opacity: 0.5;
 }
 .button .button-text
@@ -323,10 +336,6 @@ main
 {
     padding: 1em;
 }
-#login-dialog input
-{
-    width: 100%;
-}
 
 /*******************************
        User detail page
@@ -344,17 +353,6 @@ main
 #user-detail-page #right-col
 {
     width: 66%;
-}
-#user-detail-page #right-col input[type=email],
-#user-detail-page #right-col input[type=password],
-#user-detail-page #right-col input[type=text]
-{
-    width: 100%;
-}
-
-#user-detail-page #user-img
-{
-    width: 100%;
 }
 
 /*******************************

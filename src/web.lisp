@@ -7,6 +7,14 @@
 (defvar main-acceptor nil "The global web-server instance.")
 (defvar static-files-dir (merge-pathnames "www/" base-dir))
 
+;; TODO: don't hard-code domain
+(defparameter reset-pwd-msg
+  (glu:str "<p>A request was made to reset your password. If you would like "
+           "to continue please follow the link below. Please note, this "
+           "request will expire within 24 hours.</p>"
+           "<p><a href='~A://~A/reset-password?token=~A'>"
+           "Reset my password</a></p>"))
+
 (setf (html-mode) :HTML5)
 
 (defun create-acceptor (&key (port 9090) debug)
@@ -153,13 +161,25 @@
                                      (lambda ()
                                        (base-league-page 'www-user-logout-page
                                                          :require-league? nil)))
-            (create-regex-dispatcher "^/users/me/?$"
-                                     (lambda ()
-                                       (base-league-page 'www-user-detail-page
-                                                         :require-league? nil)))
             (create-regex-dispatcher "^/api/login/?$"
                                      (lambda ()
                                        (base-league-page 'api-login
+                                                         :require-league? nil)))
+            (create-regex-dispatcher "^/api/forgot-password/?$"
+                                     (lambda ()
+                                       (base-league-page 'api-forgot-pwd
+                                                         :require-league? nil)))
+            (create-regex-dispatcher "^/reset-password/?$"
+                                     (lambda ()
+                                       (base-league-page 'www-reset-pwd
+                                                         :require-league? nil)))
+            (create-regex-dispatcher "^/api/reset-password/?$"
+                                     (lambda ()
+                                       (base-league-page 'api-reset-pwd
+                                                         :require-league? nil)))
+            (create-regex-dispatcher "^/users/me/?$"
+                                     (lambda ()
+                                       (base-league-page 'www-user-detail-page
                                                          :require-league? nil)))
             (create-regex-dispatcher "^/api/users/me/?$"
                                      (lambda ()
@@ -352,12 +372,14 @@
                        (:h2 "Welcome!")
                        (:p
                         (:input :id "login-user-name"
+                                :class "full-width"
                                 :onkeyup "onEnter(event, page.login)"
                                 :placeholder "User name"
                                 :title "User name"
                                 :type "text"))
                        (:p
                         (:input :id "login-pwd"
+                                :class "full-width"
                                 :onkeyup "onEnter(event, page.login)"
                                 :placeholder "Password"
                                 :title "Password"
@@ -369,9 +391,15 @@
                                  :onclick "page.login()"
                                  "Log In"))
                        (:p
-                        (:button :class "button wide-button"
-                                 :onclick "page.cancelLogin()"
-                                 "Cancel")))
+                        (:a :id "forgot-pwd"
+                            :href "javascript:void(0)"
+                            :onclick "page.forgotPwd()"
+                            :style "float:left"
+                            "Forgot password")
+                        (:a :href "javascript:void(0)"
+                            :onclick "page.closeLogin()"
+                            :style "float:right"
+                            "Close")))
              (:main :id ,page-id
                     ,@body)))))
 ;;; Template Page ----------------------------------------------------------- END
@@ -491,6 +519,109 @@
      `(level :success message "Login successful!"))))
 ;;; Login API --------------------------------------------------------------- END
 
+;;; Reset Password Page
+(defun www-reset-pwd (&key player league)
+  (let* ((token (get-parameter "token"))
+         (player-id (safe-parse-int (subseq token 0 (position #\- token))))
+         (player (get-player :id player-id))
+         (verified-token (if player (reset-pwd-get-token player))))
+    (if (not (and player
+                  (not (empty? verified-token))
+                  (string-equal token verified-token)))
+        (return-from www-reset-pwd
+          (www-not-found-page :player player :league league)))
+    (standard-page
+        (:title "Reset Password"
+         :player player
+         :league league
+         :page-id "reset-password-page")
+      (:h2 "Please enter your new password")
+      (:p
+       (:input :id "pwd-new"
+               :class "full-width"
+               :onkeyup "onEnter(event, page.resetPwd)"
+               :placeholder "New password"
+               :title "New password"
+               :type "password"))
+      (:p
+       (:input :id "pwd-new-repeat"
+               :class "full-width"
+               :onkeyup "onEnter(event, page.resetPwd)"
+               :placeholder "Repeat new password"
+               :title "Repeat new password"
+               :type "password"))
+      (:p :id "save-result")
+      (:p
+       (:button :id "save-btn"
+                :class "button wide-button"
+                :data-player-id player-id
+                :data-reset-token (escape-string verified-token)
+                :onclick "page.resetPwd()"
+                "Save")))))
+;;; Reset Password Page ----------------------------------------------------- END
+
+;;; Reset Password API
+(defun api-reset-pwd (&key player league)
+  (sleep 2)
+  (setf (content-type*) "application/json")
+  (let* ((player-id (safe-parse-int (post-parameter "id")))
+         (reset-token (post-parameter "resetToken"))
+         (new-pwd (post-parameter "pwd"))
+         (player (get-player :id player-id))
+         (verified-token (if player (reset-pwd-get-token player)))
+         (save-res nil))
+    ;; Player not found:
+    (if (null player)
+        (return-from api-reset-pwd
+          (json:encode-json-plist-to-string
+           `(level :error message "Account not found."))))
+    ;; Verify reset password token is still valid
+    (if (or (empty? verified-token)
+            (not (string-equal reset-token verified-token)))
+        (return-from api-reset-pwd
+          (json:encode-json-plist-to-string
+           `(level :error message "Password reset period expired."))))
+    (setf save-res (change-player-pwd player new-pwd))
+    ;; Password update failed:
+    (if (failed? save-res)
+        (return-from api-reset-pwd
+          (json:encode-json-plist-to-string
+           `(level :error message "Failed to reset password."))))
+    (setf player (r-data save-res))
+    (set-auth-cookie player :perm? t)
+    (json:encode-json-plist-to-string
+     `(level :success
+             message "Password succesfully updated!"))))
+;;; Reset Password API ------------------------------------------------------ END
+
+;;; Forgot Password API
+(defun api-forgot-pwd (&key player league)
+  (sleep 2)
+  (setf (content-type*) "application/json")
+  (let* ((name (post-parameter "name"))
+         (player (get-player :name name))
+         (reset-token ""))
+    ;; User name not found:
+    (if (null player)
+        (return-from api-forgot-pwd
+          (json:encode-json-plist-to-string
+           `(level :error message "Account not found."))))
+    (setf reset-token (reset-pwd-set-token player))
+    ;; Reset attempt failed:
+    (if (empty? reset-token)
+        (return-from api-forgot-pwd
+          (json:encode-json-plist-to-string
+           `(level :error message "Failed to reset password."))))
+    ;; Send email to reset password
+    (send-email "Reset Password"
+                (sf reset-pwd-msg (if *debug* "http" "https") (host) reset-token)
+                (player-email player))
+    ;; Report success
+    (json:encode-json-plist-to-string
+     `(level :success
+             message "A link to reset your password was sent to your email."))))
+;;; Forgot Password API ----------------------------------------------------- END
+
 ;;; User Detail Page
 (defun www-user-detail-page (&key player league)
   (if (null player)
@@ -503,10 +634,11 @@
        :page-id "user-detail-page")
     (:section :id "left-col" :class "col"
               (:p
-               (:img :id "user-img" :src "/images/user.png")))
+               (:img :id "user-img" :class "full-width" :src "/images/user.png")))
     (:section :id "right-col" :class "col"
               (:p
                (:input :id "player-name-edit"
+                       :class "full-width"
                        :data-orig-val (escape-string (player-name player))
                        :placeholder "Name"
                        :title "Name"
@@ -514,6 +646,7 @@
                        :value (escape-string (player-name player))))
               (:p
                (:input :id "player-email-edit"
+                       :class "full-width"
                        :data-orig-val (escape-string (player-email player))
                        :placeholder "Email address"
                        :title "Email address"
@@ -547,16 +680,19 @@
                     :style "display:none"
                (:p
                 (:input :id "pwd-curr"
+                        :class "full-width"
                         :type "password"
                         :placeholder "Current password"
                         :title "Current password"))
                (:p
                 (:input :id "pwd-new"
+                        :class "full-width"
                         :type "password"
                         :placeholder "New password"
                         :title "New password"))
                (:p
                 (:input :id "pwd-new-repeat"
+                        :class "full-width"
                         :type "password"
                         :placeholder "Repeat new password"
                         :title "Repeat new password")))
