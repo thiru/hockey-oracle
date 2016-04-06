@@ -967,7 +967,8 @@
                                    "Save")
                                   (:button
                                    :class "button cancel-btn"
-                                   :onclick "page.closeDialog('#edit-dialog')"
+                                   :onclick
+                                   "page.closeDialog(\"#edit-dialog\")"
                                    "Cancel"))))
             ;; Players Confirmed To Play
             (:section
@@ -1213,7 +1214,7 @@
                           "Save")
                          (:button
                           :class "button cancel-btn"
-                          :onclick "page.closeDialog('#edit-dialog')"
+                          :onclick "page.closeDialog(\"edit-dialog\")"
                           "Cancel"))))
    (:table :id "player-list" :class "data-table"
            (:thead
