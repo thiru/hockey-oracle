@@ -4,13 +4,20 @@
  * Core domain.
  */
 
+// Global
 var page= {};
 
-// Global
 $(document).ready(function() {
-    page.userId = parseInt($("html").attr("data-user"));
-    page.leagueName = $("html").attr("data-league");
-    page.gameId = parseInt($("#game-info").attr("data-game"));
+    page.init();
+    if (get("user-detail-page"))
+        page.initUserDetailPage();
+    if (get("game-detail-page"))
+        page.initGameDetailPage();
+});
+
+page.init = function() {
+    page.userId = parseInt(get("root").dataset.user);
+    page.leagueName = get("root").dataset.league;
 
     page.showDialog = function(jqId) {
         $("#overlay").show();
@@ -84,6 +91,7 @@ $(document).ready(function() {
                 $("#forgot-pwd").removeClass("disabled");
             });
     };
+
     page.forgotPwd = function() {
         $("#login-result").attr("class", "").html("");
 
@@ -169,14 +177,11 @@ $(document).ready(function() {
                 $("#save-btn").prop("disabled", false);
             });
     }
-});
+};
 // Global ------------------------------------------------------------------- END
 
 // User Detail Page
-$(document).ready(function() {
-    if (!$("main[id='user-detail-page']").length)
-        return;
-
+page.initUserDetailPage = function() {
     page.saveSucceeded = false;
 
     page.inputChanged = function() {
@@ -265,367 +270,375 @@ $(document).ready(function() {
     $("#player-immediate-notify-edit").change(page.inputChanged);
     $("#player-pos-edit").change(page.inputChanged);
     $("#pwd-new-repeat").on("input", page.inputChanged);
-});
+};
 // User Detail Page --------------------------------------------------------- END
 
 // Game Detail Page
-function confirmTypeChanged(ele) {
-    var selectedVal = $(ele).val() || "";
-    if ("PLAYING" == selectedVal.toUpperCase()) {
-        $("#reason-input-group").hide();
-        $("#reason-input").val("");
-    }
-    else {
-        $("#reason-input-group").show();
-    }
+page.initGameDetailPage = function() {
+    page.confirmTypeChanged = function(ele) {
+        var selectedVal = $(ele).val() || "";
+        if ("PLAYING" == selectedVal.toUpperCase()) {
+            $("#reason-input-group").hide();
+            $("#reason-input").val("");
+        }
+        else {
+            $("#reason-input-group").show();
+        }
 
-    saveConfirmInfo();
-}
+        page.saveConfirmInfo();
+    };
 
-function reasonTextChanged(ele) {
-    var reasonLength = ($(ele).val() || "").length;
-    var maxLength = $(ele).attr("maxlength");
-    $("#reason-input-info").text((maxLength - reasonLength) + " chars left");
-}
+    page.reasonTextChanged = function(ele) {
+        var reasonLength = ($(ele).val() || "").length;
+        var maxLength = $(ele).attr("maxlength");
+        $("#reason-input-info").text((maxLength - reasonLength) + " chars left");
+    };
 
-function saveConfirmInfo() {
-    var selectedConfirmType = $("#game-confirm-opts").val();
-    var confirmType = $("#game-confirm-opts").val();
-    var confirmTypeTxt = $("#game-confirm-opts option:selected").text().trim();
-    var reason = $("#reason-input").val();
+    page.saveConfirmInfo = function() {
+        var selectedConfirmType = $("#game-confirm-opts").val();
+        var confirmType = $("#game-confirm-opts").val();
+        var confirmTypeTxt = $("#game-confirm-opts option:selected")
+            .text().trim();
+        var reason = $("#reason-input").val();
 
-    var originalInfo = $("#reason-input-info").html();
-    $("#confirm-type-status")
-        .html("<i class='fa fa-spinner fa-pulse'></i> Updating...");
-    $("#reason-input-info")
-        .html("<i class='fa fa-spinner fa-pulse'></i> Updating...");
+        var originalInfo = $("#reason-input-info").html();
+        $("#confirm-type-status")
+            .html("<i class='fa fa-spinner fa-pulse'></i> Updating...");
+        $("#reason-input-info")
+            .html("<i class='fa fa-spinner fa-pulse'></i> Updating...");
 
-    var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + page.gameId;
-    $.post(url, { confirmType: confirmType, reason: reason})
-        .done(function (result) {
-            if (!result) {
-                result = new Result(-2, "No response from server.");
-                showResult($("#reason-input-info"), result, originalInfo);
-            }
-            else {
-                result = _.create(Result.prototype, result);
-                showIconResult($("#confirm-type-status"), result);
-                showResult($("#reason-input-info"), result, originalInfo);
-                $("#reason-input").val(result.data);
-                updatePlayerConfirmOnPage(confirmTypeTxt, result.data);
-            }
-        })
-        .fail(function(data) {
-            var result = new Result(-2,
-                                    "Unexpected error. " + data.statusText +
-                                    " (" + data.status + ").");
-            showResult($("#reason-input-info"), result);
+        var gameId = parseInt(get("game-info").dataset.game);
+        var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
+        $.post(url, { confirmType: confirmType, reason: reason})
+            .done(function (result) {
+                if (!result) {
+                    result = new Result(-2, "No response from server.");
+                    showResult($("#reason-input-info"), result, originalInfo);
+                }
+                else {
+                    result = _.create(Result.prototype, result);
+                    showIconResult($("#confirm-type-status"), result);
+                    showResult($("#reason-input-info"), result, originalInfo);
+                    $("#reason-input").val(result.data);
+                    page.updatePlayerConfirmOnPage(confirmTypeTxt, result.data);
+                }
+            })
+            .fail(function(data) {
+                var result = new Result(-2,
+                                        "Unexpected error. " + data.statusText +
+                                        " (" + data.status + ").");
+                showResult($("#reason-input-info"), result);
+            });
+    };
+
+    page.updatePlayerConfirmOnPage = function(confirmType, reason) {
+        // Find player row
+        var playerEle = $(".player-item").filter(function() {
+            var p = $(this).data();
+            return p && (p.id == page.userId);
         });
-}
 
-function updatePlayerConfirmOnPage(confirmType, reason) {
-    // Find player row
-    var playerEle = $(".player-item").filter(function() {
-        var p = $(this).data();
-        return p && (p.id == page.userId);
-    });
+        // Update player confirm info
+        if (playerEle && playerEle.length) {
+            playerEle.data().confirmType = "(" + confirmType + ")";
+            playerEle.data().responseTime = "just updated";
+            playerEle.data().reason = reason;
 
-    // Update player confirm info
-    if (playerEle && playerEle.length) {
-        playerEle.data().confirmType = "(" + confirmType + ")";
-        playerEle.data().responseTime = "just updated";
-        playerEle.data().reason = reason;
+            playerEle.find(".confirm-type").html("(" + confirmType + ")");
+            playerEle.find(".confirm-time").html("just updated");
+            playerEle.find(".confirm-reason").html(escapeHtml(reason));
+        }
 
-        playerEle.find(".confirm-type").html("(" + confirmType + ")");
-        playerEle.find(".confirm-time").html("just updated");
-        playerEle.find(".confirm-reason").html(escapeHtml(reason));
-    }
+        // Move to confirmed/unconfirmed section if necessary
+        var parentSection = null;
+        if (confirmType.toUpperCase() == "PLAYING") {
+            parentSection = playerEle.parents("#unconfirmed-players-section");
+            if (parentSection && parentSection.length)
+                page.confirmPlayer(playerEle);
+        }
+        else {
+            parentSection = playerEle.parents("#confirmed-players-section");
+            if (parentSection && parentSection.length)
+                page.unconfirmPlayer(playerEle);
+        }
+    };
 
-    // Move to confirmed/unconfirmed section if necessary
-    var parentSection = null;
-    if (confirmType.toUpperCase() == "PLAYING") {
-        parentSection = playerEle.parents("#unconfirmed-players-section");
-        if (parentSection && parentSection.length)
-            confirmPlayer(playerEle);
-    }
-    else {
-        parentSection = playerEle.parents("#confirmed-players-section");
-        if (parentSection && parentSection.length)
-            unconfirmPlayer(playerEle);
-    }
-}
+    page.makeTeams = function() {
+        var activePlayersRes = getActivePlayers();
+        if (activePlayersRes.failed()) {
+            alert(activePlayersRes.message);
+            return;
+        }
 
-function makeTeams() {
-  var activePlayersRes = getActivePlayers();
-  if (activePlayersRes.failed()) {
-    alert(activePlayersRes.message);
-    return;
-  }
-
-  var teamsRes = generateTeams(2, activePlayersRes.data);
-  if (teamsRes.failed()) {
-    alert(teamsRes.message);
-    return;
-  }
-  $("#confirmed-players-section").hide();
-  $("#unconfirmed-players-section").hide();
-  $("#add-player").hide();
-  populateTeams(teamsRes.data);
-  $("#random-teams").show();
-  $("#pick-players").show();
-
-  function getActivePlayers() {
-    var players = [];
-
-    $("#confirmed-players .player-item")
-      .each(function() {
-        var player = $(this).data();
-        if (player && player.name)
-          players.push(player);
-    });
-
-    if (!players.length)
-      return new Result(-1, "No players selected");
-
-    return new Result(2, "", players);
-  }
-
-  /// Generate the specified number of teams, given the specified "active"
-  /// players.
-  function generateTeams(numTeams, activePlayers) {
-    // Validate input params
-    if (numTeams < 1)
-      return new Result(-1, "The number of teams should be a positive " +
-                            "integer but was " + numTeams);
-    if (!activePlayers || !activePlayers.length || activePlayers.length < 1)
-      return new Result(-1, "No active players specified");
-    if (numTeams > activePlayers.length)
-      return new Result(-1, "More teams are required (" + numTeams + ") " +
-                            "than the number of active players (" +
-                            activePlayers.length + ")");
-
-    // Create empty teams
-    var teams = [];
-    for (var i = 0; i < numTeams; i++)
-      teams.push({players: []});
-
-    // Get active goalies
-    var goalies = _.filter(activePlayers,
-                           function(x) {return x.position == 'G'});
-
-    // If there are less than `numTeams` goalies, create placeholder goalies
-    while (goalies.length < numTeams)
-      goalies.push({id: 0, name: "NO GOALIE", position: "G"});
-
-    // Pick randmon goalies (note that not all goalies will be selected to
-    // play as a goalie - i.e. if there are more goalies than teams)
-    goalies = _.shuffle(goalies);
-    for (var i = 0; i < numTeams; i++)
-      teams[i].players.push(goalies[i]);
-
-    // Get active players that won't play as a goalie and shuffle
-    var players = _.difference(activePlayers, goalies.slice(0, numTeams));
-    players = _.shuffle(players);
-
-    // Split the players into teams, sorting by name
-    var teamSize = Math.ceil(players.length / numTeams);
-    var dividedPlayers = _.chunk(players, teamSize);
-
-    for (var i = 0; i < numTeams; i++) {
-      dividedPlayers[i] = _.sortBy(dividedPlayers[i],
-                                   function(x) {return x.name});
-      teams[i].players = teams[i].players.concat(dividedPlayers[i]);
-    }
-
-    return new Result(2, "", teams);
-  }
-
-  function populateTeams(teams) {
-    var teamIdx = 0;
-
-    $("#random-teams .team").each(function() {
-      var playersUL = $(this).find(".team-players");
-      playersUL.empty();
-
-      for (var i = 0; i < teams[teamIdx].players.length; i++)
-        playersUL.append(playerHtml(teams[teamIdx].players[i]));
-
-      teamIdx++;
-    });
-
-    function playerHtml(player) {
-        var item = $("#random-teams .template-player-item .player-item")
-                    .first().clone();
-        item.find(".player-name").text(player.name);
-        item.find(".player-position").text(player.position);
-        return item;
-    }
-  }
-}
-
-function positionChanged(ele) {
-    var playerEle = $(ele).parents(".player-item");
-    playerEle.data().position = $(ele).val();
-}
-
-function confirmPlayer(ele) {
-    var currPlayerEle = $(ele).hasClass("player-item")
-        ? ele
-        : $(ele).parents(".player-item");
-    var player = currPlayerEle.data();
-    var moveToEle =
-        $("#confirmed-players-section .template-player-item .player-item")
-            .first().clone();
-
-    moveToEle.data(player);
-    moveToEle.find(".player-name").text(player.name);
-    moveToEle.find(".confirm-time").text(player.responseTime);
-    moveToEle.find(".player-position").val(player.position);
-
-    moveToEle.appendTo("#confirmed-players");
-    currPlayerEle.remove();
-
-    $("#confirmed-heading").addClass("blue-heading")
-                           .removeClass("grey-heading");
-    $("#confirmed-heading .true").removeClass("hidden");
-    $("#confirmed-heading .false").addClass("hidden");
-    $("#confirmed-players").show();
-    $("#make-teams").show();
-
-    var unconfirmedPlayers = $("#unconfirmed-players .player-item");
-    if (unconfirmedPlayers.length <= 0)
+        var teamsRes = generateTeams(2, activePlayersRes.data);
+        if (teamsRes.failed()) {
+            alert(teamsRes.message);
+            return;
+        }
+        $("#confirmed-players-section").hide();
         $("#unconfirmed-players-section").hide();
-}
+        $("#add-player").hide();
+        populateTeams(teamsRes.data);
+        $("#random-teams").show();
+        $("#pick-players").show();
 
-function unconfirmPlayer(ele) {
-    var currPlayerEle = $(ele).hasClass("player-item")
-        ? ele
-        : $(ele).parents(".player-item");
-    var player = currPlayerEle.data();
-    var moveToEle =
-        $("#unconfirmed-players-section .template-player-item .player-item")
+        function getActivePlayers() {
+            var players = [];
+
+            $("#confirmed-players .player-item")
+                .each(function() {
+                    var player = $(this).data();
+                    if (player && player.name)
+                        players.push(player);
+                });
+
+            if (!players.length)
+                return new Result(-1, "No players selected");
+
+            return new Result(2, "", players);
+        }
+
+        /// Generate the specified number of teams, given the specified "active"
+        /// players.
+        function generateTeams(numTeams, activePlayers) {
+            // Validate input params
+            if (numTeams < 1)
+                return new Result(-1,
+                                  "The number of teams should be a " +
+                                  "positive integer but was " + numTeams);
+            if (!activePlayers || !activePlayers.length ||
+                activePlayers.length < 1)
+                return new Result(-1, "No active players specified");
+            if (numTeams > activePlayers.length)
+                return new Result(-1,
+                                  "More teams are required (" +
+                                  numTeams + ") than the number of active " +
+                                  "players (" + activePlayers.length + ")");
+
+            // Create empty teams
+            var teams = [];
+            for (var i = 0; i < numTeams; i++)
+                teams.push({players: []});
+
+            // Get active goalies
+            var goalies = _.filter(activePlayers,
+                                   function(x) {return x.position == 'G'});
+
+            // If there are less than `numTeams` goalies, create placeholder
+            // goalie(s)
+            while (goalies.length < numTeams)
+                goalies.push({id: 0, name: "NO GOALIE", position: "G"});
+
+            // Pick randmon goalies (note that not all goalies will be selected
+            // to play as a goalie - i.e. if there are more goalies than teams)
+            goalies = _.shuffle(goalies);
+            for (var i = 0; i < numTeams; i++)
+                teams[i].players.push(goalies[i]);
+
+            // Get active players that won't play as a goalie and shuffle
+            var players = _.difference(activePlayers,
+                                       goalies.slice(0, numTeams));
+            players = _.shuffle(players);
+
+            // Split the players into teams, sorting by name
+            var teamSize = Math.ceil(players.length / numTeams);
+            var dividedPlayers = _.chunk(players, teamSize);
+
+            for (var i = 0; i < numTeams; i++) {
+                dividedPlayers[i] = _.sortBy(dividedPlayers[i],
+                                             function(x) {return x.name});
+                teams[i].players = teams[i].players.concat(dividedPlayers[i]);
+            }
+
+            return new Result(2, "", teams);
+        }
+
+        function populateTeams(teams) {
+            var teamIdx = 0;
+
+            $("#random-teams .team").each(function() {
+                var playersUL = $(this).find(".team-players");
+                playersUL.empty();
+
+                for (var i = 0; i < teams[teamIdx].players.length; i++)
+                    playersUL.append(playerHtml(teams[teamIdx].players[i]));
+
+                teamIdx++;
+            });
+
+            function playerHtml(player) {
+                var item = $("#random-teams .template-player-item .player-item")
+                    .first().clone();
+                item.find(".player-name").text(player.name);
+                item.find(".player-position").text(player.position);
+                return item;
+            }
+        }
+    };
+
+    page.positionChanged = function(ele) {
+        var playerEle = $(ele).parents(".player-item");
+        playerEle.data().position = $(ele).val();
+    };
+
+    page.updateConfirmedSection = function() {
+        var confirmedPlayers = $("#confirmed-players .player-item");
+        if (confirmedPlayers.length) {
+            $("#confirmed-heading-many").show();
+            $("#confirmed-heading-zero").hide();
+            $("#confirmed-players").show();
+        }
+        else {
+            $("#confirmed-heading-many").hide();
+            $("#confirmed-heading-zero").show();
+            $("#confirmed-players").hide();
+        }
+    };
+
+    page.updateUnconfirmedSection = function() {
+        var unconfirmedPlayers = $("#unconfirmed-players .player-item");
+        if (unconfirmedPlayers.length) {
+            $("#unconfirmed-players-section").show();
+        }
+        else {
+            $("#unconfirmed-players-section").hide();
+        }
+    };
+
+    page.confirmPlayer = function(ele) {
+        var currPlayerEle = $(ele).hasClass("player-item")
+            ? ele
+            : $(ele).parents(".player-item");
+        var player = currPlayerEle.data();
+        var moveToEle =
+            $("#confirmed-players-section .template-player-item .player-item")
             .first().clone();
 
-    moveToEle.data(player);
-    moveToEle.find(".player-name").text(player.name);
-    moveToEle.find(".confirm-type").text(player.confirmType);
-    moveToEle.find(".confirm-reason").text(player.reason);
-    moveToEle.find(".confirm-time").text(player.responseTime);
+        moveToEle.data(player);
+        moveToEle.find(".player-name").text(player.name);
+        moveToEle.find(".confirm-time").text(player.responseTime);
+        moveToEle.find(".player-position").val(player.position);
 
-    moveToEle.appendTo("#unconfirmed-players");
-    currPlayerEle.remove();
+        moveToEle.appendTo("#confirmed-players");
+        currPlayerEle.remove();
 
-    var confirmedPlayers = $("#confirmed-players .player-item");
-    if (confirmedPlayers.length <= 0) {
-        $("#confirmed-heading").removeClass("blue-heading")
-                               .addClass("grey-heading");
-        $("#confirmed-heading .true").addClass("hidden");
-        $("#confirmed-heading .false").removeClass("hidden");
-        $("#confirmed-players").hide();
-        $("#make-teams").hide();
-    }
-    else {
+        page.updateConfirmedSection();
+        page.updateUnconfirmedSection();
+    };
+
+    page.unconfirmPlayer = function(ele) {
+        var currPlayerEle = $(ele).hasClass("player-item")
+            ? ele
+            : $(ele).parents(".player-item");
+        var player = currPlayerEle.data();
+        var moveToEle =
+            $("#unconfirmed-players-section .template-player-item .player-item")
+            .first().clone();
+
+        moveToEle.data(player);
+        moveToEle.find(".player-name").text(player.name);
+        moveToEle.find(".confirm-type").text(player.confirmType);
+        moveToEle.find(".confirm-reason").text(player.reason);
+        moveToEle.find(".confirm-time").text(player.responseTime);
+
+        moveToEle.appendTo("#unconfirmed-players");
+        currPlayerEle.remove();
+
+        page.updateConfirmedSection();
+        page.updateUnconfirmedSection();
+    };
+
+    page.pickPlayers = function() {
+        $("#random-teams").hide();
+        $("#pick-players").hide();
+        $("#confirmed-players-section").show();
         $("#unconfirmed-players-section").show();
-    }
-}
+        $("#add-player").show();
+    };
 
-function pickPlayers() {
-    $("#random-teams").hide();
-    $("#pick-players").hide();
-    $("#confirmed-players-section").show();
-    $("#unconfirmed-players-section").show();
-    $("#add-player").show();
-}
+    page.addPlayer = function() {
+        $("#edit-dialog .save-btn").attr("data-player-id", 0);
+        $("#player-name-edit").val("Extra");
+        $("#player-pos-edit option").removeAttr("selected");
+        $("#player-active-edit").prop("checked", true); // TODO: obsolete
+        page.showDialog("#edit-dialog");
+        $("#player-name-edit").focus().select();
+    };
 
-function editClick(ev) {
-  ev.stopPropagation();
-}
+    page.editPlayer = function(ele) {
+        var playerRow = $(ele).parents("#confirmed-players .player-item");
+        var playerId = playerRow.attr("data-player-id");
+        var currName = playerRow.find(".player-name").text().trim();
+        var currPos = playerRow.find(".player-position :selected").val();
+        var currActive = true; // TODO: obsolete
 
-function addPlayer() {
-  $("#edit-dialog .save-btn").attr("data-player-id", 0);
-  $("#player-name-edit").val("Extra");
-  $("#player-pos-edit option").removeAttr("selected");
-  $("#player-active-edit").prop("checked", true); // TODO: obsolete
-  page.showDialog("#edit-dialog");
-  $("#player-name-edit").focus().select();
-}
+        $("#player-name-edit").val(currName);
+        $("#player-pos-edit").val(currPos);
+        $("#player-active-edit").prop("checked", currActive);
 
-function editPlayer(ele) {
-  var playerRow = $(ele).parents("#confirmed-players .player-item");
-  var playerId = playerRow.attr("data-player-id");
-  var currName = playerRow.find(".player-name").text().trim();
-  var currPos = playerRow.find(".player-position :selected").val();
-  var currActive = true; // TODO: obsolete
+        $("#edit-dialog .save-btn").attr("data-player-id", playerId);
 
-  $("#player-name-edit").val(currName);
-  $("#player-pos-edit").val(currPos);
-  $("#player-active-edit").prop("checked", currActive);
+        page.showDialog("#edit-dialog");
+        $("#player-name-edit").focus().select();
+    };
 
-  $("#edit-dialog .save-btn").attr("data-player-id", playerId);
+    page.savePlayer = function() {
+        var player = {};
 
-  page.showDialog("#edit-dialog");
-  $("#player-name-edit").focus().select();
-}
+        // Determine player ID
+        player.playerId =
+            parseInt($("#edit-dialog .save-btn").attr("data-player-id"));
+        if (player.playerId < 0) {
+            alert("Invalid player id. Expected non-negative but was: " +
+                  player.playerId + " .");
+            return;
+        }
 
-function savePlayer() {
-  var player = {};
+        // Get player name
+        player.name = $("#player-name-edit").val().trim();
+        if (!player.name || !player.name.length) {
+            alert("Player name can't be blank.");
+            return;
+        }
 
-  // Determine player ID
-  player.playerId = parseInt($("#edit-dialog .save-btn").attr("data-player-id"));
-  if (player.playerId < 0) {
-    alert("Invalid player id. Expected non-negative but was: " +
-          player.playerId + " .");
-    return;
-  }
+        // Get player position
+        player.position = $("#player-pos-edit :selected").val();
 
-  // Get player name
-  player.name = $("#player-name-edit").val().trim();
-  if (!player.name || !player.name.length) {
-    alert("Player name can't be blank.");
-    return;
-  }
+        // If we're adding a new player
+        if (player.playerId == 0) {
+            var newPlayerRow =
+                $("#confirmed-players-section .template-player-item .player-item")
+                .first().clone();
 
-  // Get player position
-  player.position = $("#player-pos-edit :selected").val();
+            var maxPlayerId = -1;
+            $("#confirmed-players .player-item").each(function() {
+                var id = parseInt($(this).attr("data-player-id"));
+                if (id > maxPlayerId)
+                    maxPlayerId = id;
+            });
+            player.playerId = maxPlayerId + 1;
 
-  // If we're adding a new player
-  if (player.playerId == 0) {
-      var newPlayerRow =
-          $("#confirmed-players-section .template-player-item .player-item")
-            .first().clone();
+            if (maxPlayerId < 0)
+                maxPlayerId = 1;
 
-    var maxPlayerId = -1;
-    $("#confirmed-players .player-item").each(function() {
-      var id = parseInt($(this).attr("data-player-id"));
-      if (id > maxPlayerId)
-        maxPlayerId = id;
-    });
-    player.playerId = maxPlayerId + 1;
+            newPlayerRow.data(player);
+            newPlayerRow.find(".player-name").text(player.name);
+            newPlayerRow.find(".confirm-time").text(player.responseTime);
+            newPlayerRow.find(".player-position").val(player.position);
 
-    if (maxPlayerId < 0)
-      maxPlayerId = 1;
+            newPlayerRow.appendTo("#confirmed-players");
+        }
+        // Otherwise we're editing an existing player
+        else {
+            var playerRow =
+                $("#confirmed-players .player-item[data-player-id=" +
+                  playerId + "]");
+            playerRow.find(".player-name").text(name);
+            playerRow.find(".player-position").val(position);
+        }
 
-    newPlayerRow.data(player);
-    newPlayerRow.find(".player-name").text(player.name);
-    newPlayerRow.find(".confirm-time").text(player.responseTime);
-    newPlayerRow.find(".player-position").val(player.position);
-
-    newPlayerRow.appendTo("#confirmed-players");
-  }
-  // Otherwise we're editing an existing player
-  else {
-    var playerRow =
-      $("#confirmed-players .player-item[data-player-id=" + playerId + "]");
-    playerRow.find(".player-name").text(name);
-    playerRow.find(".player-position").val(position);
-  }
-
-  page.closeDialog("#edit-dialog");
-  $("#confirmed-players").show();
-  $("#confirmed-heading").removeClass("grey-heading")
-                         .addClass("blue-heading");
-  $("#confirmed-heading .true").removeClass("hidden");
-  $("#confirmed-heading .false").addClass("hidden");
-  $("#make-teams").show();
-}
+        page.closeDialog("#edit-dialog");
+        page.updateConfirmedSection();
+    };
+};
 // Game Detail Page --------------------------------------------------------- END

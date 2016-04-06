@@ -272,6 +272,7 @@
   `(with-html-output-to-string
        (*standard-output* nil :prologue t :indent t)
      (:html :lang "en"
+            :id "root"
             :data-user (if ,player (player-id player))
             :data-league (if ,league (league-name league))
             (:head
@@ -887,7 +888,7 @@
                 :id "confirm-inputs"
                 (:b "Your current status for this game is:&nbsp;")
                 (:select :id "game-confirm-opts"
-                         :onchange "confirmTypeChanged(this)"
+                         :onchange "page.confirmTypeChanged(this)"
                          (doplist (ct-id ct-name confirm-types)
                            (htm
                             (:option :selected
@@ -918,8 +919,8 @@
                                  "hidden")
                  (:textarea :id "reason-input"
                             :maxlength game-confirm-reason-max-length
-                            :onchange "reasonTextChanged(this)"
-                            :onkeyup "reasonTextChanged(this)"
+                            :onchange "page.reasonTextChanged(this)"
+                            :onkeyup "page.reasonTextChanged(this)"
                             :placeholder
                             (glu:str "Please enter why you&apos;re unable to "
                                      "play or are unsure")
@@ -931,7 +932,7 @@
                                       (length (game-confirm-reason
                                                player-gc)))))
                        (:button :class "button"
-                                :onclick "saveConfirmInfo()"
+                                :onclick "page.saveConfirmInfo()"
                                 "Update")
                        (:div :class "clear-fix"))))))
             ;; Edit Player Dialog
@@ -963,7 +964,7 @@
                                   (:button
                                    :class "button save-btn"
                                    :data-player-id "0"
-                                   :onclick "savePlayer()"
+                                   :onclick "page.savePlayer()"
                                    "Save")
                                   (:button
                                    :class "button cancel-btn"
@@ -973,29 +974,25 @@
             ;; Players Confirmed To Play
             (:section
              :id "confirmed-players-section"
-             (:h2 :id "confirmed-heading"
-                  :class (if (confirmed-players game)
-                             "blue-heading"
-                             "grey-heading")
-                  (:span :class (if (confirmed-players game)
-                                    "true"
-                                    "true hidden")
-                         "Confirmed to play")
-                  (:span :class (if (confirmed-players game)
-                                    "false hidden"
-                                    "false")
-                         "No players confirmed to play"))
+             (:h2 :id "confirmed-heading-many"
+                  :class "blue-heading"
+                  :style (if (empty? (confirmed-players game)) "display:none")
+                  "Confirmed to play")
+             (:h2 :id "confirmed-heading-zero"
+                  :class "grey-heading"
+                  :style (if (confirmed-players game) "display:none")
+                         "No players confirmed to play")
              (:ul :class "template-player-item"
                   (:li :class "player-item"
                        (:span :class "player-name" "")
                        (:span :class "confirm-type" "&nbsp;")
                        (:span :class "confirm-btn-toggle"
                               (:button :class "button"
-                                       :onclick "unconfirmPlayer(this)"
+                                       :onclick "page.unconfirmPlayer(this)"
                                        :title "Move to \"Not playing\" section"
                                        (:i :class "fa fa-chevron-circle-down")))
                        (:select :class "player-position"
-                                :onchange "positionChanged(this)"
+                                :onchange "page.positionChanged(this)"
                                 (dolist (pos players-positions)
                                   (htm
                                    (:option :value pos
@@ -1031,13 +1028,13 @@
                           (:span :class "confirm-type" "&nbsp;")
                           (:span :class "confirm-btn-toggle"
                                  (:button :class "button"
-                                          :onclick "unconfirmPlayer(this)"
+                                          :onclick "page.unconfirmPlayer(this)"
                                           :title
                                           "Move to \"Not playing\" section"
                                           (:i :class
                                               "fa fa-chevron-circle-down")))
                           (:select :class "player-position"
-                                   :onchange "positionChanged(this)"
+                                   :onchange "page.positionChanged(this)"
                                    (dolist (pos players-positions)
                                      (htm
                                       (:option
@@ -1068,7 +1065,7 @@
                        (:span :class "confirm-type" "&nbsp;")
                        (:span :class "confirm-btn-toggle"
                               (:button :class "button"
-                                       :onclick "confirmPlayer(this)"
+                                       :onclick "page.confirmPlayer(this)"
                                        :title "Move to \"Confirmed\" section"
                                        (:i :class "fa fa-chevron-circle-up")))
                        (:span :class "player-position" "&nbsp;")
@@ -1104,7 +1101,7 @@
                                                 (game-confirm-confirm-type pc)))))
                           (:span :class "confirm-btn-toggle"
                                  (:button :class "button"
-                                          :onclick "confirmPlayer(this)"
+                                          :onclick "page.confirmPlayer(this)"
                                           :title "Move to \"Confirmed\" section"
                                           (:i :class "fa fa-chevron-circle-up")))
                           (:span :class "player-position" "&nbsp;")
@@ -1138,18 +1135,18 @@
                      :class (if (confirmed-players game)
                                 "button wide-button"
                                 "button wide-button hidden")
-                     :onclick "makeTeams()"
+                     :onclick "page.makeTeams()"
                      :title "Generate random teams"
                      (:i :class "fa fa-random")
                      (:span :class "button-text" "Make Teams"))
             (:button :id "add-player"
                      :class "button wide-button"
-                     :onclick "addPlayer()"
+                     :onclick "page.addPlayer()"
                      (:i :class "fa fa-user-plus")
                      (:span :class "button-text" "Add Player"))
             (:button :id "pick-players"
                      :class "button wide-button"
-                     :onclick "pickPlayers()"
+                     :onclick "page.pickPlayers()"
                      :title "Choose players"
                      (:i :class "fa fa-check-circle-o")
                      (:span :class "button-text" "Pick Players")))))))
@@ -1210,7 +1207,7 @@
                          (:button
                           :class "button save-btn"
                           :data-player-id "0"
-                          :onclick "savePlayer()"
+                          :onclick "page.savePlayer()"
                           "Save")
                          (:button
                           :class "button cancel-btn"
@@ -1257,7 +1254,7 @@
                      (:button
                       :class "button"
                       :href "javascript:void(0)"
-                      :onclick "editPlayer(this)"
+                      :onclick "page.editPlayer(this)"
                       (:i :class "fa fa-pencil-square-o"))))))))
    (:section :id "random-teams"
              (:table :id "team1" :class "team data-table"
@@ -1281,20 +1278,20 @@
    (:button :id "make-teams"
             :class "button wide-button"
             :href "javascript:void(0)"
-            :onclick "makeTeams()"
+            :onclick "page.makeTeams()"
             :title "Select to generate random teams"
             (:i :class "fa fa-random")
             (:span :class "button-text" "Make Teams"))
    (:button :id "add-player"
             :class "button wide-button"
             :href "javascript:void(0)"
-            :onclick "addPlayer()"
+            :onclick "page.addPlayer()"
             (:i :class "fa fa-user-plus")
             (:span :class "button-text" "Add Player"))
    (:button :id "pick-players"
             :class "button wide-button"
             :href "javascript:void(0)"
-            :onclick "pickPlayers()"
+            :onclick "page.pickPlayers()"
             :title "Select to choose active players"
             (:i :class "fa fa-check-circle-o")
             (:span :class "button-text" "Pick Players"))
