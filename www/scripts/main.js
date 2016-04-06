@@ -487,6 +487,7 @@ page.initGameDetailPage = function() {
             $("#confirmed-heading-many").show();
             $("#confirmed-heading-zero").hide();
             $("#confirmed-players").show();
+            $("#confirmed-count").text("(" + confirmedPlayers.length + ")");
         }
         else {
             $("#confirmed-heading-many").hide();
@@ -499,9 +500,11 @@ page.initGameDetailPage = function() {
         var unconfirmedPlayers = $("#unconfirmed-players .player-item");
         if (unconfirmedPlayers.length) {
             $("#unconfirmed-players-section").show();
+            $("#unconfirmed-count").text("(" + unconfirmedPlayers.length + ")");
         }
         else {
             $("#unconfirmed-players-section").hide();
+            $("#unconfirmed-count").text("");
         }
     };
 

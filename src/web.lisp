@@ -977,7 +977,9 @@
              (:h2 :id "confirmed-heading-many"
                   :class "blue-heading"
                   :style (if (empty? (confirmed-players game)) "display:none")
-                  "Confirmed to play")
+                  (:span "Confirmed to play")
+                  (:span :id "confirmed-count"
+                          (fmt "(~A)" (length (confirmed-players game)))))
              (:h2 :id "confirmed-heading-zero"
                   :class "grey-heading"
                   :style (if (confirmed-players game) "display:none")
@@ -1058,7 +1060,9 @@
             (:section
              :id "unconfirmed-players-section"
              (:h2 :id "unconfirmed-heading" :class "blue-heading"
-                  "Not playing or undecided")
+                  "Not playing or undecided"
+                  (:span :id "unconfirmed-count"
+                         (fmt "(~A)" (length (unconfirmed-players game)))))
              (:ul :class "template-player-item"
                   (:li :class "player-item"
                        (:span :class "player-name" "")
