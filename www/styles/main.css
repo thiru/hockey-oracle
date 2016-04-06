@@ -126,13 +126,13 @@ a:hover
 {
   font-weight: bold;
 }
-.data-list li:hover
-{
-  background: #D3FCFF;
-}
 .data-list li:nth-child(even)
 {
   background: #F5F5F5;
+}
+.data-list li:hover
+{
+  background: #D3FCFF;
 }
 
 .brief-table td
