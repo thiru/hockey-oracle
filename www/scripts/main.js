@@ -508,6 +508,27 @@ page.initGameDetailPage = function() {
         }
     };
 
+    page.moveToPlayerList = function(listEle, moveToEle) {
+        var players = listEle.find(".player-item");
+        if (!players.length) {
+            moveToEle.appendTo(listEle);
+        }
+        else {
+            var name = moveToEle.data("name").toLowerCase();
+            var inserted = false;
+            players.each(function (idx) {
+                var cmp = name.localeCompare($(this).data("name"));
+                if (cmp <= -1) {
+                    $(this).before(moveToEle);
+                    inserted = true;
+                    return false;
+                }
+            });
+            if (!inserted)
+                moveToEle.appendTo(listEle);
+        }
+    }
+
     page.confirmPlayer = function(ele) {
         var currPlayerEle = $(ele).hasClass("player-item")
             ? ele
@@ -522,7 +543,7 @@ page.initGameDetailPage = function() {
         moveToEle.find(".confirm-time").text(player.responseTime);
         moveToEle.find(".player-position").val(player.position);
 
-        moveToEle.appendTo("#confirmed-players");
+        page.moveToPlayerList($("#confirmed-players"), moveToEle);
         currPlayerEle.remove();
 
         page.updateConfirmedSection();
@@ -544,7 +565,7 @@ page.initGameDetailPage = function() {
         moveToEle.find(".confirm-reason").text(player.reason);
         moveToEle.find(".confirm-time").text(player.responseTime);
 
-        moveToEle.appendTo("#unconfirmed-players");
+        page.moveToPlayerList($("#unconfirmed-players"), moveToEle);
         currPlayerEle.remove();
 
         page.updateConfirmedSection();
@@ -629,7 +650,7 @@ page.initGameDetailPage = function() {
             newPlayerRow.find(".confirm-time").text(player.responseTime);
             newPlayerRow.find(".player-position").val(player.position);
 
-            newPlayerRow.appendTo("#confirmed-players");
+            page.moveToPlayerList($("#confirmed-players"), newPlayerRow);
         }
         // Otherwise we're editing an existing player
         else {
