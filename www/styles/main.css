@@ -416,6 +416,7 @@ main
 {
     background-color: #FFF2CC;
     border-radius: 0.3em;
+    margin: 1.5em 0;
     padding: 1em;
 }
 
@@ -460,13 +461,6 @@ main
 #game-detail-page .template-player-item
 {
     display: none;
-}
-
-/* Leave space after player listings */
-#game-detail-page #confirmed-players,
-#game-detail-page #unconfirmed-players
-{
-  margin-bottom: 1em;
 }
 
 /* Define players listing column widths */

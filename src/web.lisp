@@ -638,6 +638,11 @@
                (:img :id "user-img" :class "full-width" :src "/images/user.png")))
     (:section :id "right-col" :class "col"
               (:p
+               (:a :class "button"
+                   :href "/logout"
+                   :style "float:right" "Log out")
+               (:div :class "clear-fix"))
+              (:p
                (:input :id "player-name-edit"
                        :class "full-width"
                        :data-orig-val (escape-string (player-name player))
@@ -697,9 +702,6 @@
                         :type "password"
                         :placeholder "Repeat new password"
                         :title "Repeat new password")))
-              (:p
-               (:a :class "button wide-button" :href "/logout"
-                   "Log out"))
               (:p
                (:button :id "save-btn"
                         :class "button wide-button"
@@ -1135,6 +1137,7 @@
                                   :src "/images/team-logos/panthers.png")
                             (:h2 :class "team-heading" "Panthers")
                             (:ul :class "team-players data-list")))
+            (:br)
             (:button :id "make-teams"
                      :class (if (confirmed-players game)
                                 "button wide-button"
