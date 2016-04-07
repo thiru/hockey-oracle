@@ -203,6 +203,11 @@ a:hover
   display: none;
 }
 
+.template-items
+{
+    display: none;
+}
+
 /* Get rid of ugly system-outline */
 :focus {outline:none;}
 ::-moz-focus-inner {border:0;}
@@ -436,23 +441,24 @@ main
 }
 
 /* Edit dialog formatting */
-#game-detail-page #edit-dialog .label-col > *
+#edit-dialog .label-col > *,
+#edit-dialog .label-col > *
 {
   padding-right: 2em;
 }
-#game-detail-page #edit-dialog .input-col > *
+#edit-dialog .input-col > *
 {
   width: 100%;
 }
-#game-detail-page #edit-dialog td
+#edit-dialog td
 {
   padding-bottom: 0.5em;
 }
-#game-detail-page #edit-dialog input[type="checkbox"]
+#edit-dialog input[type="checkbox"]
 {
   margin: 0;
 }
-#game-detail-page #edit-dialog .actions
+#edit-dialog .actions
 {
   margin-top: 1em;
   text-align: right;
@@ -558,4 +564,16 @@ main
     opacity: 0.4;
     position: absolute;
     top: 3em;
+}
+
+/*******************************
+        Player list page
+*******************************/
+
+#player-list-page .player-position,
+#player-list-page .action-buttons
+{
+    display: block;
+    float: right;
+    margin: 0 1em 0.5em 0.5em;
 }

@@ -1184,123 +1184,78 @@
 ;;; Player List Page
 (defun www-player-list-page (&key player league)
   (standard-page
-   (:title "Players"
-    :player player
-    :league league
-    :page-id "player-list-page")
-   (:div :id "edit-dialog" :class "dialog"
-         (:header "Editing Player")
-         (:section :class "content"
-                   (:table
-                    (:tr :class "input-row"
-                         (:td :class "label-col"
-                              (:label :for "player-name-edit" "Name: "))
-                         (:td :class "input-col"
-                              (:input :id "player-name-edit" :type "text")))
-                    (:tr
-                     (:td
-                      (:label :for "player-pos-edit" "Position: "))
-                     (:td
-                      (:select :id "player-pos-edit"
-                               (dolist (pos players-positions)
-                                 (htm
-                                  (:option :value pos (esc pos)))))))
-                    (:tr
-                     (:td
-                      (:label :for "player-active-edit" "Is Active: "))
-                     (:td
-                      (:input :id "player-active-edit" :type "checkbox"))))
-                   (:div :class "actions"
-                         (:button
-                          :class "button save-btn"
-                          :data-player-id "0"
-                          :onclick "page.savePlayer()"
-                          "Save")
-                         (:button
-                          :class "button cancel-btn"
-                          :onclick "page.closeDialog(\"edit-dialog\")"
-                          "Cancel"))))
-   (:table :id "player-list" :class "data-table"
-           (:thead
-            (:tr
-             (:th :class "player-name" "Player")
-             (:th :class "player-position" :title "Position" "Pos")
-             (:th :class "actions-col" "")))
-           (:tbody
-            (dolist (p (get-players league))
-              (htm
-               (:tr
-                :class (if (player-active? p)
-                           "player-item selected"
-                           "player-item")
-                :data-player-id (player-id p)
-                (:td
-                 :class "player-name"
-                 :onclick "togglePlayerActive(this)"
-                 (:i
-                  :class (if (player-active? p)
-                             "player-check fa fa-check-circle-o"
-                             "player-check fa fa-circle-o")
-                  :title
-                  "When checked the player is considered active/able to play")
+      (:title "Players"
+       :player player
+       :league league
+       :page-id "player-list-page")
+    (:h2 :class "blue-heading"
+         "Players")
+    (:ul :id "all-players" :class "data-list"
+         (dolist (p (get-players league))
+           (htm
+            (:li :class "player-item"
+                 :data-id (player-id p)
+                 :data-name (player-name p)
+                 :data-position (player-position p)
                  (:span :class "player-name"
-                        (esc (player-name p))))
-                (:td
-                 (:select :class "player-position"
-                          (dolist (pos players-positions)
-                            (htm
-                             (:option
-                              :value pos
-                              :selected (if (string-equal
-                                             pos
-                                             (player-position p))
-                                            ""
-                                            nil)
-                              (esc pos))))))
-                (:td :class "action-buttons"
-                     (:button
-                      :class "button"
-                      :href "javascript:void(0)"
-                      :onclick "page.editPlayer(this)"
-                      (:i :class "fa fa-pencil-square-o"))))))))
-   (:section :id "random-teams"
-             (:table :id "team1" :class "team data-table"
-                     (:thead
-                      (:tr :class "team-heading"
-                           (:th :class "team-name"
-                                "Cripplers")
-                           (:th
-                            (:img :class "team-logo"
-                                  :src "/images/team-logos/cripplers.png"))))
-                     (:tbody :class "team-players"))
-             (:table :id "team2" :class "team data-table"
-                     (:thead
-                      (:tr :class "team-heading"
-                           (:th :class "team-name"
-                                "Panthers")
-                           (:th
-                            (:img :class "team-logo"
-                                  :src "/images/team-logos/panthers.png"))))
-                     (:tbody :class "team-players")))
-   (:button :id "make-teams"
-            :class "button wide-button"
-            :href "javascript:void(0)"
-            :onclick "page.makeTeams()"
-            :title "Select to generate random teams"
-            (:i :class "fa fa-random")
-            (:span :class "button-text" "Make Teams"))
-   (:button :id "add-player"
-            :class "button wide-button"
-            :href "javascript:void(0)"
-            :onclick "page.addPlayer()"
-            (:i :class "fa fa-user-plus")
-            (:span :class "button-text" "Add Player"))
-   (:button :id "pick-players"
-            :class "button wide-button"
-            :href "javascript:void(0)"
-            :onclick "page.pickPlayers()"
-            :title "Select to choose active players"
-            (:i :class "fa fa-check-circle-o")
-            (:span :class "button-text" "Pick Players"))
-    ))
+                        (esc (player-name p)))
+                 (:span :class "action-buttons"
+                        (:button :class "button"
+                                 :onclick "page.editPlayer(this, \"#all-players\")"
+                                 (:i :class "fa fa-pencil-square-o")))
+                 (:span :class "player-position" (esc (player-position p)))
+                 (:span :class "clear-fix")))))
+    (:br)
+    (:button :id "add-player"
+             :class "button wide-button"
+             :onclick "page.addPlayer()"
+             (:i :class "fa fa-user-plus")
+             (:span :class "button-text" "Add Player"))
+    (:div :class "template-items"
+          (:ul :class "template-player-item"
+               (:li :class "player-item"
+                    (:span :class "player-name" "")
+                    (:span :class "action-buttons"
+                           (:button :class "button"
+                                    :onclick "page.editPlayer(this, \"#all-players\")"
+                                    (:i :class "fa fa-pencil-square-o")))
+                    (:span :class "player-position" "&nbsp;")
+                    (:span :class "clear-fix"))))
+    (:div :id "edit-dialog" :class "dialog"
+          (:header "Editing Player")
+          (:section :class "content"
+                    (:table
+                     (:tr :class "input-row"
+                          (:td :class "label-col"
+                               (:label :for "player-name-edit" "Name: "))
+                          (:td :class "input-col"
+                               (:input :id "player-name-edit"
+                                       :type "text")))
+                     (:tr
+                      (:td
+                       (:label :for "player-pos-edit" "Position: "))
+                      (:td
+                       (:select :id "player-pos-edit"
+                                (dolist (pos players-positions)
+                                  (htm
+                                   (:option :selected t
+                                            :value pos (esc pos)))))))
+                     (:tr
+                      (:td
+                       (:label :for "player-active-edit" "Is Active: "))
+                      (:td
+                       (:input :id "player-active-edit"
+                               :checked t
+                               :type "checkbox"))))
+                    (:div :class "actions"
+                          (:button
+                           :class "button save-btn"
+                           :data-player-id "0"
+                           :onclick "page.savePlayer(\"#all-players\", \".template-player-item .player-item\")"
+                           "Save")
+                          (:button
+                           :class "button cancel-btn"
+                           :onclick
+                           "page.closeDialog(\"#edit-dialog\")"
+                           "Cancel"))))))
 ;;; Player List Page -------------------------------------------------------- END

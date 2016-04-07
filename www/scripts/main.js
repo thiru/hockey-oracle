@@ -13,6 +13,8 @@ $(document).ready(function() {
         page.initUserDetailPage();
     if (get("game-detail-page"))
         page.initGameDetailPage();
+    if (get("player-list-page"))
+        page.initGameDetailPage();
 });
 
 page.init = function() {
@@ -581,40 +583,41 @@ page.initGameDetailPage = function() {
     };
 
     page.addPlayer = function() {
-        $("#edit-dialog .save-btn").attr("data-player-id", 0);
+        $("#edit-dialog .save-btn").data().id = 0;
         $("#player-name-edit").val("Extra");
         $("#player-pos-edit option").removeAttr("selected");
-        $("#player-active-edit").prop("checked", true); // TODO: obsolete
         page.showDialog("#edit-dialog");
         $("#player-name-edit").focus().select();
     };
 
-    page.editPlayer = function(ele) {
-        var playerRow = $(ele).parents("#confirmed-players .player-item");
-        var playerId = playerRow.attr("data-player-id");
-        var currName = playerRow.find(".player-name").text().trim();
-        var currPos = playerRow.find(".player-position :selected").val();
-        var currActive = true; // TODO: obsolete
+    page.editPlayer = function(ele, playerListJQSel) {
+        var playerRow = $(ele).parents(playerListJQSel + " .player-item");
+        var player = playerRow.data();
 
-        $("#player-name-edit").val(currName);
-        $("#player-pos-edit").val(currPos);
-        $("#player-active-edit").prop("checked", currActive);
+        $("#player-name-edit").val(player.name);
+        $("#player-pos-edit").val(player.position);
 
-        $("#edit-dialog .save-btn").attr("data-player-id", playerId);
+        $("#edit-dialog .save-btn").data().id = player.id;
 
         page.showDialog("#edit-dialog");
         $("#player-name-edit").focus().select();
     };
 
-    page.savePlayer = function() {
+    page.savePlayer = function(playerListJQSel, templateItemJQSel) {
         var player = {};
 
+        // Defaulting to game detail page specifics
+        if (isBlank(playerListJQSel))
+            playerListJQSel = "#confirmed-players";
+        if (isBlank(templateItemJQSel))
+            templateItemJQSel = "#confirmed-players-section " +
+                                ".template-player-item .player-item";
+
         // Determine player ID
-        player.playerId =
-            parseInt($("#edit-dialog .save-btn").attr("data-player-id"));
-        if (player.playerId < 0) {
+        player.id = $("#edit-dialog .save-btn").data().id;
+        if (player.id < 0) {
             alert("Invalid player id. Expected non-negative but was: " +
-                  player.playerId + " .");
+                  player.id + " .");
             return;
         }
 
@@ -629,18 +632,16 @@ page.initGameDetailPage = function() {
         player.position = $("#player-pos-edit :selected").val();
 
         // If we're adding a new player
-        if (player.playerId == 0) {
-            var newPlayerRow =
-                $("#confirmed-players-section .template-player-item .player-item")
-                .first().clone();
+        if (player.id == 0) {
+            var newPlayerRow = $(templateItemJQSel).first().clone();
 
             var maxPlayerId = -1;
-            $("#confirmed-players .player-item").each(function() {
-                var id = parseInt($(this).attr("data-player-id"));
+            $(playerListJQSel + " .player-item").each(function() {
+                var id = parseInt($(this).data().id);
                 if (id > maxPlayerId)
                     maxPlayerId = id;
             });
-            player.playerId = maxPlayerId + 1;
+            player.id = maxPlayerId + 1;
 
             if (maxPlayerId < 0)
                 maxPlayerId = 1;
@@ -648,17 +649,26 @@ page.initGameDetailPage = function() {
             newPlayerRow.data(player);
             newPlayerRow.find(".player-name").text(player.name);
             newPlayerRow.find(".confirm-time").text(player.responseTime);
-            newPlayerRow.find(".player-position").val(player.position);
+            var positionEle = newPlayerRow.find(".player-position");
+            if (positionEle.is("select"))
+                positionEle.val(player.position);
+            else
+                positionEle.text(player.position);
 
-            page.moveToPlayerList($("#confirmed-players"), newPlayerRow);
+            page.moveToPlayerList($(playerListJQSel), newPlayerRow);
         }
         // Otherwise we're editing an existing player
         else {
             var playerRow =
-                $("#confirmed-players .player-item[data-player-id=" +
-                  playerId + "]");
-            playerRow.find(".player-name").text(name);
-            playerRow.find(".player-position").val(position);
+                $(playerListJQSel + " .player-item[data-id=" +
+                  player.id + "]");
+            playerRow.data(player);
+            playerRow.find(".player-name").text(player.name);
+            var positionEle = playerRow.find(".player-position");
+            if (positionEle.is("select"))
+                positionEle.val(player.position);
+            else
+                positionEle.text(player.position);
         }
 
         page.closeDialog("#edit-dialog");
