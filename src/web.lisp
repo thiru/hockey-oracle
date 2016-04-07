@@ -1110,7 +1110,8 @@
                                           :onclick "page.confirmPlayer(this)"
                                           :title "Move to \"Confirmed\" section"
                                           (:i :class "fa fa-chevron-circle-up")))
-                          (:span :class "player-position" "&nbsp;")
+                          (:span :class "player-position"
+                                 (esc (player-position (-> pc player))))
                           (:span :class "confirm-reason"
                                  (esc (game-confirm-reason pc)))
                           (:span :class "confirm-time"
