@@ -398,7 +398,7 @@
   ;; TODO: Use pipelines to send multiple commands at once
   (if league
       (redis:with-persistent-connection ()
-        (let* ((player-ids (red-smembers (sf "leagues:players:~A"
+        (let* ((player-ids (red-smembers (sf "leagues:~A:players"
                                              (league-id league))))
                (players '()))
           (dolist (player-id player-ids)
