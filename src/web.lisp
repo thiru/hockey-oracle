@@ -628,87 +628,105 @@
   (if (null player)
       (return-from www-user-detail-page
         (www-not-found-page :player player :league league)))
-  (standard-page
-      (:title "User"
-       :player player
-       :league league
-       :page-id "user-detail-page")
-    (:section :id "left-col" :class "col"
-              (:p
-               (:img :id "user-img" :class "full-width" :src "/images/user.png")))
-    (:section :id "right-col" :class "col"
-              (:p
-               (:a :class "button"
-                   :href "/logout"
-                   :style "float:right" "Log out")
-               (:div :class "clear-fix"))
-              (:p
-               (:input :id "player-name-edit"
+  (let ((leagues (get-all-leagues))
+        (commissions '()))
+    (dolist (l leagues)
+      (if (find (player-id player) (league-commissioners l) :key #'player-id)
+          (push l commissions)))
+    (standard-page
+        (:title "User"
+         :player player
+         :league league
+         :page-id "user-detail-page")
+      (:section :id "left-col" :class "col"
+                (:p
+                 (:img :id "user-img"
                        :class "full-width"
-                       :data-orig-val (escape-string (player-name player))
-                       :placeholder "Name"
-                       :title "Name"
-                       :type "text"
-                       :value (escape-string (player-name player))))
-              (:p
-               (:input :id "player-email-edit"
-                       :class "full-width"
-                       :data-orig-val (escape-string (player-email player))
-                       :placeholder "Email address"
-                       :title "Email address"
-                       :type "email"
-                       :value (escape-string (player-email player))))
-              (:p
-               (:label
-                :title "Notify me immediately when the state of the upcoming game changes. E.g. when a player changes their status."
-                (:input :id "player-immediate-notify-edit"
-                        :checked (player-notify-immediately? player)
-                        :type "checkbox")
-                (:span "Immediate email notifications")))
-              (:br)
-              (:p
-               (:label
-                (:span "Default Position: ")
-                (:select :id "player-pos-edit"
-                         :data-orig-val (escape-string (player-position player))
-                         (dolist (pos players-positions)
-                           (htm
-                            (:option :selected
-                                     (string-equal pos (player-position player))
-                                     :value pos (esc pos)))))))
-              (:br)
-              (:p
-               (:button :id "change-pwd-btn"
-                        :class "button wide-button"
-                        :onclick "page.changePwd()"
-                        "Change Password"))
-              (:div :id "pwd-group"
-                    :style "display:none"
-               (:p
-                (:input :id "pwd-curr"
-                        :class "full-width"
-                        :type "password"
-                        :placeholder "Current password"
-                        :title "Current password"))
-               (:p
-                (:input :id "pwd-new"
-                        :class "full-width"
-                        :type "password"
-                        :placeholder "New password"
-                        :title "New password"))
-               (:p
-                (:input :id "pwd-new-repeat"
-                        :class "full-width"
-                        :type "password"
-                        :placeholder "Repeat new password"
-                        :title "Repeat new password")))
-              (:p
-               (:button :id "save-btn"
-                        :class "button wide-button"
-                        :onclick "page.saveUser()"
-                        :style "display:none"
-                        "Save"))
-              (:p :id "save-result"))))
+                       :src "/images/user.png")))
+      (:section :id "right-col" :class "col"
+                (:p
+                 (:a :class "button"
+                     :href "/logout"
+                     :style "float:right" "Log out")
+                 (:div :class "clear-fix"))
+                (:p
+                 (:input :id "player-name-edit"
+                         :class "full-width"
+                         :data-orig-val (escape-string (player-name player))
+                         :placeholder "Name"
+                         :title "Name"
+                         :type "text"
+                         :value (escape-string (player-name player))))
+                (:p
+                 (:input :id "player-email-edit"
+                         :class "full-width"
+                         :data-orig-val (escape-string (player-email player))
+                         :placeholder "Email address"
+                         :title "Email address"
+                         :type "email"
+                         :value (escape-string (player-email player))))
+                (:br)
+                (if commissions
+                    (htm
+                     (:p :id "commissions"
+                         :title "You are a commissioner of these leagues"
+                      (:span "Commissions: ")
+                      (dolist (l commissions)
+                        (htm
+                         (:a :href (sf "/~(~A~)" (league-name l))
+                             (esc (league-name l)))
+                         (:span :class "comma" ","))))))
+                (:p
+                 (:label
+                  :title "Notify me immediately when the state of the upcoming game changes. E.g. when a player changes their status."
+                  (:input :id "player-immediate-notify-edit"
+                          :checked (player-notify-immediately? player)
+                          :type "checkbox")
+                  (:span "Immediate email notifications")))
+                (:br)
+                (:p
+                 (:label
+                  (:span "Default Position: ")
+                  (:select :id "player-pos-edit"
+                           :data-orig-val (escape-string (player-position player))
+                           (dolist (pos players-positions)
+                             (htm
+                              (:option :selected
+                                       (string-equal pos (player-position player))
+                                       :value pos (esc pos)))))))
+                (:br)
+                (:p
+                 (:button :id "change-pwd-btn"
+                          :class "button wide-button"
+                          :onclick "page.changePwd()"
+                          "Change Password"))
+                (:div :id "pwd-group"
+                      :style "display:none"
+                      (:p
+                       (:input :id "pwd-curr"
+                               :class "full-width"
+                               :type "password"
+                               :placeholder "Current password"
+                               :title "Current password"))
+                      (:p
+                       (:input :id "pwd-new"
+                               :class "full-width"
+                               :type "password"
+                               :placeholder "New password"
+                               :title "New password"))
+                      (:p
+                       (:input :id "pwd-new-repeat"
+                               :class "full-width"
+                               :type "password"
+                               :placeholder "Repeat new password"
+                               :title "Repeat new password")))
+                (:p
+                 (:button :id "save-btn"
+                          :class "button wide-button"
+                          :onclick "page.saveUser()"
+                          :style "display:none"
+                          "Save"))
+                (:p :id "save-result")))))
 ;;; User Detail Page -------------------------------------------------------- END
 
 ;;; User Save API

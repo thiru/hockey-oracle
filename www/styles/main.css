@@ -57,6 +57,11 @@ a:hover
     display: block;
 }
 
+.comma:last-child
+{
+    display: none;
+}
+
 .success
 {
     color: green;
@@ -359,6 +364,12 @@ main
 #user-detail-page #right-col
 {
     width: 66%;
+}
+
+#user-detail-page #commissions
+{
+    font-size: 1.5em;
+    font-weight: bold;
 }
 
 /*******************************

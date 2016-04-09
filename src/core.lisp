@@ -93,11 +93,13 @@
    * ID: unique identifier
    * NAME: unique name
    * CREATED: date/time created
-   * ACTIVE?: whether it is active/visible"
+   * ACTIVE?: whether it is active/visible
+   * COMMISSIONERS: a list of users who act as commissioners of this league"
   (id 0)
   (name "")
   (created "")
-  (active? t))
+  (active? t)
+  (commissioners '()))
 
 (defun get-all-leagues ()
   "Gets a list of all LEAGUE's sorted by name (A -> Z)."
@@ -125,7 +127,14 @@
     (make-league :id id
                  :name (red-hget league-key "name")
                  :created (red-hget league-key "created")
-                 :active? (to-bool (red-hget league-key "active?")))))
+                 :active? (to-bool (red-hget league-key "active?"))
+                 :commissioners
+                 (let* ((commish-key (sf "leagues:~A:commissioners" id))
+                        (commish-ids (red-smembers commish-key))
+                        (players '()))
+                   (dolist (id commish-ids)
+                     (push (get-player :id id) players))
+                   (sort players #'string< :key #'player-name)))))
 ;;; Leagues ----------------------------------------------------------------- END
 
 ;;; Teams

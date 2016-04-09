@@ -30,6 +30,7 @@
    :league-name
    :league-created
    :league-active?
+   :league-commissioners
    :get-all-leagues
    :get-league
    :season
