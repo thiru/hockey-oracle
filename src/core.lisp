@@ -367,6 +367,7 @@
   "Describes a player/user.
    * ID: unique identifier (across all leagues)
    * NAME: his/her name
+   * ADMIN?: whether a site-wide administrator
    * EMAIL: email address
    * NOTIFY-IMMEDIATELY?: notify immediately if upcoming game state changes
    * AUTH: current authentication (hashed and salted password)
@@ -377,6 +378,7 @@
    * ACTIVE?: whether active/able to play"
   (id 0)
   (name "")
+  (admin? nil)
   (email "")
   (notify-immediately? nil)
   (auth "")
@@ -557,6 +559,9 @@
   (let ((id (parse-id player-key)))
     (make-player :id id
                  :name (red-hget player-key "name")
+                 :admin? (to-bool (find (sf "~A" id)
+                                        (red-smembers "admin:users")
+                                        :test #'string-equal))
                  :email (red-hget player-key "email")
                  :notify-immediately?
                  (to-bool (red-hget player-key "notify-immediately?"))

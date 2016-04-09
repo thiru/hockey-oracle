@@ -67,6 +67,7 @@
    :make-player
    :player-id
    :player-name
+   :player-admin?
    :player-notify-immediately?
    :player-email
    :player-auth

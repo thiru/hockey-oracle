@@ -666,16 +666,23 @@
                          :type "email"
                          :value (escape-string (player-email player))))
                 (:br)
+                (if (player-admin? player)
+                    (htm
+                     (:p :id "admin"
+                         :title "You have site-wide adminstrator privileges"
+                         (:i :class "fa fa-star")
+                         (:span "Administrator"))))
                 (if commissions
                     (htm
-                     (:p :id "commissions"
+                     (:p :id "commissioner"
                          :title "You are a commissioner of these leagues"
-                      (:span "Commissions: ")
-                      (dolist (l commissions)
-                        (htm
-                         (:a :href (sf "/~(~A~)" (league-name l))
-                             (esc (league-name l)))
-                         (:span :class "comma" ","))))))
+                         (:i :class "fa fa-star")
+                         (:span "Commissioner: ")
+                         (dolist (l commissions)
+                           (htm
+                            (:a :href (sf "/~(~A~)" (league-name l))
+                                (esc (league-name l)))
+                            (:span :class "comma" ","))))))
                 (:p
                  (:label
                   :title "Notify me immediately when the state of the upcoming game changes. E.g. when a player changes their status."
