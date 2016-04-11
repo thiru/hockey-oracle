@@ -24,6 +24,7 @@
    :failed?
    :random-string
    :gen-hash
+   :pretty-time
    :league
    :make-league
    :league-id
@@ -42,6 +43,8 @@
    :get-seasons
    :game
    :game-id
+   :game-created-at
+   :game-created-by
    :game-time
    :game-progress
    :game-home-team
@@ -51,6 +54,7 @@
    :game-confirms
    :get-game
    :get-games
+   :save-new-game
    :confirm-types
    :game-confirm
    :game-confirm-reason-max-length
@@ -82,6 +86,7 @@
    :get-all-players
    :get-players
    :get-player
+   :is-commissioner?
    :update-player
    :change-player-pwd
    :reset-pwd-get-token
@@ -97,7 +102,7 @@
 
 (defpackage :hockey-oracle.web
   (:use :alexandria :cl :cl-who :glu :hockey-oracle.app :hockey-oracle.core
-        :hunchentoot :local-time :split-sequence)
+        :hunchentoot :split-sequence)
   (:shadowing-import-from :glu :str)
   (:documentation "Hockey Oracle web interface.")
   (:export

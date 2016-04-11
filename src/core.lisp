@@ -85,6 +85,22 @@
    (ironclad:digest-sequence :sha512
                              (ironclad:ascii-string-to-byte-array
                               (sf "~A~A" str (or salt ""))))))
+
+(defun pretty-time (time-str &optional mode)
+  "Formats a date/time to a user-friendly form. 'time-str' is expected to be a
+   timestamp readable by LOCAL-TIME. MODE can be FULL or SHORT."
+  (if (empty? time-str)
+      ""
+      (let* ((format-desc '())
+             (timestamp (local-time:parse-timestring time-str)))
+
+        (if (eq 'short mode)
+            (setf format-desc '(:short-weekday " " :short-month " " :day " "
+                                :hour12 ":" (:min 2) :ampm))
+            (setf format-desc '(:long-weekday " " :short-month " " :day " "
+                                :year " @ " :hour12 ":" (:min 2) :ampm)))
+
+        (local-time:format-timestring nil timestamp :format format-desc))))
 ;;; Utils ------------------------------------------------------------------- END
 
 ;;; Leagues
@@ -175,13 +191,14 @@
 (defstruct game
   "Describes a hockey game.
    * TIME: date/time of the game
-     * This also acts as a unique identifier within the scope of a league
    * PROGRESS: is the state of the game, and one of:
      * NIL (not yet started)
      * IN-PROGRESS
      * FINAL
    * CONFIRMS: list of GAME-CONFIRM structs"
   (id 0)
+  (created-at "")
+  (created-by "")
   (league nil)
   (time nil)
   (progress nil)
@@ -245,7 +262,7 @@
   "Get all GAME's belonging to the given LEAGUE."
   (if league
       (redis:with-persistent-connection ()
-        (let* ((game-keys (red-keys (sf "leagues:~A:games:*" (-> league id))))
+        (let* ((game-keys (red-keys (sf "leagues:~A:game:*" (-> league id))))
                (games '()))
           (dolist (game-key game-keys)
             (let ((game (new-game-from-db game-key league)))
@@ -263,11 +280,48 @@
   (if (or (empty? league) (null game-id))
       nil
       (redis:with-persistent-connection ()
-        (let* ((game-key (sf "leagues:~A:games:~A"
+        (let* ((game-key (sf "leagues:~A:game:~A"
                              (-> league id)
                              game-id)))
           (if (redis:red-exists game-key)
               (new-game-from-db game-key league))))))
+
+;; TODO: transactify
+(defun save-new-game (league time user)
+  "Save a new game for LEAGUE at TIME.
+   Returns an R, containing the new game if successful."
+  (if (null league)
+      (return-from save-new-game
+        (new-r :error "No league specified.")))
+  (if (empty? time)
+      (return-from save-new-game
+        (new-r :error "No game time specified.")))
+  (if (null (local-time:parse-timestring time :fail-on-error nil))
+      (return-from save-new-game
+        (new-r :error (sf "Game date/time '~A' invalid." time))))
+  (if (null user)
+      (return-from save-new-game
+        (new-r :error "No user/player specified.")))
+  (if (not (is-commissioner? user league))
+      (return-from save-new-game
+        (new-r :error
+               (sf "You (~A) do not have permission to create new games in ~A."
+                   (player-name user) (league-name league)))))
+  (redis:with-persistent-connection ()
+    (let* ((id-seed-key (sf "leagues:~A:games:id-seed" (league-id league)))
+           (game-id (red-get id-seed-key))
+           (game-key (sf "leagues:~A:game:~A" (league-id league) game-id))
+           (new-game))
+      (red-hset game-key "created-at" (local-time:now))
+      (red-hset game-key "created-by" (player-id user))
+      (red-hset game-key "time" time)
+      (red-hset game-key "home-team" 1) ; TODO: remove hard-coding
+      (red-hset game-key "away-team" 2) ; TODO: remove hard-coding
+      (red-hset game-key "home-score" 0)
+      (red-hset game-key "away-score" 0)
+      (red-incr id-seed-key)
+      (setf new-game (get-game league game-id))
+      (new-r :success (sf "Created new game on ~A!" (pretty-time time)) new-game))))
 
 ;; TODO: transactify
 (defun save-game-confirm (game player confirm-type &optional reason)
@@ -322,7 +376,7 @@
                  (sf "\"~A\"" (local-time:now))
                  (sf "\"~A\"" (or reason ""))))))
     (redis:with-persistent-connection ()
-      (red-hset (sf "leagues:~A:games:~A"
+      (red-hset (sf "leagues:~A:game:~A"
                     (league-id (game-league game))
                     (game-id game))
                 "confirms"
@@ -333,6 +387,8 @@
   "Create a GAME struct based on the given redis key."
   (let ((id (parse-id game-key)))
     (make-game :id id
+               :created-at (red-hget game-key "created-at")
+               :created-by (get-player :id (red-hget game-key "created-by"))
                :league league
                :time (red-hget game-key "time")
                :progress (red-hget game-key "progress")
@@ -451,6 +507,12 @@
                (if (string= (player-temp-auth player) temp-auth)
                    player))
               (t player)))))
+
+(defun is-commissioner? (player league)
+  "Check whether PLAYER is a commission of LEAGUE."
+  (if (or (null player) (null league))
+      (return-from is-commissioner? nil))
+  (find (player-id player) (league-commissioners league) :key #'player-id))
 
 (defun reset-pwd-get-token (player)
   "Get the password reset request key.

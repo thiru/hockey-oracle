@@ -11,6 +11,8 @@ $(document).ready(function() {
     page.init();
     if (get("user-detail-page"))
         page.initUserDetailPage();
+    if (get("game-list-page"))
+        page.initGameListPage();
     if (get("game-detail-page"))
         page.initGameDetailPage();
     if (get("player-list-page"))
@@ -274,6 +276,112 @@ page.initUserDetailPage = function() {
     $("#pwd-new-repeat").on("input", page.inputChanged);
 };
 // User Detail Page --------------------------------------------------------- END
+
+// Game List Page
+page.initGameListPage = function() {
+    page.openGameEditor = function() {
+        page.showDialog("#new-game-dialog");
+        get("date-picker").focus();
+        get("date-picker").value = moment().add(1, "day").format("YYYY-MM-DD");
+        get("time-picker").value = moment().format("h:00 a");
+    };
+
+    page.updateRelTime = function() {
+        var dateAndTime = page.parseDateTime();
+
+        if (dateAndTime.isValid())
+            showResult($("#save-result"),
+                       new Result("success",
+                                  "Game to take place " + dateAndTime.fromNow()))
+    };
+
+    page.parseDateTime = function() {
+        var rawDate = get("date-picker").value;
+        var rawTime = get("time-picker").value;
+
+        var parsedDate = moment(rawDate,
+                                "YYYY-MM-DD",
+                                /*stricMode:*/ false);
+        var parsedTime = moment(rawTime,
+                                ["h:mm a", "HH:mm"],
+                                /*stricMode:*/ false);
+
+        // Validate date & time
+        if (!parsedDate.isValid() && !parsedTime.isValid()) {
+            showResult($("#save-result"),
+                       new Result("error", "Date and time are invalid."));
+            return;
+        }
+        else if (!parsedDate.isValid()) {
+            showResult($("#save-result"),
+                       new Result("error", "Date is invalid."));
+            return;
+        }
+        else if (!parsedTime.isValid()) {
+            showResult($("#save-result"),
+                       new Result("error", "Time is invalid."));
+            return;
+        }
+
+        var dateAndTime = moment(parsedDate.format("YYYY-MM-DD") + "T" +
+                                 parsedTime.format("HH:mm"));
+
+        return dateAndTime;
+    };
+
+    page.saveGame = function() {
+        var dateAndTime = page.parseDateTime();
+
+        // Request server to save new game
+        var newGame = {
+            date: dateAndTime.format()
+        };
+
+        var savingMsg =
+            "Saving game to take place " + dateAndTime.fromNow() + "...";
+        $("#save-result")
+            .html("<i class='fa fa-spinner fa-pulse'></i> " + savingMsg);
+        $("#save-game-btn").prop("disabled", true);
+
+        var url = "/" + page.leagueName.toLowerCase() + "/api/games/new";
+        $.post(url, newGame)
+            .done(function (result) {
+                if (!result) {
+                    result = new Result(-2, "No response from server.");
+                    showResult($("#save-result"), result, originalInfo);
+                }
+                else {
+                    result = _.create(Result.prototype, result);
+                    showResult($("#save-result"), result);
+                    if (result.succeeded()) {
+                        var item = $("#template-game-item").clone();
+                        item.find(".game-date")
+                            .text(result.data[1])
+                            .attr("href",
+                                  item.find(".game-date")
+                                  .attr("href")
+                                  .replace("<GAME-ID>", result.data[0]));
+                        $("#new-games-list").append(item);
+                        $("#new-games-section").show();
+                    }
+                }
+
+                $("#save-game-btn").prop("disabled", false);
+            })
+            .fail(function(data) {
+                var result = new Result(-2,
+                                        "Unexpected error. " + data.statusText +
+                                        " (" + data.status + ").");
+                showResult($("#save-result"), result);
+                $("#save-game-btn").prop("disabled", false);
+            });
+    };
+
+    page.closeGameEditor = function() {
+        page.closeDialog("#new-game-dialog");
+    };
+};
+// Game List Page ----------------------------------------------------------- END
 
 // Game Detail Page
 page.initGameDetailPage = function() {

@@ -77,21 +77,12 @@
   "Gets a list of path segments, excluding query parameters."
   (split-sequence #\/ (script-name* req) :remove-empty-subseqs t))
 
-(defun pretty-time (time-str &optional mode)
-  "Formats a date/time to a user-friendly form. 'time-str' is expected to be a
-   timestamp readable by LOCAL-TIME. MODE can be FULL or SHORT."
-  (if (empty? time-str)
-      ""
-      (let* ((format-desc '())
-             (timestamp (parse-timestring time-str)))
-
-        (if (eq 'short mode)
-            (setf format-desc '(:short-weekday " " :short-month " " :day " "
-                                :hour12 ":" (:min 2) :ampm))
-            (setf format-desc '(:long-weekday " " :short-month " " :day " "
-                                :year " @ " :hour12 ":" (:min 2) :ampm)))
-
-        (format-timestring nil timestamp :format format-desc))))
+(defun json-result (result &optional data)
+  "Converts the given R instance to a JSON string."
+  (json:encode-json-plist-to-string
+   `(level ,(r-level result)
+           message ,(r-message result)
+           data ,data)))
 
 (defun parse-league (req)
   "Parses the request path to obtain the league defined as the first segment.
@@ -195,6 +186,9 @@
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/games/[0-9-]+$"
                                      (lambda ()
                                        (base-league-page 'www-game-detail-page)))
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/api/games/new$"
+                                     (lambda ()
+                                       (base-league-page 'api-new-game)))
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/api/games/[0-9-]+$"
                                      (lambda ()
                                        (base-league-page 'api-game-confirm)))
@@ -298,6 +292,7 @@
               :type "text/css")
              (:script :src "/deps/jquery/jquery-2.1.3.min.js")
              (:script :src "/deps/lodash/lodash.min.js")
+             (:script :src "/deps/momentjs/moment.min.js")
              (:script :src "/scripts/utils.js")
              (:script :src "/scripts/main.js"))
             (:body
@@ -820,11 +815,63 @@
          :player player
          :league league
          :page-id "game-list-page")
-      (if (and (empty? started-games) (empty? unstarted-games))
-          (htm (:div "No games have been created for this league."))
+      ;; Template Items
+      (:div :class "template-items"
+            (:ul
+             (:li :id "template-game-item"
+                  (:a :class "game-date"
+                      :href (sf "/~A/games/<GAME-ID>"
+                                (string-downcase (league-name league))))
+                  (:span :class "game-state" "")
+                  (:span :class "clear-fix"))))
+      (if (is-commissioner? player league)
           (htm
+           ;; Edit Game Dialog
+           (:section :id "new-game-dialog"
+                     :class "dialog"
+                     (:h2 "New Game")
+                     (:p
+                      (:label :for "date-picker" "Date:")
+                      (:input :id "date-picker"
+                              :class "full-width"
+                              :onchange "page.updateRelTime()"
+                              :onkeyup "page.updateRelTime()"
+                              :placeholder "YYYY-MM-DD"
+                              :type "date"))
+                     (:p
+                      (:label :for "time-picker" "Time:")
+                      (:input :id "time-picker"
+                              :class "full-width"
+                              :onchange "page.updateRelTime()"
+                              :onkeyup "page.updateRelTime()"
+                              :placeholder "HH:MM AM/PM"
+                              :type "text"))
+                     (:p :class "actions"
+                         (:button :id "save-game-btn"
+                                  :class "button"
+                                  :onclick "page.saveGame()"
+                                  "Save")
+                         (:button :class "button"
+                                  :onclick "page.closeGameEditor()"
+                                  "Close"))
+                     (:p :id "save-result"))
+           ;; New Game Button
+           (:section :id "edit-controls"
+                     (:button :class "button"
+                              :onclick "page.openGameEditor()"
+                              "New Game"))))
+      ;; New Games Section
+      (:section :id "new-games-section" :style "display:none"
+                (:h2 :class "blue-heading" "New Games")
+                (:ul :id "new-games-list" :class "data-list"))
+      (if (and (empty? started-games) (empty? unstarted-games))
+          ;; No Games Notice
+          (htm (:h2 :id "no-games" "No games have been created for this league."))
+          (htm
+           ;; List of Incomplete Games
            (:h2 :class "blue-heading" "Schedule")
-           (:ul :class "data-list"
+           (:ul :id "schedule-list"
+                :class "data-list"
                 (dolist (game unstarted-games)
                   (htm
                    (:li
@@ -835,6 +882,7 @@
                         (esc (pretty-time (game-time game))))
                     (:span :class "game-state" "")
                     (:span :class "clear-fix")))))
+           ;; List of Complete Games
            (:h2 :class "blue-heading" "Scores")
            (:ul :class "data-list"
                 (dolist (game (reverse started-games))
@@ -867,6 +915,19 @@
                                   (esc (sf "~A" (game-home-score game))))))
                     (:div :class "clear-fix"))))))))))
 ;;; Game List Page ---------------------------------------------------------- END
+
+;;; New Game API
+(defun api-new-game (&key player league)
+  (setf (content-type*) "application/json")
+  (let* ((game-time (post-parameter "date")))
+    (if (empty? game-time)
+        (json-result (new-r :error "Game date not provided."))
+        (let ((save-res (save-new-game league game-time player))
+              (data '()))
+          (push (pretty-time (game-time (r-data save-res))) data)
+          (push (game-id (r-data save-res)) data)
+          (json-result save-res data)))))
+;;; New Game API ------------------------------------------------------------ END
 
 ;;; Game Detail Page
 (defun www-game-detail-page (&key player league)

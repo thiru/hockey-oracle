@@ -187,8 +187,10 @@ a:hover
 .button:disabled
 {
     background: black;
+    box-shadow: none;
     cursor: default;
     opacity: 0.5;
+    transition: none;
 }
 .button .button-text
 {
@@ -392,6 +394,20 @@ main
 /*******************************
         Game list page
 *******************************/
+
+#game-list-page #edit-controls
+{
+    margin-bottom: 1em;
+}
+
+#game-list-page #new-game-dialog
+{
+    padding: 1em;
+}
+#game-list-page #new-game-dialog .actions
+{
+    text-align: right;
+}
 
 #game-list-page .data-list
 {
