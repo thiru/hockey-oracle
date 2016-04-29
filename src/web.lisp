@@ -7,7 +7,6 @@
 (defvar main-acceptor nil "The global web-server instance.")
 (defvar static-files-dir (merge-pathnames "www/" base-dir))
 
-;; TODO: don't hard-code domain
 (defparameter reset-pwd-msg
   (glu:str "<p>A request was made to reset your password. If you would like "
            "to continue please follow the link below. Please note, this "
@@ -220,17 +219,12 @@
          (player-id 0)
          (given-auth "")
          (player nil))
-    ;; TODO: remove following logging
-    (log-message* :debug "=== ME-QUERY: ~A ===~%" me-query)
-    (log-message* :debug "=== PERM-USER-COOKIE: ~A ===~%" perm-user-cookie)
-    (log-message* :debug "=== TEMP-USER-COOKIE: ~A ===~%" temp-user-cookie)
     (when (not (empty? me-query))
       (setf player-id (subseq me-query 0 (position #\- me-query)))
       (setf given-auth (subseq me-query (1+ (or (position #\- me-query) 0))))
       (setf player (get-player :id player-id :temp-auth given-auth))
       (set-auth-cookie player))
     ;; Try to load player from long-lived cookie if player not yet found
-    ;; TODO: following when clause is untested
     (when (and (null player) perm-user-cookie)
       (setf player-id
             (subseq perm-user-cookie 0 (position #\- perm-user-cookie)))
