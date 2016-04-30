@@ -47,9 +47,9 @@ page.init = function() {
         var pwd = get("login-pwd").value;
 
         if (isBlank(userName))
-            result = new Result("error", "No user name provided.");
+            result = Result.error("No user name provided.");
         else if (isBlank(pwd))
-            result = new Result("error", "No password provided.");
+            result = Result.error("No password provided.");
 
         if (result && result.failed()) {
             showResult($("#login-result"), result);
@@ -65,9 +65,10 @@ page.init = function() {
         $.post("/api/login", { name: userName, pwd: pwd })
             .done(function (result) {
                 if (!result)
-                    result = new Result(-2, "No response from server.");
+                    result = Result.error("No response from server.");
                 else
-                    result = _.create(Result.prototype, result);
+                    result = new Result(result.level, result.message,
+                                        result.data);
 
                 if (result.failed())
                     showResult($("#login-result"), result);
@@ -87,9 +88,8 @@ page.init = function() {
                 $("#forgot-pwd").removeClass("disabled");
             })
             .fail(function (data) {
-                var result = new Result(-2,
-                                        "Unexpected error. " + data.statusText +
-                                        " (" + data.status + ").");
+                var result = Result.error("Unexpected error. " + data.statusText +
+                                          " (" + data.status + ").");
                 showResult($("#login-result"), result);
                 $("#login-btn").prop("disabled", false);
                 $("#forgot-pwd").removeClass("disabled");
@@ -103,7 +103,7 @@ page.init = function() {
         var userName = get("login-user-name").value;
 
         if (isBlank(userName))
-            result = new Result("error", "No user name provided.");
+            result = Result.error("No user name provided.");
 
         if (result && result.failed()) {
             showResult($("#login-result"), result);
@@ -121,18 +121,18 @@ page.init = function() {
         $.post("/api/forgot-password", { name: userName })
             .done(function (result) {
                 if (!result)
-                    result = new Result(-2, "No response from server.");
+                    result = Result.error("No response from server.");
                 else
-                    result = _.create(Result.prototype, result);
+                    result = new Result(result.level, result.message,
+                                        result.data);
 
                 showResult($("#login-result"), result);
                 $("#login-btn").prop("disabled", false);
                 $("#forgot-pwd").removeClass("disabled");
             })
             .fail(function (data) {
-                var result = new Result(-2,
-                                        "Unexpected error. " + data.statusText +
-                                        " (" + data.status + ").");
+                var result = Result.error("Unexpected error. " + data.statusText +
+                                          " (" + data.status + ").");
                 showResult($("#login-result"), result);
                 $("#login-btn").prop("disabled", false);
                 $("#forgot-pwd").removeClass("disabled");
@@ -148,14 +148,14 @@ page.init = function() {
         player.pwd = get("pwd-new").value;
         if (isBlank(player.pwd)) {
             showResult($("#save-result"),
-                       new Result("error", "Password can't be blank."));
+                       Result.error("Password can't be blank."));
             return;
         }
 
         var newPwdRepeat = get("pwd-new-repeat").value;
         if (player.pwd !== newPwdRepeat) {
             showResult($("#save-result"),
-                       new Result("error", "Passwords don't match."));
+                       Result.error("Passwords don't match."));
             return;
         }
 
@@ -166,17 +166,17 @@ page.init = function() {
         $.post("/api/reset-password", player)
             .done(function (result) {
                 if (!result)
-                    result = new Result(-2, "No response from server.");
+                    result = Result.error("No response from server.");
                 else
-                    result = _.create(Result.prototype, result);
+                    result = new Result(result.level, result.message,
+                                        result.data);
 
                 showResult($("#save-result"), result);
                 $("#save-btn").prop("disabled", false);
             })
             .fail(function (data) {
-                var result = new Result(-2,
-                                        "Unexpected error. " + data.statusText +
-                                        " (" + data.status + ").");
+                var result = Result.error("Unexpected error. " + data.statusText +
+                                          " (" + data.status + ").");
                 showResult($("#save-result"), result);
                 $("#save-btn").prop("disabled", false);
             });
@@ -253,17 +253,17 @@ page.initUserDetailPage = function() {
         $.post("/api/users/me", player)
             .done(function (result) {
                 if (!result)
-                    result = new Result(-2, "No response from server.");
+                    result = Result.error("No response from server.");
                 else
-                    result = _.create(Result.prototype, result);
+                    result = new Result(result.level, result.message,
+                                        result.data);
                 page.saveSucceeded = result.succeeded();
                 showResult($("#save-result"), result);
                 $("#save-btn").prop("disabled", false);
             })
             .fail(function (data) {
-                var result = new Result(-2,
-                                        "Unexpected error. " + data.statusText +
-                                        " (" + data.status + ").");
+                var result = Result.error("Unexpected error. " + data.statusText +
+                                          " (" + data.status + ").");
                 showResult($("#save-result"), result);
                 $("#save-btn").prop("disabled", false);
             });
@@ -291,8 +291,8 @@ page.initGameListPage = function() {
 
         if (dateAndTime.isValid())
             showResult($("#save-result"),
-                       new Result("success",
-                                  "Game to take place " + dateAndTime.fromNow()))
+                       Result.success("Game will take place " +
+                                      dateAndTime.fromNow()))
     };
 
     page.parseDateTime = function() {
@@ -309,17 +309,16 @@ page.initGameListPage = function() {
         // Validate date & time
         if (!parsedDate.isValid() && !parsedTime.isValid()) {
             showResult($("#save-result"),
-                       new Result("error", "Date and time are invalid."));
+                       Result.error("Date and time are invalid."));
             return;
         }
         else if (!parsedDate.isValid()) {
             showResult($("#save-result"),
-                       new Result("error", "Date is invalid."));
+                       Result.error("Date is invalid."));
             return;
         }
         else if (!parsedTime.isValid()) {
-            showResult($("#save-result"),
-                       new Result("error", "Time is invalid."));
+            showResult($("#save-result"), Result.error("Time is invalid."));
             return;
         }
 
@@ -347,11 +346,12 @@ page.initGameListPage = function() {
         $.post(url, newGame)
             .done(function (result) {
                 if (!result) {
-                    result = new Result(-2, "No response from server.");
+                    result = Result.error("No response from server.");
                     showResult($("#save-result"), result, originalInfo);
                 }
                 else {
-                    result = _.create(Result.prototype, result);
+                    result = new Result(result.level, result.message,
+                                        result.data);
                     showResult($("#save-result"), result);
                     if (result.succeeded()) {
                         var item = $("#template-game-item").clone();
@@ -369,9 +369,8 @@ page.initGameListPage = function() {
                 $("#save-game-btn").prop("disabled", false);
             })
             .fail(function(data) {
-                var result = new Result(-2,
-                                        "Unexpected error. " + data.statusText +
-                                        " (" + data.status + ").");
+                var result = Result.error("Unexpected error. " + data.statusText +
+                                          " (" + data.status + ").");
                 showResult($("#save-result"), result);
                 $("#save-game-btn").prop("disabled", false);
             });
@@ -422,11 +421,12 @@ page.initGameDetailPage = function() {
         $.post(url, { confirmType: confirmType, reason: reason})
             .done(function (result) {
                 if (!result) {
-                    result = new Result(-2, "No response from server.");
+                    result = Result.error("No response from server.");
                     showResult($("#reason-input-info"), result, originalInfo);
                 }
                 else {
-                    result = _.create(Result.prototype, result);
+                    result = new Result(result.level, result.message,
+                                        result.data);
                     showIconResult($("#confirm-type-status"), result);
                     showResult($("#reason-input-info"), result, originalInfo);
                     $("#reason-input").val(result.data);
@@ -434,9 +434,8 @@ page.initGameDetailPage = function() {
                 }
             })
             .fail(function(data) {
-                var result = new Result(-2,
-                                        "Unexpected error. " + data.statusText +
-                                        " (" + data.status + ").");
+                var result = Result.error("Unexpected error. " + data.statusText +
+                                          " (" + data.status + ").");
                 showResult($("#reason-input-info"), result);
             });
     };
@@ -503,9 +502,9 @@ page.initGameDetailPage = function() {
                 });
 
             if (!players.length)
-                return new Result(-1, "No players selected");
+                return Result.warning("No players selected");
 
-            return new Result(2, "", players);
+            return Result.success("", players);
         }
 
         /// Generate the specified number of teams, given the specified "active"
@@ -513,17 +512,15 @@ page.initGameDetailPage = function() {
         function generateTeams(numTeams, activePlayers) {
             // Validate input params
             if (numTeams < 1)
-                return new Result(-1,
-                                  "The number of teams should be a " +
-                                  "positive integer but was " + numTeams);
+                return Result.warning("The number of teams should be a " +
+                                      "positive integer but was " + numTeams);
             if (!activePlayers || !activePlayers.length ||
                 activePlayers.length < 1)
-                return new Result(-1, "No active players specified");
+                return Result.warning("No active players specified");
             if (numTeams > activePlayers.length)
-                return new Result(-1,
-                                  "More teams are required (" +
-                                  numTeams + ") than the number of active " +
-                                  "players (" + activePlayers.length + ")");
+                return Result.warning("More teams are required (" +
+                                      numTeams + ") than the number of active " +
+                                      "players (" + activePlayers.length + ")");
 
             // Create empty teams
             var teams = [];
@@ -560,7 +557,7 @@ page.initGameDetailPage = function() {
                 teams[i].players = teams[i].players.concat(dividedPlayers[i]);
             }
 
-            return new Result(2, "", teams);
+            return Result.success("", teams);
         }
 
         function populateTeams(teams) {
