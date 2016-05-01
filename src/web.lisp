@@ -1220,9 +1220,7 @@
                             (:ul :class "team-players data-list")))
             (:br)
             (:button :id "make-teams"
-                     :class (if (confirmed-players game)
-                                "button wide-button"
-                                "button wide-button hidden")
+                     :class "button wide-button"
                      :onclick "page.makeTeams()"
                      :title "Generate random teams"
                      (:i :class "fa fa-random")
