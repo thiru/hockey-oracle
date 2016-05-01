@@ -932,7 +932,7 @@
                                   :player player
                                   :confirm-type :no-response))))
          (confirm-qp (get-parameter "confirm"))
-         (confirm-save-res (new-r :info))
+         (confirm-save-res (new-r :success))
          (show-confirm-inputs
            (and game
                 (not (string-equal "final" (game-progress game))))))
