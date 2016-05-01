@@ -932,7 +932,7 @@
                                   :player player
                                   :confirm-type :no-response))))
          (confirm-qp (get-parameter "confirm"))
-         (confirm-save-res (new-r :success))
+         (confirm-save-res (new-r :info "Confirmation not updated.."))
          (show-confirm-inputs
            (and game
                 (not (string-equal "final" (game-progress game))))))
@@ -979,21 +979,22 @@
                                                     player-gc))
                                      :value ct-id (esc ct-name)))))
                 (:span :id "confirm-type-status"
-                       (if (succeeded? confirm-save-res)
-                           (htm
-                            (:i :class
-                                (sf "fa fa-check ~A"
-                                    (string-downcase
-                                     (r-level confirm-save-res)))
-                                :title
-                                (esc (r-message confirm-save-res))))
-                           (htm
-                            (:i :class
-                                (sf "fa fa-exclamation-circle ~A"
-                                    (string-downcase
-                                     (r-level confirm-save-res)))
-                                :title
-                                (esc (r-message confirm-save-res))))))
+                       (cond ((eq :success (r-level confirm-save-res))
+                              (htm
+                               (:i :class
+                                   (sf "fa fa-check ~A"
+                                       (string-downcase
+                                        (r-level confirm-save-res)))
+                                   :title
+                                   (esc (r-message confirm-save-res)))))
+                             ((failed? confirm-save-res)
+                              (htm
+                               (:i :class
+                                   (sf "fa fa-exclamation-circle ~A"
+                                       (string-downcase
+                                        (r-level confirm-save-res)))
+                                   :title
+                                   (esc (r-message confirm-save-res)))))))
                 (:div :id "reason-input-group"
                       :class (if (string-equal :playing
                                                (game-confirm-confirm-type
@@ -1257,7 +1258,7 @@
                           (game-confirm-for (r-data save-res) player)))
            `(level ,(r-level save-res)
                    message ,(r-message save-res)
-                   data nil))))))
+                   data ""))))))
 ;;; Game Confirm API -------------------------------------------------------- END
 
 ;;; Player List Page

@@ -385,8 +385,12 @@ page.initGameListPage = function() {
 // Game Detail Page
 page.initGameDetailPage = function() {
     page.confirmTypeChanged = function(ele) {
-        var selectedVal = $(ele).val() || "";
-        if ("PLAYING" == selectedVal.toUpperCase()) {
+        var selectedVal = $(ele).val().toUpperCase();
+        if ("NO-RESPONSE" == selectedVal) {
+            $("#confirm-type-status").hide();
+            return;
+        }
+        else if ("PLAYING" == selectedVal) {
             $("#reason-input-group").hide();
             $("#reason-input").val("");
         }
@@ -405,14 +409,23 @@ page.initGameDetailPage = function() {
 
     page.saveConfirmInfo = function() {
         var selectedConfirmType = $("#game-confirm-opts").val();
-        var confirmType = $("#game-confirm-opts").val();
-        var confirmTypeTxt = $("#game-confirm-opts option:selected")
-            .text().trim();
+        var confirmType = $("#game-confirm-opts").val().toUpperCase();
+
+        if ("NO-RESPONSE" == confirmType) {
+            showResult($("#reason-input-info"),
+                       Result.warning("Please select an option other than " +
+                                      "'No response'."));
+            return;
+        }
+
+        var confirmTypeTxt =
+            $("#game-confirm-opts option:selected").text().trim();
         var reason = $("#reason-input").val();
 
         var originalInfo = $("#reason-input-info").html();
         $("#confirm-type-status")
             .html("<i class='fa fa-spinner fa-pulse'></i> Updating...");
+        $("#confirm-type-status").show();
         $("#reason-input-info")
             .html("<i class='fa fa-spinner fa-pulse'></i> Updating...");
 

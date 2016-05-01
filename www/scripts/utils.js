@@ -41,7 +41,7 @@ function Result(level, msg, data)
         this.level = Level.error;
 
     this.message = msg || '';
-    this.data = data || {};
+    this.data = data;
 }
 Result.prototype.succeeded = function()
 {
