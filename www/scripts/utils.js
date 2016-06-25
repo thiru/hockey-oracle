@@ -136,6 +136,11 @@ function dataChanged(eleId) {
     return currVal !== origVal;
 }
 
+function showLoading(jqSel, msg) {
+    $(jqSel).html("<i class='fa fa-spinner fa-pulse'></i> " +
+                  ( msg || "Updating..."));
+}
+
 function showResult(ele, result) {
     ele.html(result.message).attr("class", result.levelName());
 }

@@ -51,6 +51,11 @@ a:hover
   text-decoration: underline;
 }
 
+input, select
+{
+    height: 2.5em;
+}
+
 .clear-fix
 {
     clear: both;
@@ -440,11 +445,6 @@ main
 /*******************************
         Game detail page
 *******************************/
-
-#game-detail-page #time-status
-{
-    font-size: 1.7em;
-}
 
 #game-detail-page #confirm-inputs
 {

@@ -88,17 +88,15 @@
 
 (defun pretty-time (time-str &optional mode)
   "Formats a date/time to a user-friendly form. 'time-str' is expected to be a
-   timestamp readable by LOCAL-TIME. MODE can be FULL or SHORT."
+   timestamp readable by LOCAL-TIME."
   (if (empty? time-str)
       ""
       (let* ((format-desc '())
              (timestamp (local-time:parse-timestring time-str)))
 
-        (if (eq 'short mode)
-            (setf format-desc '(:short-weekday " " :short-month " " :day " "
-                                :hour12 ":" (:min 2) :ampm))
-            (setf format-desc '(:long-weekday " " :short-month " " :day " "
-                                :year " @ " :hour12 ":" (:min 2) :ampm)))
+        ;; NOTE: This format needs to be in sync with front-end date/time format
+        (setf format-desc '(:short-weekday ", " :short-month " " :day " "
+                            :year " @ " :hour12 ":" (:min 2) " " :ampm))
 
         (local-time:format-timestring nil timestamp :format format-desc))))
 ;;; Utils ------------------------------------------------------------------- END
@@ -191,10 +189,7 @@
 (defstruct game
   "Describes a hockey game.
    * TIME: date/time of the game
-   * PROGRESS: is the state of the game, and one of:
-     * NIL (not yet started)
-     * IN-PROGRESS
-     * FINAL
+   * PROGRESS: is the state of the game, and defined in GAME-PROGRESS-STATES
    * CONFIRMS: list of GAME-CONFIRM structs"
   (id 0)
   (created-at "")
@@ -207,6 +202,8 @@
   (home-score 0)
   (away-score 0)
   (confirms '()))
+
+(defparameter game-progress-states '(:new :underway :final))
 
 (defun game-confirm-for (game player)
   "Get GAME-CONFIRM (if any) for PLAYER for the game GAME."
@@ -267,7 +264,8 @@
           (dolist (game-key game-keys)
             (let ((game (new-game-from-db game-key league)))
               (cond (exclude-started
-                     (if (empty? (game-progress game))
+                     (if (or (empty? (game-progress game))
+                             (string-equal "new" (game-progress game)))
                          (push game games)))
                     (exclude-unstarted
                      (if (not (empty? (game-progress game)))
@@ -305,8 +303,8 @@
   (if (not (is-commissioner? user league))
       (return-from save-new-game
         (new-r :error
-               (sf "You (~A) do not have permission to create new games in ~A."
-                   (player-name user) (league-name league)))))
+               (sf "You do not have permission to create new games in ~A."
+                   (league-name league)))))
   (redis:with-persistent-connection ()
     (let* ((id-seed-key (sf "leagues:~A:games:id-seed" (league-id league)))
            (game-id (red-get id-seed-key))
@@ -322,6 +320,36 @@
       (red-incr id-seed-key)
       (setf new-game (get-game league game-id))
       (new-r :success (sf "Created new game on ~A!" (pretty-time time)) new-game))))
+
+;; TODO: transactify
+(defun update-game-info (game user time progress)
+  "Update the game time and progress.
+   Returns an R, with the updated game if successful."
+  (if (null game)
+      (return-from update-game-info
+        (new-r :error "No game specified." game)))
+  (if (null user)
+      (return-from update-game-info
+        (new-r :error "No user/player specified." game)))
+  (if (empty? progress)
+      (return-from update-game-info
+        (new-r :error "No game progress specified." game)))
+  (if (not (is-commissioner? user (game-league game)))
+      (return-from update-game-info
+        (new-r :error
+               (sf "You do not have permission to update games in ~A."
+                   (league-name league)))))
+  (redis:with-persistent-connection ()
+    (let* ((game-key (sf "leagues:~A:game:~A"
+                         (league-id (game-league game))
+                         (game-id game)))
+           (updated-game nil))
+      (red-hset game-key "updated-at" (local-time:now))
+      (red-hset game-key "updated-by" (player-id user))
+      (red-hset game-key "time" time)
+      (red-hset game-key "progress" progress)
+      (setf updated-game (get-game (game-league game) (game-id game)))
+      (new-r :success "Updated game!" updated-game))))
 
 ;; TODO: transactify
 (defun save-game-confirm (game player confirm-type &optional reason)

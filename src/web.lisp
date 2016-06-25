@@ -953,16 +953,78 @@
                :player player
                :league league
                :page-id "game-detail-page")
+            ;; Edit button
+            (if (is-commissioner? player league)
+                (htm
+                 (:button :class "button wide-button"
+                          :onclick "page.editGame()"
+                          (:span :class "button-text" "Edit"))))
+            ;; Game Time/Status (main heading)
             (:div :id "game-info"
                   :data-game game-id
-                  ;; Game Time (main heading)
-                  (:h1 :id "time-status"
-                       (:span (esc (pretty-time (game-time game))))
+                  ;; Game Time/Status Edit
+                  (:h1 :id "time-status-rw" :style "display:none"
+                       (:div :class "col col-3"
+                             (:input :id "game-date-rw"
+                                     :class "full-width"
+                                     :onchange "page.updateGameTime()"
+                                     :onkeyup "page.updateGameTime()"
+                                     :placeholder "Game date (e.g. Dec 12 2016)"
+                                     :title "Game date (e.g. Dec 12 2016)"
+                                     :value (local-time:format-timestring
+                                             nil
+                                             (local-time:parse-timestring
+                                              (game-time game))
+                                             :format
+                                             '(:short-month " " :day " " :year))))
+                       (:div :class "col col-3"
+                             (:input :id "game-time-rw"
+                                     :class "full-width"
+                                     :onchange "page.updateGameTime()"
+                                     :onkeyup "page.updateGameTime()"
+                                     :placeholder "Game time (e.g. 7:00 pm)"
+                                     :title "Game time (e.g. 7:00 pm)"
+                                     :value (local-time:format-timestring
+                                             nil
+                                             (local-time:parse-timestring
+                                              (game-time game))
+                                             :format '(:hour12
+                                                       ":"
+                                                       (:min 2)
+                                                       " "
+                                                       :ampm))))
+                       (:div :class "col col-3"
+                             (:select :id "game-status-ddl"
+                                      :class "full-width"
+                                      :onchange "page.updateGameState()"
+                                      :onkeyup "page.updateGameState()"
+                                      :title "Game state"
+                                      (dolist (gps game-progress-states)
+                                        (htm
+                                         (:option :selected
+                                                  (string-equal
+                                                   gps
+                                                   (game-progress game))
+                                                  :value gps
+                                                  (fmt "~A" gps))))))
+                       (:div :class "clear-fix"))
+                  ;; Game Time Display
+                  (:h1 :id "time-status-ro"
+                       (:span :id "game-time-ro"
+                              (esc (pretty-time (game-time game))))
                        (if (not (empty? (game-progress game)))
                            (htm
-                            (:span " - ")
-                            (:span :class "uppercase"
-                                   (esc (game-progress game)))))))
+                            (:span :id "game-state-ro"
+                                   :class "uppercase"
+                                   (fmt " - ~A" (game-progress game)))))))
+            ;; Save button/result
+            (if (is-commissioner? player league)
+                (htm
+                 (:button :id "save-game-info-btn"
+                          :class "button wide-button hidden"
+                          :onclick "page.saveGame()"
+                          (:span :class "button-text" "Save"))
+                 (:div :id "save-res")))
             ;; Player-Specific Game Confirmation
             (when show-confirm-inputs
               (htm
@@ -1005,8 +1067,7 @@
                             :onchange "page.reasonTextChanged(this)"
                             :onkeyup "page.reasonTextChanged(this)"
                             :placeholder
-                            (glu:str "Please enter why you&apos;re unable to "
-                                     "play or are unsure")
+                            "Reason for not playing or indecisiveness"
                             (esc (game-confirm-reason player-gc)))
                  (:div :id "save-confirm-group"
                        (:div :id "reason-input-info"
@@ -1106,8 +1167,7 @@
                                                         pc))))
                           :data-reason (esc (game-confirm-reason pc))
                           :data-response-time (pretty-time
-                                               (game-confirm-time pc)
-                                               'short)
+                                               (game-confirm-time pc))
                           (:span :class "player-name"
                                  (esc (player-name (-> pc player))))
                           (:span :class "confirm-type" "&nbsp;")
@@ -1136,8 +1196,7 @@
                                  (:span :class "confirm-time"
                                         :title "Date confirmed"
                                         (esc (pretty-time
-                                              (game-confirm-time pc)
-                                              'short))))
+                                              (game-confirm-time pc)))))
                           (:span :class "clear-fix"))))))
             ;; Players Not Playing Or Unsure
             (:section
@@ -1179,7 +1238,7 @@
                                                         pc))))
                           :data-reason (esc (game-confirm-reason pc))
                           :data-response-time (pretty-time
-                                               (game-confirm-time pc) 'short)
+                                               (game-confirm-time pc))
                           (:span :class "player-name"
                                  (esc (player-name (-> pc player))))
                           (:span :class "confirm-type"
@@ -1198,8 +1257,7 @@
                           (:span :class "confirm-time"
                                  :title "Date confirmed"
                                  (esc (pretty-time
-                                       (game-confirm-time pc)
-                                       'short)))
+                                       (game-confirm-time pc))))
                           (:span :class "clear-fix"))))))
             ;; Random Teams
             (:section :id "random-teams"
@@ -1244,21 +1302,29 @@
   (setf (content-type*) "application/json")
   (let* ((game-id (last1 (path-segments *request*)))
          (game (get-game league game-id))
+         (game-time (post-parameter "gameTime"))
+         (game-progress (post-parameter "gameProgress"))
          (confirm-type (post-parameter "confirmType"))
          (reason (post-parameter "reason"))
-         (save-res))
-    (when confirm-type
-      (setf save-res
-            (save-game-confirm game player confirm-type reason))
-      (json:encode-json-plist-to-string
-       (if (succeeded? save-res)
-           `(level :success
-                   message "Confirmation updated!"
-                   data ,(game-confirm-reason
-                          (game-confirm-for (r-data save-res) player)))
-           `(level ,(r-level save-res)
-                   message ,(r-message save-res)
-                   data ""))))))
+         (save-res (new-r :info "Nothing updated.")))
+    (cond
+      ;; Update game info (e.g. time, progress)
+      (game-time
+       (setf save-res (update-game-info game player game-time game-progress))
+       (json-result save-res))
+      ;; Update player's confirmation status
+      (confirm-type
+       (setf save-res (save-game-confirm game player confirm-type reason))
+       (json:encode-json-plist-to-string
+        (if (succeeded? save-res)
+            `(level :success
+                    message "Confirmation updated!"
+                    data ,(game-confirm-reason
+                           (game-confirm-for (r-data save-res) player)))
+            `(level ,(r-level save-res)
+                    message ,(r-message save-res)
+                    data ""))))
+      (t (json-result (new-r :error "Unable to determine save type."))))))
 ;;; Game Confirm API -------------------------------------------------------- END
 
 ;;; Player List Page

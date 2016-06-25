@@ -7,6 +7,9 @@
 // Global
 var page= {};
 
+// NOTE: This format needs to be in sync with back-end date/time format
+page.dateAndTimeFmt = "ddd, MMM D YYYY @ h:mm a";
+
 $(document).ready(function() {
     page.init();
     if (get("user-detail-page"))
@@ -30,6 +33,39 @@ page.init = function() {
     page.closeDialog = function(jqId) {
         $("#overlay").hide();
         $(jqId).hide();
+    };
+
+    page.parseDateTime = function(dateEleId, timeEleId) {
+        var rawDate = get(dateEleId).value;
+        var rawTime = get(timeEleId).value;
+
+        var parsedDate = moment(rawDate,
+                                ["MMM D YYYY", "MMMM D YYYY", "YYYY MM DD"],
+                                /*stricMode:*/ false);
+        var parsedTime = moment(rawTime,
+                                ["h:mm a", "HH:mm"],
+                                /*stricMode:*/ false);
+
+        // Validate date & time
+        if (!parsedDate.isValid() && !parsedTime.isValid()) {
+            showResult($("#save-result"),
+                       Result.error("Date and time are invalid."));
+            return;
+        }
+        else if (!parsedDate.isValid()) {
+            showResult($("#save-result"),
+                       Result.error("Date is invalid."));
+            return;
+        }
+        else if (!parsedTime.isValid()) {
+            showResult($("#save-result"), Result.error("Time is invalid."));
+            return;
+        }
+
+        var dateAndTime = moment(parsedDate.format("YYYY-MM-DD") + "T" +
+                                 parsedTime.format("HH:mm"));
+
+        return dateAndTime;
     };
 
     page.showLogin = function() {
@@ -284,52 +320,24 @@ page.initGameListPage = function() {
         get("date-picker").focus();
         get("date-picker").value = moment().add(1, "day").format("YYYY-MM-DD");
         get("time-picker").value = moment().format("h:00 a");
+        page.updateRelTime();
     };
 
     page.updateRelTime = function() {
-        var dateAndTime = page.parseDateTime();
+        var gameTime = page.parseDateTime("date-picker", "time-picker");
+        var relTime = gameTime.fromNow();
+        var exactTime = gameTime.format(page.dateAndTimeFmt);
 
-        if (dateAndTime.isValid())
-            showResult($("#save-result"),
-                       Result.success("Game will take place " +
-                                      dateAndTime.fromNow()))
-    };
-
-    page.parseDateTime = function() {
-        var rawDate = get("date-picker").value;
-        var rawTime = get("time-picker").value;
-
-        var parsedDate = moment(rawDate,
-                                "YYYY-MM-DD",
-                                /*stricMode:*/ false);
-        var parsedTime = moment(rawTime,
-                                ["h:mm a", "HH:mm"],
-                                /*stricMode:*/ false);
-
-        // Validate date & time
-        if (!parsedDate.isValid() && !parsedTime.isValid()) {
-            showResult($("#save-result"),
-                       Result.error("Date and time are invalid."));
+        if (!gameTime.isValid())
             return;
-        }
-        else if (!parsedDate.isValid()) {
-            showResult($("#save-result"),
-                       Result.error("Date is invalid."));
-            return;
-        }
-        else if (!parsedTime.isValid()) {
-            showResult($("#save-result"), Result.error("Time is invalid."));
-            return;
-        }
 
-        var dateAndTime = moment(parsedDate.format("YYYY-MM-DD") + "T" +
-                                 parsedTime.format("HH:mm"));
-
-        return dateAndTime;
+        showResult($("#save-result"),
+                   Result.success("Game set to take place " + relTime +
+                                  "<br/>" + "(" + exactTime + ")"))
     };
 
     page.saveGame = function() {
-        var dateAndTime = page.parseDateTime();
+        var dateAndTime = page.parseDateTime("date-picker", "time-picker");
 
         // Request server to save new game
         var newGame = {
@@ -384,6 +392,58 @@ page.initGameListPage = function() {
 
 // Game Detail Page
 page.initGameDetailPage = function() {
+    page.editGame = function() {
+        $("#time-status-rw").show();
+        $("#save-game-info-btn").show();
+    };
+
+    page.saveGame = function() {
+        var gameTime = page.parseDateTime("game-date-rw", "game-time-rw");
+        if (!gameTime) {
+            showResult($("#save-res"), Result.error("Game date/time invalid."))
+            return;
+        }
+        gameTime = gameTime.format();
+
+        var gameProgress = $("#game-status-ddl :selected").val().trim();
+
+        showLoading("#save-res");
+
+        var gameId = parseInt(get("game-info").dataset.game);
+        var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
+        $.post(url, { gameTime: gameTime, gameProgress: gameProgress})
+            .done(function (result) {
+                if (!result) {
+                    showResult($("#save-res"),
+                               Result.error("No response from server."));
+                }
+                else {
+                    result = new Result(result.level, result.message,
+                                        result.data);
+                    showResult($("#save-res"), result);
+                }
+            })
+            .fail(function(data) {
+                var result = Result.error("Unexpected error. " +
+                                          data.statusText +
+                                          " (" + data.status + ").");
+                showResult($("#save-res"), result);
+            });
+    };
+
+    page.updateGameTime = function() {
+        var dateTime = page.parseDateTime("game-date-rw", "game-time-rw");
+        if (!dateTime)
+            $("#game-time-ro").text("Invalid date/time");
+        else
+            $("#game-time-ro").text(dateTime.format(page.dateAndTimeFmt));
+    };
+
+    page.updateGameState = function() {
+        var gameStatus = $("#game-status-ddl :selected").html().trim();
+        $("#game-state-ro").text(" - " + gameStatus);
+    };
+
     page.confirmTypeChanged = function(ele) {
         var selectedVal = $(ele).val().toUpperCase();
         if ("NO-RESPONSE" == selectedVal) {

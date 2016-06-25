@@ -51,10 +51,12 @@
    :game-away-team
    :game-home-score
    :game-away-score
+   :game-progress-states
    :game-confirms
    :get-game
    :get-games
    :save-new-game
+   :update-game-info
    :confirm-types
    :game-confirm
    :game-confirm-reason-max-length
