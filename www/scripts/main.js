@@ -14,6 +14,8 @@ $(document).ready(function() {
     page.init();
     if (get("user-detail-page"))
         page.initUserDetailPage();
+    if (get("league-detail-page"))
+        page.initLeagueDetailPage();
     if (get("game-list-page"))
         page.initGameListPage();
     if (get("game-detail-page"))
@@ -312,6 +314,18 @@ page.initUserDetailPage = function() {
     $("#pwd-new-repeat").on("input", page.inputChanged);
 };
 // User Detail Page --------------------------------------------------------- END
+
+// League Detail Page
+page.initLeagueDetailPage = function() {
+    var upcomingGameTimeEle = get("upcoming-game-time");
+    if (upcomingGameTimeEle) {
+        var upcomingGameTime = moment(upcomingGameTimeEle.text.trim(),
+                                      page.dateAndTimeFmt);
+        get("upcoming-game-rel-time").innerHTML =
+            "(" + upcomingGameTime.fromNow() + ")";
+    }
+};
+// League Detail Page ------------------------------------------------------- END
 
 // Game List Page
 page.initGameListPage = function() {

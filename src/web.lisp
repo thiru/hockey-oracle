@@ -72,6 +72,12 @@
     (or (string-equal (first path-segs) base-path)
         (string-equal (second path-segs) base-path))))
 
+(defun at-league-home? (league req)
+  "Determine whether we are at the league's home page."
+  (let ((path-segs (path-segments req)))
+    (and (= 1 (length path-segs))
+         (string-equal (league-name league) (first path-segs)))))
+
 (defun path-segments (req)
   "Gets a list of path segments, excluding query parameters."
   (split-sequence #\/ (script-name* req) :remove-empty-subseqs t))
@@ -204,7 +210,7 @@
                                        (base-league-page
                                         'www-not-found-page
                                         :require-league? nil)))
-            (create-regex-dispatcher "^/[a-zA-Z-]+/?$"
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/?$"
                                      (lambda ()
                                        (base-league-page
                                         'www-league-detail-page)))))
@@ -327,6 +333,14 @@
                            :href "/leagues" "Leagues"))
                       (if ,league
                           (htm
+                           (:li
+                            (:a :class (if (at-league-home? ,league *request*)
+                                           "active"
+                                           nil)
+                                :href (sf "/~A"
+                                          (string-downcase (league-name,
+                                                            league)))
+                                (fmt "~A" (league-name ,league))))
                            (:li
                             (:a :class (if (based-on-path? path "games")
                                            "active"
@@ -794,10 +808,32 @@
 
 ;;; League Detail Page
 (defun www-league-detail-page (&key player league)
-  (redirect (sf "/~A/games~A"
-                (string-downcase (league-name league))
-                (if (query-string*)
-                    (sf "?~A" (query-string*)) ""))))
+  (let* ((upcoming-game (first (get-games league :exclude-started t))))
+    (standard-page
+        (:title (league-name league)
+         :player player
+         :league league
+         :page-id "league-detail-page")
+      (:h1 (fmt "Welcome to the ~A!" (league-name league)))
+      (if (not (empty? upcoming-game))
+          (htm
+           (:h2 :class "underlined-heading" "Upcoming Game")
+           (:p
+            (:a :id "upcoming-game-time"
+                :href (sf "/~A/games/~A"
+                          (string-downcase (league-name league))
+                          (game-id upcoming-game))
+                (esc (pretty-time (game-time upcoming-game))))
+            (:span :id "upcoming-game-rel-time" ""))))
+      (:h2 :class "underlined-heading" "All Games")
+      (:p
+       (:a :href (sf "/~A/games#schedule"
+                     (string-downcase (league-name league)))
+           "Schedule"))
+      (:p
+       (:a :href (sf "/~A/games#scores"
+                     (string-downcase (league-name league)))
+           "Scores")))))
 ;;; League Detail Page ------------------------------------------------------ END
 
 ;;; Game List Page
@@ -863,7 +899,7 @@
           (htm (:h2 :id "no-games" "No games have been created for this league."))
           (htm
            ;; List of Incomplete Games
-           (:h2 :class "blue-heading" "Schedule")
+           (:h2 :id "schedule" :class "blue-heading" "Schedule")
            (:ul :id "schedule-list"
                 :class "data-list"
                 (dolist (game unstarted-games)
@@ -877,7 +913,7 @@
                     (:span :class "game-state" "")
                     (:span :class "clear-fix")))))
            ;; List of Complete Games
-           (:h2 :class "blue-heading" "Scores")
+           (:h2 :id "scores" :class "blue-heading" "Scores")
            (:ul :class "data-list"
                 (dolist (game (reverse started-games))
                   (htm
@@ -1269,12 +1305,14 @@
                       ; TODO: Remove hard-coded team logos
                       (:div :id "team1" :class "team"
                             (:img :class "team-logo"
-                                  :src "/images/team-logos/cripplers.png")
+                                  :src
+                                  "/images/leagues/phl/teams/cripplers.png")
                             (:h2 :class "team-heading" "Cripplers")
                             (:ul :class "team-players data-list"))
                       (:div :id "team2" :class "team"
                             (:img :class "team-logo"
-                                  :src "/images/team-logos/panthers.png")
+                                  :src
+                                  "/images/leagues/phl/teams/panthers.png")
                             (:h2 :class "team-heading" "Panthers")
                             (:ul :class "team-players data-list")))
             (:br)

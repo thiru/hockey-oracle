@@ -56,6 +56,11 @@ input, select
     height: 2.5em;
 }
 
+img
+{
+    max-width: 100%;
+}
+
 .clear-fix
 {
     clear: both;
@@ -105,6 +110,11 @@ input, select
 .uppercase
 {
     text-transform: uppercase;
+}
+
+.underlined-heading
+{
+    border-bottom: solid 2px #F55813; /* ORANGE-HIGHLIGHT */
 }
 
 .blue-heading
