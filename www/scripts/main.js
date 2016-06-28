@@ -28,6 +28,14 @@ page.init = function() {
     page.userId = parseInt(get("root").dataset.user);
     page.leagueName = get("root").dataset.league;
 
+    page.toggleMainMenu = function() {
+        var hamMenu = $("#ham-menu-group");
+        if (hamMenu.hasClass("hidden"))
+            hamMenu.removeClass("hidden");
+        else
+            hamMenu.addClass("hidden");
+    };
+
     page.showDialog = function(jqId) {
         $("#overlay").show();
         $(jqId).show();

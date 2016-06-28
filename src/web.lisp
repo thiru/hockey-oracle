@@ -325,8 +325,11 @@
                 (:nav
                  (:ul :class "nav-items"
                       (:li
-                       (:a :href "/" (:i :class "fa fa-bars")))
-                      (:li
+                       (:a :id "main-menu"
+                           :onclick "page.toggleMainMenu()"
+                           :href "javascript:void(0)"
+                           (:i :class "fa fa-bars")))
+                      (:li :class "big-screen"
                        (:a :class (if (based-on-path? path "leagues")
                                       "active"
                                       nil)
@@ -358,8 +361,8 @@
                                 "Players"))
                            (:li
                             (:a :class (if (based-on-path? path "about")
-                                           "active"
-                                           nil)
+                                           "big-screen active"
+                                           "big-screen")
                                 :href (sf "/~A/about"
                                           (string-downcase (league-name
                                                             ,league)))
@@ -368,9 +371,36 @@
                       (if (null ,league)
                           (htm (:li (:a :class (if (based-on-path? path
                                                                    "about")
-                                                   "active"
-                                                   nil)
-                                        :href "/about" "About"))))))))
+                                                   "big-screen active"
+                                                   "big-screen")
+                                        :href "/about" "About")))))
+                 (:br)
+                 (:div :id "ham-menu-group"
+                       :class "hidden"
+                       (:ul :class "simple-list"
+                            (:li
+                                 (:a :class (if (based-on-path? path "leagues")
+                                                "active"
+                                                nil)
+                                     :href "/leagues" "Leagues"))
+                            (if (null ,league)
+                                (htm (:li (:a :class (if (based-on-path? path
+                                                                         "about")
+                                                         "big-screen active"
+                                                         "big-screen")
+                                              :href "/about" "About")))
+                                (htm (:li
+                                      (:a :class (if (based-on-path? path "about")
+                                                     "active"
+                                                     nil)
+                                          :href (sf "/~A/about"
+                                                    (string-downcase (league-name
+                                                                      ,league)))
+                                          "About"))))
+                            (:li
+                             (:a :onclick "page.toggleMainMenu()"
+                                 :href "javascript:void(0)"
+                                 "Close")))))))
              (:section :id "login-dialog"
                        :class "dialog"
                        (:h2 "Welcome!")
@@ -786,7 +816,11 @@
        :player nil
        :league league
        :page-id "user-logout-page")
-    (:h2 "Thank you, come again!")))
+    (:h2 "Thank you, come again!")
+    (:p
+     (:a :class "wide-button"
+         :href "/"
+         "Go back to Home page"))))
 ;;; User Logout Page -------------------------------------------------------- END
 
 ;;; League List Page
