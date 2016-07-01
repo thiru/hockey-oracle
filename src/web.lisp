@@ -177,6 +177,9 @@
                                      (lambda ()
                                        (base-league-page 'www-user-detail-page
                                                          :require-league? nil)))
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/users/me/?$"
+                                     (lambda ()
+                                       (base-league-page 'www-user-detail-page)))
             (create-regex-dispatcher "^/api/users/me/?$"
                                      (lambda ()
                                        (base-league-page 'api-user-save
@@ -302,7 +305,10 @@
                       (:div :id "top-right-heading"
                             (if ,player
                                 (htm
-                                 (:a :href "/users/me"
+                                 (:a :href (if ,league
+                                               (sf "/~(~A~)/users/me"
+                                                   (league-name ,league))
+                                               "/users/me")
                                      (esc (player-name ,player))))
                                 (htm
                                  (:a :href "javascript:void(0)"
