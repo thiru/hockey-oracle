@@ -970,7 +970,8 @@
                     (:div :class "game-score"
                           (:div
                            (:img :class "team-logo"
-                                 :src (sf "/images/team-logos/~A"
+                                 :src (sf "/images/leagues/~(~A~)/teams/~(~A~)"
+                                          (league-name league)
                                           (team-logo (game-away-team game))))
                            (:span :class "team-name"
                                   (esc (sf "~A"
@@ -979,7 +980,8 @@
                                   (esc (sf "~A" (game-away-score game)))))
                           (:div
                            (:img :class "team-logo"
-                                 :src (sf "/images/team-logos/~A"
+                                 :src (sf "/images/leagues/~(~A~)/teams/~(~A~)"
+                                          (league-name league)
                                           (team-logo (game-home-team game))))
                            (:span :class "team-name"
                                   (esc (sf "~A"
