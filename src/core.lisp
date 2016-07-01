@@ -284,6 +284,20 @@
           (if (redis:red-exists game-key)
               (new-game-from-db game-key league))))))
 
+(defun get-upcoming-games (league count)
+  "Get the next COUNT games that haven't yet started."
+  (let* ((new-games (get-games league :exclude-started t))
+         (compare-time (local-time:adjust-timestamp (local-time:now)
+                         (offset :hour -6)))
+         (upcoming-games '()))
+    (setf upcoming-games
+          (remove-if-not (lambda (x)
+                           (local-time:timestamp>=
+                            (local-time:parse-timestring (game-time x))
+                            compare-time))
+                         new-games))
+    (subseq upcoming-games 0 (min (length upcoming-games) count))))
+
 ;; TODO: transactify
 (defun save-new-game (league time user)
   "Save a new game for LEAGUE at TIME.

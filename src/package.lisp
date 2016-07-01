@@ -55,6 +55,7 @@
    :game-confirms
    :get-game
    :get-games
+   :get-upcoming-games
    :save-new-game
    :update-game-info
    :confirm-types

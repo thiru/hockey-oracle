@@ -848,23 +848,26 @@
 
 ;;; League Detail Page
 (defun www-league-detail-page (&key player league)
-  (let* ((upcoming-game (first (get-games league :exclude-started t))))
+  (let* ((upcoming-games (get-upcoming-games league 3)))
     (standard-page
         (:title (league-name league)
          :player player
          :league league
          :page-id "league-detail-page")
       (:h1 (fmt "Welcome to the ~A!" (league-name league)))
-      (if (not (empty? upcoming-game))
+      (:h2 :class "underlined-heading" "Upcoming Games")
+      (if (empty? upcoming-games)
           (htm
-           (:h2 :class "underlined-heading" "Upcoming Game")
-           (:p
-            (:a :id "upcoming-game-time"
-                :href (sf "/~A/games/~A"
-                          (string-downcase (league-name league))
-                          (game-id upcoming-game))
-                (esc (pretty-time (game-time upcoming-game))))
-            (:span :id "upcoming-game-rel-time" ""))))
+           (:p "No upcoming games scheduled"))
+          (dolist (game upcoming-games)
+            (htm
+             (:p :class "upcoming-game-item"
+              (:a :class "upcoming-game-time"
+                  :href (sf "/~A/games/~A"
+                            (string-downcase (league-name league))
+                            (game-id game))
+                  (esc (pretty-time (game-time game))))
+              (:span :class "upcoming-game-rel-time" "")))))
       (:h2 :class "underlined-heading" "All Games")
       (:p
        (:a :href (sf "/~A/games#schedule"

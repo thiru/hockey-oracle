@@ -325,13 +325,11 @@ page.initUserDetailPage = function() {
 
 // League Detail Page
 page.initLeagueDetailPage = function() {
-    var upcomingGameTimeEle = get("upcoming-game-time");
-    if (upcomingGameTimeEle) {
-        var upcomingGameTime = moment(upcomingGameTimeEle.text.trim(),
-                                      page.dateAndTimeFmt);
-        get("upcoming-game-rel-time").innerHTML =
-            "(" + upcomingGameTime.fromNow() + ")";
-    }
+    $(".upcoming-game-item").each(function() {
+        var gameTimeStamp = $(this).find(".upcoming-game-time").text().trim();
+        var gameTimeRel = moment(gameTimeStamp, page.dateAndTimeFmt).fromNow();
+        $(this).find(".upcoming-game-rel-time").text("(" + gameTimeRel + ")");
+    });
 };
 // League Detail Page ------------------------------------------------------- END
 
