@@ -624,3 +624,28 @@ main
     float: right;
     margin: 0 1em 0.5em 0.5em;
 }
+
+/*******************************
+       Player detail page
+*******************************/
+
+#player-detail-page br
+{
+    display: block;
+}
+
+#player-detail-page #left-col
+{
+    width: 33%;
+}
+#player-detail-page #right-col
+{
+    width: 66%;
+}
+
+#player-detail-page #admin,
+#player-detail-page #commissioner
+{
+    font-size: 1.5em;
+    font-weight: bold;
+}

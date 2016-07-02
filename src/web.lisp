@@ -53,6 +53,7 @@
 ;;; General ----------------------------------------------------------------- END
 
 ;;; Utils
+;;; TODO: Following is not being used
 (defmacro html-snippet (root-tag)
   "Generate HTML given a single root HTML tag."
   `(with-html-output-to-string (*standard-output* nil :indent t)
@@ -63,6 +64,11 @@
   `(if (empty? ,str)
        ,fallback
        (or (parse-integer ,str :junk-allowed t) ,fallback)))
+
+(defun clean-uri-segment (input)
+  "Replaces non-alphanumeric chars in INPUT for a cleaner URI segment."
+  (setf input (cl-ppcre:regex-replace-all "[ ]+" input "-"))
+  (cl-ppcre:regex-replace-all "[^A-Za-z0-9-]" input ""))
 
 (defun based-on-path? (path base-path)
   "Determine whether 'path' is based on 'base-path'."
@@ -203,6 +209,9 @@
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/players/?$"
                                      (lambda ()
                                        (base-league-page 'www-player-list-page)))
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/players/[a-zA-Z0-9-]+/[0-9]+/?$"
+                                     (lambda ()
+                                       (base-league-page 'www-player-detail-page)))
             (create-regex-dispatcher "^/[a-zA-Z0-9-]+/manage/?$"
                                      (lambda ()
                                        (base-league-page 'www-manage-league-page)))
@@ -1417,8 +1426,12 @@
                  :data-id (player-id p)
                  :data-name (player-name p)
                  :data-position (player-position p)
-                 (:span :class "player-name"
-                        (esc (player-name p)))
+                 (:a :class "player-name"
+                     :href (sf "/~(~A~)/players/~(~A~)/~A"
+                               (league-name league)
+                               (clean-uri-segment (player-name p))
+                               (player-id p))
+                     (esc (player-name p)))
                  (:span :class "action-buttons"
                         (:button :class "button"
                                  :onclick "page.editPlayer(this, \"#all-players\")"
@@ -1480,6 +1493,51 @@
                            "Cancel"))))))
 ;;; Player List Page -------------------------------------------------------- END
 
+;;; Player Detail Page
+(defun www-player-detail-page (&key player league)
+  (let* ((path-segs (path-segments *request*))
+         (target-player-id (safe-parse-int (last1 path-segs)))
+         (target-player (get-player :id target-player-id)))
+    (if (null target-player)
+        (return-from www-player-detail-page
+          (www-not-found-page :player player :league league)))
+    (let ((leagues (get-all-leagues))
+          (commissions '()))
+      (dolist (l leagues)
+        (if (find (player-id target-player) (league-commissioners l) :key #'player-id)
+            (push l commissions)))
+      (standard-page
+          (:title "Player"
+           :player player
+           :league league
+           :page-id "player-detail-page")
+        (:section :id "left-col" :class "col"
+                  (:p
+                   (:img :id "user-img"
+                         :class "full-width"
+                         :src "/images/user.png")))
+        (:section :id "right-col" :class "col"
+                  (:h1 (fmt "~A" (escape-string (player-name target-player))))
+                  (if (player-admin? target-player)
+                      (htm
+                       (:p :id "admin"
+                           (:i :class "fa fa-star")
+                           (:span "Administrator"))))
+                  (if commissions
+                      (htm
+                       (:p :id "commissioner"
+                           (:i :class "fa fa-star")
+                           (:span "Commissioner: ")
+                           (dolist (l commissions)
+                             (htm
+                              (:a :href (sf "/~(~A~)" (league-name l))
+                                  (esc (league-name l)))
+                              (:span :class "comma" ","))))))
+                  (:p
+                   (:span "Default Position: ")
+                   (:b (fmt "~A" (player-position target-player)))))))))
+;;; Player Detail Page ------------------------------------------------------ END
+
 ;;; Manage League Page
 (defun www-manage-league-page (&key player league)
   (standard-page
@@ -1492,9 +1550,10 @@
         "Commissioners: "
         (dolist (p (league-commissioners league))
           (htm
-           (:a :href (sf "/~(~A~)/players/~(~A~)"
+           (:a :href (sf "/~(~A~)/players/~(~A~)/~A"
                          (league-name league)
-                         (player-name p))
+                         (clean-uri-segment (player-name p))
+                         (player-id p))
                (esc (player-name p)))
            (:span :class "comma" ","))))
     (:p
