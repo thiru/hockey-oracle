@@ -108,12 +108,15 @@
    * NAME: unique name
    * CREATED: date/time created
    * ACTIVE?: whether it is active/visible
-   * COMMISSIONERS: a list of users who act as commissioners of this league"
+   * COMMISSIONERS: a list of users who act as commissioners of this league
+   * SEND-AUTOMATED-EMAILS?: whether to send automated email reminders,
+     notifications, etc. to players"
   (id 0)
   (name "")
   (created "")
   (active? t)
-  (commissioners '()))
+  (commissioners '())
+  (send-automated-emails? t))
 
 (defun get-all-leagues ()
   "Gets a list of all LEAGUE's sorted by name (A -> Z)."
@@ -135,6 +138,23 @@
             (find name leagues :test #'string-equal :key #'league-name)
             (find id leagues :test #'= :key #'league-id)))))
 
+(defun update-league (league)
+  "Update editable league details.
+   Returns an R."
+  (check-type league LEAGUE)
+  (if (empty? league)
+      (return-from update-league
+        (new-r :error (sf "Failed to retrieve league with id ~A."
+                          (league-id league))
+               league)))
+  (let ((league-key (sf "league:~A" (league-id league))))
+    (redis:with-persistent-connection ()
+      (when (red-exists league-key)
+        (red-hset league-key
+                  "send-automated-emails?"
+                  (if (league-send-automated-emails? league) 1 0)))))
+  (new-r :success "Update successful!" league))
+
 (defun new-league-from-db (league-key)
   "Create a LEAGUE struct from the given redis key."
   (let ((id (parse-id league-key)))
@@ -148,7 +168,9 @@
                         (players '()))
                    (dolist (id commish-ids)
                      (push (get-player :id id) players))
-                   (sort players #'string< :key #'player-name)))))
+                   (sort players #'string< :key #'player-name))
+                 :send-automated-emails?
+                 (to-bool (red-hget league-key "send-automated-emails?")))))
 ;;; Leagues ----------------------------------------------------------------- END
 
 ;;; Teams

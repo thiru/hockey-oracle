@@ -146,11 +146,11 @@
                                                    "styles/"
                                                    static-files-dir))
             (create-regex-dispatcher "^/$" 'www-home-page)
-            (create-regex-dispatcher "^/about$"
+            (create-regex-dispatcher "^/about/?$"
                                      (lambda ()
                                        (base-league-page 'www-about-page
                                                          :require-league? nil)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/about$"
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/about/?$"
                                      (lambda ()
                                        (base-league-page 'www-about-page)))
             (create-regex-dispatcher "^/logout/?$"
@@ -184,31 +184,37 @@
                                      (lambda ()
                                        (base-league-page 'api-user-save
                                                          :require-league? nil)))
-            (create-regex-dispatcher "^/leagues$"
+            (create-regex-dispatcher "^/leagues/?$"
                                      (lambda ()
                                        (base-league-page 'www-league-list-page
                                                          :require-league? nil)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/games$"
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/games/?$"
                                      (lambda ()
                                        (base-league-page 'www-game-list-page)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/games/[0-9-]+$"
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/games/[0-9-]+/?$"
                                      (lambda ()
                                        (base-league-page 'www-game-detail-page)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/api/games/new$"
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/api/games/new/?$"
                                      (lambda ()
                                        (base-league-page 'api-new-game)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/api/games/[0-9-]+$"
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/api/games/[0-9-]+/?$"
                                      (lambda ()
                                        (base-league-page 'api-game-confirm)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/players$"
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/players/?$"
                                      (lambda ()
                                        (base-league-page 'www-player-list-page)))
-            (create-regex-dispatcher "^/test-server-error$"
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/manage/?$"
+                                     (lambda ()
+                                       (base-league-page 'www-manage-league-page)))
+            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/api/leagues/save/?$"
+                                     (lambda ()
+                                       (base-league-page 'api-league-save)))
+            (create-regex-dispatcher "^/test-server-error/?$"
                                      (lambda ()
                                        (base-league-page
                                         'www-test-server-error
                                         :require-league? nil)))
-            (create-regex-dispatcher "^/test-not-found$"
+            (create-regex-dispatcher "^/test-not-found/?$"
                                      (lambda ()
                                        (base-league-page
                                         'www-not-found-page
@@ -346,49 +352,40 @@
                             (:a :class (if (at-league-home? ,league *request*)
                                            "active"
                                            nil)
-                                :href (sf "/~A"
-                                          (string-downcase (league-name,
-                                                            league)))
+                                :href (sf "/~(~A~)"
+                                          (league-name,league))
                                 (fmt "~A" (league-name ,league))))
                            (:li
                             (:a :class (if (based-on-path? path "games")
                                            "active"
                                            nil)
-                                :href (sf "/~A/games"
-                                          (string-downcase (league-name ,league)))
+                                :href (sf "/~(~A~)/games"
+                                          (league-name ,league))
                                 "Games"))
                            (:li
                             (:a :class (if (based-on-path? path "players")
                                            "active"
                                            nil)
-                                :href (sf "/~A/players"
-                                          (string-downcase (league-name
-                                                            ,league)))
-                                "Players"))
-                           (:li
-                            (:a :class (if (based-on-path? path "about")
-                                           "big-screen active"
-                                           "big-screen")
-                                :href (sf "/~A/about"
-                                          (string-downcase (league-name
-                                                            ,league)))
-                                "About"))
-                           ))
-                      (if (null ,league)
-                          (htm (:li (:a :class (if (based-on-path? path
-                                                                   "about")
-                                                   "big-screen active"
-                                                   "big-screen")
-                                        :href "/about" "About")))))
+                                :href (sf "/~(~A~)/players"
+                                          (league-name ,league))
+                                "Players")))))
                  (:br)
                  (:div :id "ham-menu-group"
                        :class "hidden"
                        (:ul :class "simple-list"
                             (:li
-                                 (:a :class (if (based-on-path? path "leagues")
-                                                "active"
-                                                nil)
-                                     :href "/leagues" "Leagues"))
+                             (:a :class (if (based-on-path? path "leagues")
+                                            "active"
+                                            nil)
+                                 :href "/leagues" "Leagues"))
+                            (if (and ,league
+                                     ,player
+                                     (is-commissioner? ,player ,league))
+                                (htm
+                                 (:li
+                                  (:a :href (sf "/~(~A~)/manage"
+                                                (league-name ,league))
+                                      "Manage"))))
                             (if (null ,league)
                                 (htm (:li (:a :class (if (based-on-path? path
                                                                          "about")
@@ -400,8 +397,7 @@
                                                      "active"
                                                      nil)
                                           :href (sf "/~A/about"
-                                                    (string-downcase (league-name
-                                                                      ,league)))
+                                                    (league-name ,league))
                                           "About"))))
                             (:li
                              (:a :onclick "page.toggleMainMenu()"
@@ -842,7 +838,7 @@
           (htm
            (:li
             (:a :class "button wide-button"
-                :href (string-downcase (league-name league))
+                :href (sf "/~(~A~)" (league-name league))
                 (esc (league-name league)))))))))
 ;;; League List Page -------------------------------------------------------- END
 
@@ -863,19 +859,17 @@
             (htm
              (:p :class "upcoming-game-item"
               (:a :class "upcoming-game-time"
-                  :href (sf "/~A/games/~A"
-                            (string-downcase (league-name league))
+                  :href (sf "/~(~A~)/games/~(~A~)"
+                            (league-name league)
                             (game-id game))
                   (esc (pretty-time (game-time game))))
               (:span :class "upcoming-game-rel-time" "")))))
       (:h2 :class "underlined-heading" "All Games")
       (:p
-       (:a :href (sf "/~A/games#schedule"
-                     (string-downcase (league-name league)))
+       (:a :href (sf "/~(~A~)/games#schedule" (league-name league))
            "Schedule"))
       (:p
-       (:a :href (sf "/~A/games#scores"
-                     (string-downcase (league-name league)))
+       (:a :href (sf "/~(~A~)/games#scores" (league-name league))
            "Scores")))))
 ;;; League Detail Page ------------------------------------------------------ END
 
@@ -893,8 +887,7 @@
             (:ul
              (:li :id "template-game-item"
                   (:a :class "game-date"
-                      :href (sf "/~A/games/<GAME-ID>"
-                                (string-downcase (league-name league))))
+                      :href (sf "/~(~A~)/games/<GAME-ID>" (league-name league)))
                   (:span :class "game-state" "")
                   (:span :class "clear-fix"))))
       (if (is-commissioner? player league)
@@ -949,8 +942,8 @@
                   (htm
                    (:li
                     (:a :class "game-date"
-                        :href (sf "/~A/games/~A"
-                                  (string-downcase (league-name league))
+                        :href (sf "/~(~A~)/games/~(~A~)"
+                                  (league-name league)
                                   (game-id game))
                         (esc (pretty-time (game-time game))))
                     (:span :class "game-state" "")
@@ -963,8 +956,8 @@
                    (:li
                     (:div :class "game-date"
                           (:a
-                           :href (sf "/~A/games/~A"
-                                     (string-downcase (league-name league))
+                           :href (sf "/~(~A~)/games/~(~A~)"
+                                     (league-name league)
                                      (game-id game))
                            (esc (pretty-time (game-time game)))))
                     (:div :class "game-score"
@@ -1125,17 +1118,15 @@
                        (cond ((eq :success (r-level confirm-save-res))
                               (htm
                                (:i :class
-                                   (sf "fa fa-check ~A"
-                                       (string-downcase
-                                        (r-level confirm-save-res)))
+                                   (sf "fa fa-check ~(~A~)"
+                                       (r-level confirm-save-res))
                                    :title
                                    (esc (r-message confirm-save-res)))))
                              ((failed? confirm-save-res)
                               (htm
                                (:i :class
-                                   (sf "fa fa-exclamation-circle ~A"
-                                       (string-downcase
-                                        (r-level confirm-save-res)))
+                                   (sf "fa fa-exclamation-circle ~(~A~)"
+                                        (r-level confirm-save-res))
                                    :title
                                    (esc (r-message confirm-save-res)))))))
                 (:div :id "reason-input-group"
@@ -1488,3 +1479,46 @@
                            "page.closeDialog(\"#edit-dialog\")"
                            "Cancel"))))))
 ;;; Player List Page -------------------------------------------------------- END
+
+;;; Manage League Page
+(defun www-manage-league-page (&key player league)
+  (standard-page
+      (:title "Manage"
+       :player player
+       :league league
+       :page-id "manage-league-page")
+    (:h2 (fmt "~A Management" (league-name league)))
+    (:p :style "font-weight:bold"
+        "Commissioners: "
+        (dolist (p (league-commissioners league))
+          (htm
+           (:a :href (sf "/~(~A~)/players/~(~A~)"
+                         (league-name league)
+                         (player-name p))
+               (esc (player-name p)))
+           (:span :class "comma" ","))))
+    (:p
+     (:label
+      (:input :id "send-automated-emails"
+              :checked (league-send-automated-emails? league)
+              :type "checkbox")
+      (:span " Send automated emails")))
+    (:button :id "save-btn"
+             :class "button wide-button"
+             :onclick "page.save()"
+             "Save")
+    (:p :id "save-result")))
+;;; Manage League Page ------------------------------------------------------ END
+
+;;; League Save API
+(defun api-league-save (&key player league)
+  (setf (content-type*) "application/json")
+  (when (not (is-commissioner? player league))
+    (setf (return-code*) +http-forbidden+)
+    (return-from api-league-save
+      (json-result
+       (new-r :error "Sorry you don't have permission to make this change."))))
+  (setf (league-send-automated-emails? league)
+        (string-equal "true" (post-parameter "sendAutomatedEmails")))
+  (json-result (update-league league)))
+;;; League Save API --------------------------------------------------------- END

@@ -16,6 +16,8 @@ $(document).ready(function() {
         page.initUserDetailPage();
     if (get("league-detail-page"))
         page.initLeagueDetailPage();
+    if (get("manage-league-page"))
+        page.initManageLeaguePage();
     if (get("game-list-page"))
         page.initGameListPage();
     if (get("game-detail-page"))
@@ -332,6 +334,44 @@ page.initLeagueDetailPage = function() {
     });
 };
 // League Detail Page ------------------------------------------------------- END
+
+// Manage League Page
+page.initManageLeaguePage = function() {
+    page.save = function() {
+        var league = {};
+        league.sendAutomatedEmails = get("send-automated-emails").checked;
+
+        // Saving...
+        $("#save-btn").prop("disabled", true);
+        $("#save-result")
+            .attr("class", "")
+            .html("<i class='fa fa-spinner fa-pulse'></i> Saving...");
+
+        $.post("/" + page.leagueName + "/api/leagues/save", league)
+            .done(function (result) {
+                if (!result)
+                    result = Result.error("No response from server.");
+                else
+                    result = new Result(result.level, result.message,
+                                        result.data);
+                page.saveSucceeded = result.succeeded();
+                showResult($("#save-result"), result);
+                $("#save-btn").prop("disabled", false);
+            })
+            .fail(function (data) {
+                var result = data.responseJSON;
+                if (!result)
+                    result = Result.error("Unexpected error. " + data.statusText +
+                                          " (" + data.status + ").");
+                else
+                    result = new Result(result.level, result.message,
+                                        result.data);
+                showResult($("#save-result"), result);
+                $("#save-btn").prop("disabled", false);
+            });
+    }
+};
+// Manage League Page ------------------------------------------------------- END
 
 // Game List Page
 page.initGameListPage = function() {

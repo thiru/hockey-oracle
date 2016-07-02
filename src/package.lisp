@@ -32,8 +32,10 @@
    :league-created
    :league-active?
    :league-commissioners
+   :league-send-automated-emails?
    :get-all-leagues
    :get-league
+   :update-league
    :season
    :make-season
    :season-id

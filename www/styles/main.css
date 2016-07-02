@@ -27,6 +27,7 @@ body
 h2, h3, h4, h5, h6
 {
   margin-top: 0;
+  margin-bottom: 0.5rem;
 }
 
 a
@@ -49,11 +50,6 @@ a:focus
 a:hover
 {
   text-decoration: underline;
-}
-
-input, select
-{
-    height: 2.5em;
 }
 
 img
@@ -311,11 +307,6 @@ nav .nav-items li
   display: inline-block;
   float: left;
   padding-right: 1em;
-}
-nav .nav-items li:last-child
-{
-  float: right;
-  padding-right: 0;
 }
 
 @media screen and (max-width: 480px) {
