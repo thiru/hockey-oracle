@@ -156,7 +156,7 @@
                                      (lambda ()
                                        (base-league-page 'www-about-page
                                                          :require-league? nil)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/about/?$"
+            (create-regex-dispatcher "^/[\\w-]+/about/?$"
                                      (lambda ()
                                        (base-league-page 'www-about-page)))
             (create-regex-dispatcher "^/logout/?$"
@@ -183,7 +183,7 @@
                                      (lambda ()
                                        (base-league-page 'www-user-detail-page
                                                          :require-league? nil)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/users/me/?$"
+            (create-regex-dispatcher "^/[\\w-]+/users/me/?$"
                                      (lambda ()
                                        (base-league-page 'www-user-detail-page)))
             (create-regex-dispatcher "^/api/users/me/?$"
@@ -194,28 +194,28 @@
                                      (lambda ()
                                        (base-league-page 'www-league-list-page
                                                          :require-league? nil)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/games/?$"
+            (create-regex-dispatcher "^/[\\w-]+/games/?$"
                                      (lambda ()
                                        (base-league-page 'www-game-list-page)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/games/[0-9-]+/?$"
+            (create-regex-dispatcher "^/[\\w-]+/games/[0-9-]+/?$"
                                      (lambda ()
                                        (base-league-page 'www-game-detail-page)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/api/games/new/?$"
+            (create-regex-dispatcher "^/[\\w-]+/api/games/new/?$"
                                      (lambda ()
                                        (base-league-page 'api-new-game)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/api/games/[0-9-]+/?$"
+            (create-regex-dispatcher "^/[\\w-]+/api/games/[0-9-]+/?$"
                                      (lambda ()
                                        (base-league-page 'api-game-confirm)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/players/?$"
+            (create-regex-dispatcher "^/[\\w-]+/players/?$"
                                      (lambda ()
                                        (base-league-page 'www-player-list-page)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/players/[a-zA-Z0-9-]+/[0-9]+/?$"
+            (create-regex-dispatcher "^/[\\w-]+/players/[\\w-]+/\[\\w-]+/?$"
                                      (lambda ()
                                        (base-league-page 'www-player-detail-page)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/manage/?$"
+            (create-regex-dispatcher "^/[\\w-]+/manage/?$"
                                      (lambda ()
                                        (base-league-page 'www-manage-league-page)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/api/leagues/save/?$"
+            (create-regex-dispatcher "^/[\\w-]+/api/leagues/save/?$"
                                      (lambda ()
                                        (base-league-page 'api-league-save)))
             (create-regex-dispatcher "^/test-server-error/?$"
@@ -228,7 +228,7 @@
                                        (base-league-page
                                         'www-not-found-page
                                         :require-league? nil)))
-            (create-regex-dispatcher "^/[a-zA-Z0-9-]+/?$"
+            (create-regex-dispatcher "^/[\\w-]+/?$"
                                      (lambda ()
                                        (base-league-page
                                         'www-league-detail-page)))))
@@ -1390,7 +1390,6 @@
 ;;; Game Update API
 (defun api-game-confirm (&key player league)
   (setf (content-type*) "application/json")
-  ;; TODO: Verify player is commissioner
   (let* ((game-id (last1 (path-segments *request*)))
          (game (get-game league game-id))
          (delete-game? (string-equal "true" (post-parameter "deleteGame")))
