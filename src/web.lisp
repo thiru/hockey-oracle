@@ -328,13 +328,7 @@
                                 (htm
                                  (:a :href "javascript:void(0)"
                                      :onclick "page.showLogin()"
-                                     "Log in")))
-                            (if ,league
-                                (htm
-                                 (:span " - ")
-                                 (:a :href (sf "/~(~A~)"
-                                               (league-name ,league))
-                                     (esc (league-name ,league))))))
+                                     "Log in"))))
                       (:a :href "/"
                           (:img
                            :alt "logo"
