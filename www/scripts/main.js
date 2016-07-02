@@ -457,6 +457,38 @@ page.initGameDetailPage = function() {
         $("#save-game-info-btn").show();
     };
 
+    page.deleteGame = function() {
+        if (!confirm("Are you sure you want to delete this game?"))
+            return;
+
+        showLoading("#delete-res");
+
+        var gameId = parseInt(get("game-info").dataset.game);
+        var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
+        $.post(url, { deleteGame: true })
+            .done(function (result) {
+                if (!result) {
+                    showResult($("#delete-res"),
+                               Result.error("No response from server."));
+                }
+                else {
+                    result = new Result(result.level, result.message,
+                                        result.data);
+                    showResult($("#delete-res"), result);
+                }
+            })
+            .fail(function(data) {
+                var result = data.responseJSON;
+                if (!result)
+                    result = Result.error("Unexpected error. " + data.statusText +
+                                          " (" + data.status + ").");
+                else
+                    result = new Result(result.level, result.message,
+                                        result.data);
+                showResult($("#delete-res"), result);
+            });
+    }
+
     page.saveGame = function() {
         var gameTime = page.parseDateTime("game-date-rw", "game-time-rw");
         if (!gameTime) {
@@ -484,9 +516,13 @@ page.initGameDetailPage = function() {
                 }
             })
             .fail(function(data) {
-                var result = Result.error("Unexpected error. " +
-                                          data.statusText +
+                var result = data.responseJSON;
+                if (!result)
+                    result = Result.error("Unexpected error. " + data.statusText +
                                           " (" + data.status + ").");
+                else
+                    result = new Result(result.level, result.message,
+                                        result.data);
                 showResult($("#save-res"), result);
             });
     };

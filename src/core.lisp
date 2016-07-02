@@ -387,6 +387,27 @@
       (setf updated-game (get-game (game-league game) (game-id game)))
       (new-r :success "Updated game!" updated-game))))
 
+(defun delete-game (game user)
+  "Delete GAME.
+   Returns an R."
+  (if (null game)
+      (return-from delete-game
+        (new-r :error "No game specified." game)))
+  (if (null user)
+      (return-from delete-game
+        (new-r :error "No user/player specified." game)))
+  (if (not (is-commissioner? user (game-league game)))
+      (return-from delete-game
+        (new-r :error
+               (sf "You do not have permission to update games in ~A."
+                   (league-name league)))))
+  (redis:with-persistent-connection ()
+    (let* ((game-key (sf "leagues:~A:game:~A"
+                         (league-id (game-league game))
+                         (game-id game))))
+      (red-del game-key)
+      (new-r :success "Deleted game!" game))))
+
 ;; TODO: transactify
 (defun save-game-confirm (game player confirm-type &optional reason)
   "Save the game confirm details for the game GAME and player PLAYER. If REASON

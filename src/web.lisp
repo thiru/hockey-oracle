@@ -1039,9 +1039,16 @@
             ;; Edit button
             (if (is-commissioner? player league)
                 (htm
-                 (:button :class "button wide-button"
-                          :onclick "page.editGame()"
-                          (:span :class "button-text" "Edit"))))
+                 (:div
+                  (:div :class "col col-2"
+                        (:button :class "button wide-button"
+                                 :onclick "page.editGame()"
+                                 (:span :class "button-text" "Edit")))
+                  (:div :class "col col-2"
+                        (:button :class "button wide-button"
+                                 :onclick "page.deleteGame()"
+                                 (:span :class "button-text" "Delete"))))
+                 (:div :id "delete-res")))
             ;; Game Time/Status (main heading)
             (:div :id "game-info"
                   :data-game game-id
@@ -1380,17 +1387,26 @@
                      (:span :class "button-text" "Pick Players")))))))
 ;;; Game Detail Page -------------------------------------------------------- END
 
-;;; Game Confirm API
+;;; Game Update API
 (defun api-game-confirm (&key player league)
   (setf (content-type*) "application/json")
+  ;; TODO: Verify player is commissioner
   (let* ((game-id (last1 (path-segments *request*)))
          (game (get-game league game-id))
+         (delete-game? (string-equal "true" (post-parameter "deleteGame")))
          (game-time (post-parameter "gameTime"))
          (game-progress (post-parameter "gameProgress"))
          (confirm-type (post-parameter "confirmType"))
          (reason (post-parameter "reason"))
          (save-res (new-r :info "Nothing updated.")))
+    (when (null game)
+      (setf (return-code*) +http-not-found+)
+      (return-from api-game-confirm
+        (json-result (new-r :error "Game not found."))))
     (cond
+      ;; Delete game
+      (delete-game?
+       (json-result (delete-game game player)))
       ;; Update game info (e.g. time, progress)
       (game-time
        (setf save-res (update-game-info game player game-time game-progress))
@@ -1408,7 +1424,7 @@
                     message ,(r-message save-res)
                     data ""))))
       (t (json-result (new-r :error "Unable to determine save type."))))))
-;;; Game Confirm API -------------------------------------------------------- END
+;;; Game Update API --------------------------------------------------------- END
 
 ;;; Player List Page
 (defun www-player-list-page (&key player league)

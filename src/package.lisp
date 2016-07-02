@@ -59,6 +59,7 @@
    :get-games
    :get-upcoming-games
    :save-new-game
+   :delete-game
    :update-game-info
    :confirm-types
    :game-confirm
