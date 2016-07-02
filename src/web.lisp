@@ -324,7 +324,10 @@
                                                (sf "/~(~A~)/users/me"
                                                    (league-name ,league))
                                                "/users/me")
-                                     (esc (player-name ,player))))
+                                     (esc (player-name ,player)))
+                                 (:a :href "/logout"
+                                     :title "Log out"
+                                     (:i :class "fa fa-sign-out")))
                                 (htm
                                  (:a :href "javascript:void(0)"
                                      :onclick "page.showLogin()"
