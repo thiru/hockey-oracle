@@ -258,6 +258,9 @@ page.initUserDetailPage = function() {
     page.saveUser = function() {
         var player = {};
 
+        // Get player id
+        player.id = get("player-name-edit").dataset.playerId;
+
         // Get player name
         player.name = $("#player-name-edit").val().trim();
         if (isBlank(player.name)) {
@@ -298,7 +301,7 @@ page.initUserDetailPage = function() {
             .attr("class", "")
             .html("<i class='fa fa-spinner fa-pulse'></i> Saving...");
 
-        $.post("/api/users/me", player)
+        $.post("/api/users/" + player.id, player)
             .done(function (result) {
                 if (!result)
                     result = Result.error("No response from server.");
@@ -310,8 +313,13 @@ page.initUserDetailPage = function() {
                 $("#save-btn").prop("disabled", false);
             })
             .fail(function (data) {
-                var result = Result.error("Unexpected error. " + data.statusText +
+                var result = data.responseJSON;
+                if (!result)
+                    result = Result.error("Unexpected error. " + data.statusText +
                                           " (" + data.status + ").");
+                else
+                    result = new Result(result.level, result.message,
+                                        result.data);
                 showResult($("#save-result"), result);
                 $("#save-btn").prop("disabled", false);
             });

@@ -186,7 +186,10 @@
             (create-regex-dispatcher "^/[\\w-]+/users/me/?$"
                                      (lambda ()
                                        (base-league-page 'www-user-detail-page)))
-            (create-regex-dispatcher "^/api/users/me/?$"
+            (create-regex-dispatcher "^/[\\w-]+/users/[\\w-]+/[0-9]+/?$"
+                                     (lambda ()
+                                       (base-league-page 'www-user-detail-page)))
+            (create-regex-dispatcher "^/api/users/[0-9]+/?$"
                                      (lambda ()
                                        (base-league-page 'api-user-save
                                                          :require-league? nil)))
@@ -666,121 +669,143 @@
 
 ;;; User Detail Page
 (defun www-user-detail-page (&key player league)
-  (if (null player)
+  (let* ((path-segs (path-segments *request*))
+         (target-player-id (safe-parse-int (last1 path-segs)))
+         (target-player (if (plusp target-player-id)
+                            (get-player :id target-player-id))))
+    (when (and (plusp target-player-id) (null target-player))
       (return-from www-user-detail-page
         (www-not-found-page :player player :league league)))
-  (let ((leagues (get-all-leagues))
-        (commissions '()))
-    (dolist (l leagues)
-      (if (find (player-id player) (league-commissioners l) :key #'player-id)
-          (push l commissions)))
-    (standard-page
-        (:title "User"
-         :player player
-         :league league
-         :page-id "user-detail-page")
-      (:section :id "left-col" :class "col"
-                (:p
-                 (:img :id "user-img"
-                       :class "full-width"
-                       :src "/images/user.png")))
-      (:section :id "right-col" :class "col"
-                (:p
-                 (:a :class "button"
-                     :href "/logout"
-                     :style "float:right" "Log out")
-                 (:div :class "clear-fix"))
-                (:p
-                 (:input :id "player-name-edit"
+    (if (null player)
+        (return-from www-user-detail-page
+          (www-not-found-page :player player :league league)))
+    (if (and (not (= target-player-id (player-id player)))
+             (not (player-admin? player)))
+        (return-from www-user-detail-page
+          (www-not-authorised-page :player player :league league)))
+    (if (null target-player)
+        (setf target-player player))
+    (let ((leagues (get-all-leagues))
+          (commissions '()))
+      (dolist (l leagues)
+        (if (find (player-id target-player) (league-commissioners l) :key #'player-id)
+            (push l commissions)))
+      (standard-page
+          (:title "User"
+           :player player
+           :league league
+           :page-id "user-detail-page")
+        (:section :id "left-col" :class "col"
+                  (:p
+                   (:img :id "user-img"
                          :class "full-width"
-                         :data-orig-val (escape-string (player-name player))
-                         :placeholder "Name"
-                         :title "Name"
-                         :type "text"
-                         :value (escape-string (player-name player))))
-                (:p
-                 (:input :id "player-email-edit"
-                         :class "full-width"
-                         :data-orig-val (escape-string (player-email player))
-                         :placeholder "Email address"
-                         :title "Email address"
-                         :type "email"
-                         :value (escape-string (player-email player))))
-                (:br)
-                (if (player-admin? player)
-                    (htm
-                     (:p :id "admin"
-                         :title "You have site-wide adminstrator privileges"
-                         (:i :class "fa fa-star")
-                         (:span "Administrator"))))
-                (if commissions
-                    (htm
-                     (:p :id "commissioner"
-                         :title "You are a commissioner of these leagues"
-                         (:i :class "fa fa-star")
-                         (:span "Commissioner: ")
-                         (dolist (l commissions)
-                           (htm
-                            (:a :href (sf "/~(~A~)" (league-name l))
-                                (esc (league-name l)))
-                            (:span :class "comma" ","))))))
-                (:p
-                 (:label
-                  :title "Notify me immediately when the state of the upcoming game changes. E.g. when a player changes their status."
-                  (:input :id "player-immediate-notify-edit"
-                          :checked (player-notify-immediately? player)
-                          :type "checkbox")
-                  (:span "Immediate email notifications")))
-                (:br)
-                (:p
-                 (:label
-                  (:span "Default Position: ")
-                  (:select :id "player-pos-edit"
-                           :data-orig-val (escape-string (player-position player))
-                           (dolist (pos players-positions)
+                         :src "/images/user.png")))
+        (:section :id "right-col" :class "col"
+                  (if (eq player target-player)
+                      (htm
+                       (:p
+                        (:a :class "button"
+                            :href "/logout"
+                            :style "float:right" "Log out")
+                        (:div :class "clear-fix"))
+                       ))
+                  (:p
+                   (:input :id "player-name-edit"
+                           :class "full-width"
+                           :data-orig-val (escape-string (player-name target-player))
+                           :data-player-id (player-id target-player)
+                           :placeholder "Name"
+                           :title "Name"
+                           :type "text"
+                           :value (escape-string (player-name target-player))))
+                  (:p
+                   (:input :id "player-email-edit"
+                           :class "full-width"
+                           :data-orig-val (escape-string (player-email target-player))
+                           :placeholder "Email address"
+                           :title "Email address"
+                           :type "email"
+                           :value (escape-string (player-email target-player))))
+                  (:br)
+                  (if (player-admin? target-player)
+                      (htm
+                       (:p :id "admin"
+                           :title "You have site-wide adminstrator privileges"
+                           (:i :class "fa fa-star")
+                           (:span "Administrator"))))
+                  (if commissions
+                      (htm
+                       (:p :id "commissioner"
+                           :title "You are a commissioner of these leagues"
+                           (:i :class "fa fa-star")
+                           (:span "Commissioner: ")
+                           (dolist (l commissions)
                              (htm
-                              (:option :selected
-                                       (string-equal pos (player-position player))
-                                       :value pos (esc pos)))))))
-                (:br)
-                (:p
-                 (:button :id "change-pwd-btn"
-                          :class "button wide-button"
-                          :onclick "page.changePwd()"
-                          "Change Password"))
-                (:div :id "pwd-group"
-                      :style "display:none"
-                      (:p
-                       (:input :id "pwd-curr"
-                               :class "full-width"
-                               :type "password"
-                               :placeholder "Current password"
-                               :title "Current password"))
-                      (:p
-                       (:input :id "pwd-new"
-                               :class "full-width"
-                               :type "password"
-                               :placeholder "New password"
-                               :title "New password"))
-                      (:p
-                       (:input :id "pwd-new-repeat"
-                               :class "full-width"
-                               :type "password"
-                               :placeholder "Repeat new password"
-                               :title "Repeat new password")))
-                (:p
-                 (:button :id "save-btn"
-                          :class "button wide-button"
-                          :onclick "page.saveUser()"
-                          :style "display:none"
-                          "Save"))
-                (:p :id "save-result")))))
+                              (:a :href (sf "/~(~A~)" (league-name l))
+                                  (esc (league-name l)))
+                              (:span :class "comma" ","))))))
+                  (:p
+                   (:label
+                    :title "Notify me immediately when the state of the upcoming game changes. E.g. when a player changes their status."
+                    (:input :id "player-immediate-notify-edit"
+                            :checked (player-notify-immediately? target-player)
+                            :type "checkbox")
+                    (:span "Immediate email notifications")))
+                  (:br)
+                  (:p
+                   (:label
+                    (:span "Default Position: ")
+                    (:select :id "player-pos-edit"
+                             :data-orig-val
+                             (escape-string (player-position target-player))
+                             (dolist (pos players-positions)
+                               (htm
+                                (:option :selected
+                                         (string-equal pos
+                                                       (player-position
+                                                        target-player))
+                                         :value pos (esc pos)))))))
+                  (:br)
+                  (:p
+                   (:button :id "change-pwd-btn"
+                            :class "button wide-button"
+                            :onclick "page.changePwd()"
+                            "Change Password"))
+                  (:div :id "pwd-group"
+                        :style "display:none"
+                        (:p
+                         (:input :id "pwd-curr"
+                                 :class "full-width"
+                                 :type "password"
+                                 :placeholder "Current password"
+                                 :title "Current password"))
+                        (:p
+                         (:input :id "pwd-new"
+                                 :class "full-width"
+                                 :type "password"
+                                 :placeholder "New password"
+                                 :title "New password"))
+                        (:p
+                         (:input :id "pwd-new-repeat"
+                                 :class "full-width"
+                                 :type "password"
+                                 :placeholder "Repeat new password"
+                                 :title "Repeat new password")))
+                  (:p
+                   (:button :id "save-btn"
+                            :class "button wide-button"
+                            :onclick "page.saveUser()"
+                            :style "display:none"
+                            "Save"))
+                  (:p :id "save-result"))))))
 ;;; User Detail Page -------------------------------------------------------- END
 
 ;;; User Save API
 (defun api-user-save (&key player league)
   (setf (content-type*) "application/json")
-  (let* ((name (post-parameter "name"))
+  (let* ((curr-player-id (player-id player))
+         (id (safe-parse-int (post-parameter "id")))
+         (name (post-parameter "name"))
          (email (post-parameter "email"))
          (notify-immediately?
            (string-equal "true" (post-parameter "notifyImmediately")))
@@ -788,32 +813,36 @@
          (curr-pwd (post-parameter "currentPwd"))
          (new-pwd (post-parameter "newPwd"))
          (save-res nil))
+    ;; Verify target player is same is current player or is admin
+    (when (not (or (= id (player-id player)) (player-admin? player)))
+      (setf (return-code*) +http-forbidden+)
+      (return-from api-user-save
+        (json-result (new-r :error
+                            "You do not have permission to make this change."))))
+    (setf (player-id player) id)
     (setf (player-name player) name)
     (setf (player-email player) email)
     (setf (player-notify-immediately? player) notify-immediately?)
     (setf (player-position player) pos)
     (setf save-res (update-player player))
     ;; Basic player update failed or no password change attempted
-    (if (or (failed? save-res) (empty? new-pwd))
-        (return-from api-user-save
-          (json:encode-json-plist-to-string
-           `(level ,(r-level save-res)
-                   message ,(r-message save-res)))))
+    (when (or (failed? save-res) (empty? new-pwd))
+      (setf (return-code*) +http-internal-server-error+)
+      (return-from api-user-save (json-result save-res)))
     ;; Verify current password provided by user is correct
     (setf player (get-player :id (player-id player) :pwd curr-pwd))
-    (if (null player) ; Current password incorrect
-        (return-from api-user-save
-          (json:encode-json-plist-to-string
-           `(level :error message "Current password is incorrect."))))
+    (when (null player) ; Current password incorrect
+      (setf (return-code*) +http-bad-request+)
+      (return-from api-user-save
+        (json-result (new-r :error "Current password is incorrect."))))
+    ;; Save new password
     (setf save-res (change-player-pwd player new-pwd))
-    (if (failed? save-res)
-        (return-from api-user-save
-          (json:encode-json-plist-to-string
-           `(level ,(r-level save-res) message ,(r-message save-res)))))
-    (setf player (r-data save-res))
-    (set-auth-cookie player :perm? t)
-    (json:encode-json-plist-to-string
-     `(level :success message "Update successful!"))))
+    (when (failed? save-res) ; Save new password failed
+      (setf (return-code*) +http-internal-server-error+)
+      (return-from api-user-save (json-result save-res)))
+    (if (= curr-player-id (player-id player))
+        (set-auth-cookie (r-data save-res) :perm? t))
+    (json-result (new-r :success "Update successful!"))))
 ;;; User Save API ----------------------------------------------------------- END
 
 ;;; User Logout Page
@@ -1529,6 +1558,16 @@
                          :class "full-width"
                          :src "/images/user.png")))
         (:section :id "right-col" :class "col"
+                  (if (or (player-admin? player)
+                          (= target-player-id (player-id player)))
+                      (htm
+                       (:a :class "button wide-button"
+                           :href (sf "/~(~A~)/users/~(~A~)/~A"
+                                     (league-name league)
+                                     (clean-uri-segment
+                                      (player-name target-player))
+                                     (player-id target-player))
+                           "Edit")))
                   (:h1 (fmt "~A" (escape-string (player-name target-player))))
                   (if (player-admin? target-player)
                       (htm
