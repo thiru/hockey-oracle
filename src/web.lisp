@@ -726,7 +726,32 @@
                            :title "Email address"
                            :type "email"
                            :value (escape-string (player-email target-player))))
-                  (:br)
+                  (:section :id "change-pwd"
+                            (:p
+                             (:a :id "change-pwd-btn"
+                                 :href "javascript:void(0)"
+                                 :onclick "page.changePwd()"
+                                 "Change Password"))
+                            (:div :id "pwd-group"
+                                  :style "display:none"
+                                  (:p
+                                   (:input :id "pwd-curr"
+                                           :class "full-width"
+                                           :type "password"
+                                           :placeholder "Current password"
+                                           :title "Current password"))
+                                  (:p
+                                   (:input :id "pwd-new"
+                                           :class "full-width"
+                                           :type "password"
+                                           :placeholder "New password"
+                                           :title "New password"))
+                                  (:p
+                                   (:input :id "pwd-new-repeat"
+                                           :class "full-width"
+                                           :type "password"
+                                           :placeholder "Repeat new password"
+                                           :title "Repeat new password"))))
                   (if (player-admin? target-player)
                       (htm
                        (:p :id "admin"
@@ -765,32 +790,6 @@
                                                        (player-position
                                                         target-player))
                                          :value pos (esc pos)))))))
-                  (:br)
-                  (:p
-                   (:button :id "change-pwd-btn"
-                            :class "button wide-button"
-                            :onclick "page.changePwd()"
-                            "Change Password"))
-                  (:div :id "pwd-group"
-                        :style "display:none"
-                        (:p
-                         (:input :id "pwd-curr"
-                                 :class "full-width"
-                                 :type "password"
-                                 :placeholder "Current password"
-                                 :title "Current password"))
-                        (:p
-                         (:input :id "pwd-new"
-                                 :class "full-width"
-                                 :type "password"
-                                 :placeholder "New password"
-                                 :title "New password"))
-                        (:p
-                         (:input :id "pwd-new-repeat"
-                                 :class "full-width"
-                                 :type "password"
-                                 :placeholder "Repeat new password"
-                                 :title "Repeat new password")))
                   (:p
                    (:button :id "save-btn"
                             :class "button wide-button"
