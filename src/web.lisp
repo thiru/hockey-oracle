@@ -314,6 +314,7 @@
              (:script :src "/deps/jquery/jquery-2.1.3.min.js")
              (:script :src "/deps/lodash/lodash.min.js")
              (:script :src "/deps/momentjs/moment.min.js")
+             (:script :src "/deps/rxjs/rx.all.min.js")
              (:script :src "/scripts/utils.js")
              (:script :src "/scripts/main.js"))
             (:body
