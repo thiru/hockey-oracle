@@ -671,25 +671,25 @@
     (new-r :success "Password updated!" (get-player :id (player-id player)))))
 
 (defun update-player (player)
-  "Update player details such as name, etc.
+  "Update player details such as name, email, etc.
    Returns an R."
   (check-type player PLAYER)
   (if (empty? player)
       (return-from update-player
-        (new-r :error (sf "Failed to retrieve player with id ~A."
-                          (player-id player))
-               player)))
+        (new-r :error "No player provided." (player-id player))))
   (if (> (length (player-name player)) player-name-max-length)
       (return-from update-player
         (new-r :error
-               (sf "Name must be less than ~A letters but was ~A letters."
+               (sf '("Name is too long (~A characters). "
+                     "The maximum length is ~A characters.")
                    player-name-max-length
                    (length (player-name player)))
                player)))
   (if (> (length (player-email player)) player-email-max-length)
       (return-from update-player
         (new-r :error
-               (sf "Email address must be less than ~A letters but was ~A letters."
+               (sf '("Email address is too long (~A characters). "
+                     "The maximum length is ~A characters.")
                    player-email-max-length
                    (length (player-email player)))
                player)))
@@ -701,6 +701,14 @@
                (sf "Invalid player position '~A'. Position must be one of: ~A."
                    (player-position player) players-positions)
                player)))
+  (if (find-if (lambda (p)
+                 (and
+                  (/= (player-id player) (player-id p))
+                  (string-equal (player-email player) (player-email p))))
+               (get-all-players))
+      (return-from update-player
+        (new-r :error
+               (sf "Sorry, this email address is taken by another player."))))
   (let ((player-key (sf "player:~A" (player-id player))))
     (redis:with-persistent-connection ()
       (when (red-exists player-key)

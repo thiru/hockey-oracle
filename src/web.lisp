@@ -8,11 +8,12 @@
 (defvar static-files-dir (merge-pathnames "www/" base-dir))
 
 (defparameter reset-pwd-msg
-  (glu:str "<p>A request was made to reset your password. If you would like "
-           "to continue please follow the link below. Please note, this "
-           "request will expire within 24 hours.</p>"
-           "<p><a href='~A://~A/reset-password?token=~A'>"
-           "Reset my password</a></p>"))
+  (concatenate 'string
+               "<p>A request was made to reset your password. If you would like "
+               "to continue please follow the link below. Please note, this "
+               "request will expire within 24 hours.</p>"
+               "<p><a href='~A://~A/reset-password?token=~A'>"
+               "Reset my password</a></p>"))
 
 (setf (html-mode) :HTML5)
 
@@ -827,7 +828,7 @@
     (setf (player-notify-immediately? player) notify-immediately?)
     (setf (player-position player) pos)
     (setf save-res (update-player player))
-    ;; Basic player update failed or no password change attempted
+    ;; Player update failed or no password change attempted
     (when (or (failed? save-res) (empty? new-pwd))
       (setf (return-code*) +http-internal-server-error+)
       (return-from api-user-save (json-result save-res)))
