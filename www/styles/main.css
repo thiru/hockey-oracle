@@ -607,10 +607,11 @@ main
 #game-detail-page .team-logo
 {
     left: 40%;
-    max-height: 8em;
+    max-height: 10em;
     opacity: 0.4;
     position: absolute;
-    top: 3em;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 /*******************************
