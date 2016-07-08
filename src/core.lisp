@@ -559,27 +559,37 @@
 
 (defun get-player (&key
                      (id 0 id-given?)
-                     (name "" name-given?)
+                     name
+                     email
+                     league
                      (pwd "" pwd-given?)
                      (perm-auth "" perm-auth-given?)
                      (temp-auth "" temp-auth-given?))
-  "Gets the PLAYER with the given ID or NAME. If PWD is non-null it is compared
-   against PLAYER-AUTH, and only returned if they match. If PERM-AUTH is non-null
-   it is compared against PLAYER-PERM-AUTH, and only returned if they match. If
-   TEMP-AUTH is non-null it is compared against PLAYER-TEMP-AUTH, and only
-   returned if non-null."
+  "Gets the PLAYER with the given ID or matching one or more of NAME, EMAIL and
+   LEAUGE. If more than one PLAYER is found NIL is returned.
+   If PWD is non-null it is compared against PLAYER-AUTH, and only returned if
+   they match. If PERM-AUTH is non-null it is compared against PLAYER-PERM-AUTH,
+   and only returned if they match. If TEMP-AUTH is non-null it is compared
+   against PLAYER-TEMP-AUTH, and only returned if non-null."
   (let ((player nil))
-    (cond (id-given?
-           (let* ((player-key (sf "player:~A" id)))
-             (redis:with-persistent-connection ()
-               (when (red-exists player-key)
-                 (setf player (new-player-from-db player-key))
-                 ))))
-          (name-given?
-           (let ((players (get-all-players)))
-             (setf player
-                   (find name players :test #'string-equal :key #'player-name))))
-          (t nil))
+    (if id-given?
+        (let* ((player-key (sf "player:~A" id)))
+          (redis:with-persistent-connection ()
+            (when (red-exists player-key)
+              (setf player (new-player-from-db player-key)))))
+        (let* ((players (if (null league)
+                            (get-all-players)
+                            (get-players league)))
+               (players (remove-if-not
+                         (lambda (p)
+                           (and
+                            (or (empty? name)
+                                (string-equal name (player-name p)))
+                            (or (empty? email)
+                                (string-equal email (player-email p)))))
+                         players)))
+          (if (= 1 (length players))
+              (setf player (first players)))))
     (if player
         (cond (pwd-given?
                (if (string= (player-auth player)

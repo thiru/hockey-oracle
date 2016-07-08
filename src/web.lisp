@@ -417,11 +417,11 @@
                        :class "dialog"
                        (:h2 "Welcome!")
                        (:p
-                        (:input :id "login-user-name"
+                        (:input :id "login-email-address"
                                 :class "full-width"
                                 :onkeyup "onEnter(event, page.login)"
-                                :placeholder "User name"
-                                :title "User name"
+                                :placeholder "Email Address"
+                                :title "Email Address"
                                 :type "text"))
                        (:p
                         (:input :id "login-pwd"
@@ -551,11 +551,11 @@
 (defun api-login (&key player league)
   (sleep 2)
   (setf (content-type*) "application/json")
-  (let* ((name (post-parameter "name"))
+  (let* ((email (post-parameter "email"))
          (pwd (post-parameter "pwd"))
          (player nil))
     ;; Verify password provided by user is correct
-    (setf player (get-player :name name :pwd pwd))
+    (setf player (get-player :email email :pwd pwd))
     (if (null player) ; Password incorrect
         (return-from api-login
           (json:encode-json-plist-to-string
@@ -644,10 +644,10 @@
 (defun api-forgot-pwd (&key player league)
   (sleep 2)
   (setf (content-type*) "application/json")
-  (let* ((name (post-parameter "name"))
-         (player (get-player :name name))
+  (let* ((email (post-parameter "email"))
+         (player (get-player :email email))
          (reset-token ""))
-    ;; User name not found:
+    ;; User email not found:
     (if (null player)
         (return-from api-forgot-pwd
           (json:encode-json-plist-to-string
@@ -665,7 +665,7 @@
     ;; Report success
     (json:encode-json-plist-to-string
      `(level :success
-             message "A link to reset your password was sent to your email."))))
+             message "A link to reset your password was emailed to you."))))
 ;;; Forgot Password API ----------------------------------------------------- END
 
 ;;; User Detail Page
@@ -689,7 +689,9 @@
     (let ((leagues (get-all-leagues))
           (commissions '()))
       (dolist (l leagues)
-        (if (find (player-id target-player) (league-commissioners l) :key #'player-id)
+        (if (find (player-id target-player)
+                  (league-commissioners l)
+                  :key #'player-id)
             (push l commissions)))
       (standard-page
           (:title "User"

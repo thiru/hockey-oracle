@@ -82,7 +82,7 @@ page.init = function() {
 
     page.showLogin = function() {
         page.showDialog("#login-dialog");
-        $("#login-user-name").focus().select();
+        $("#login-email-address").focus().select();
     };
     page.closeLogin = function() {
         page.closeDialog("#login-dialog");
@@ -91,11 +91,11 @@ page.init = function() {
         $("#login-result").attr("class", "").html("");
 
         var result = null;
-        var userName = get("login-user-name").value;
+        var email = get("login-email-address").value;
         var pwd = get("login-pwd").value;
 
-        if (isBlank(userName))
-            result = Result.error("No user name provided.");
+        if (isBlank(email))
+            result = Result.error("No email address provided.");
         else if (isBlank(pwd))
             result = Result.error("No password provided.");
 
@@ -110,7 +110,7 @@ page.init = function() {
         $("#login-btn").prop("disabled", true);
         $("#forgot-pwd").addClass("disabled");
 
-        $.post("/api/login", { name: userName, pwd: pwd })
+        $.post("/api/login", { email: email, pwd: pwd })
             .done(function (result) {
                 if (!result)
                     result = Result.error("No response from server.");
@@ -148,10 +148,10 @@ page.init = function() {
         $("#login-result").attr("class", "").html("");
 
         var result = null;
-        var userName = get("login-user-name").value;
+        var email = get("login-email-address").value;
 
-        if (isBlank(userName))
-            result = Result.error("No user name provided.");
+        if (isBlank(email))
+            result = Result.error("No email address provided.");
 
         if (result && result.failed()) {
             showResult($("#login-result"), result);
@@ -166,7 +166,7 @@ page.init = function() {
         $("#login-btn").prop("disabled", true);
         $("#forgot-pwd").addClass("disabled");
 
-        $.post("/api/forgot-password", { name: userName })
+        $.post("/api/forgot-password", { email: email })
             .done(function (result) {
                 if (!result)
                     result = Result.error("No response from server.");
