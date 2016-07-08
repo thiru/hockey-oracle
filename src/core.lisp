@@ -670,6 +670,7 @@
           (red-del pwd-reset-key)))
     (new-r :success "Password updated!" (get-player :id (player-id player)))))
 
+;; TODO: transactify
 (defun update-player (player)
   "Update player details such as name, email, etc.
    Returns an R."
