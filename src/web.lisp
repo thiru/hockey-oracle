@@ -675,13 +675,17 @@
          (target-player-id (safe-parse-int (last1 path-segs)))
          (target-player (if (plusp target-player-id)
                             (get-player :id target-player-id))))
+    ;; Abort if player id specified in URL but not found
     (when (and (plusp target-player-id) (null target-player))
       (return-from www-user-detail-page
         (www-not-found-page :player player :league league)))
+    ;; Abort if implicit player not provided
     (if (null player)
         (return-from www-user-detail-page
           (www-not-found-page :player player :league league)))
-    (if (and (not (= target-player-id (player-id player)))
+    ;; Abort if attempting to view a different player is not an admin
+    (if (and target-player
+             (/= target-player-id (player-id player))
              (not (player-admin? player)))
         (return-from www-user-detail-page
           (www-not-authorised-page :player player :league league)))
