@@ -86,7 +86,7 @@
                              (ironclad:ascii-string-to-byte-array
                               (sf "~A~A" str (or salt ""))))))
 
-(defun pretty-time (time-str &optional mode)
+(defun pretty-time (time-str)
   "Formats a date/time to a user-friendly form. 'time-str' is expected to be a
    timestamp readable by LOCAL-TIME."
   (if (empty? time-str)
@@ -603,6 +603,19 @@
                    player))
               (t player)))))
 
+(defun get-player-emails (league &key immediate-notify-only?)
+  "Get email addresses of all players in LEAGUE.
+   If IMMEDIATE-NOTIFY-ONLY? is T, only players who requested immediate email
+   notification will be returned."
+  (map 'list
+       #'player-email
+       (remove-if (complement
+                   (lambda (p)
+                     (and (or (not immediate-notify-only?)
+                              (player-notify-immediately? p))
+                          (not (empty? (player-email p))))))
+                  (get-players league))))
+
 (defun is-commissioner? (player league)
   "Check whether PLAYER is a commission of LEAGUE."
   (if (or (null player) (null league))
@@ -741,8 +754,8 @@
 
 ;;; Email
 (defun send-email (subject message &optional to)
-  "Sends an HTML message with the specified parameters. If TO is not specified
-   the email is sent to the administrator."
+  "Sends an HTML email with the specified parameters. If TO is not specified the
+   email is sent to the administrator."
   (redis:with-persistent-connection ()
     (let ((username (red-hget "admin:email" "username"))
           (pwd (red-hget "admin:email" "pwd"))
@@ -755,4 +768,31 @@
                           :html-message message
                           :ssl :tls
                           :authentication `(,username ,pwd)))))
+
+(defun send-email-to-players (subject message league &key immediate-notify-only?)
+  "Sends an HTML email to certain players belonging to LEAGUE.
+   If IMMEDIATE-NOTIFY-ONLY? is T, only players who requested immediate email
+   notification will be included."
+  (if (empty? subject)
+      (return-from send-email-to-players
+        (new-r :error "No subject provided.")))
+  (if (empty? message)
+      (return-from send-email-to-players
+        (new-r :error "No message provided.")))
+  (if (null league)
+      (return-from send-email-to-players
+        (new-r :error "No league provided.")))
+  (if (not (league-send-automated-emails? league))
+      (return-from send-email-to-players
+        (new-r :info (sf "Automated emails currently disabled for league, '~A'."
+                         (league-name league)))))
+  (let* ((email-addresses (get-player-emails
+                           league
+                           :immediate-notify-only? immediate-notify-only?)))
+    (if (empty? email-addresses)
+        (return-from send-email-to-players
+          (new-r :info "No email addresses retrieved.")))
+    (send-email subject message email-addresses)
+    (new-r :success (sf "Successfully sent email to ~A recipients."
+                        (length email-addresses)))))
 ;;; Email ------------------------------------------------------------------- END

@@ -12,7 +12,7 @@
                "<p>A request was made to reset your password. If you would like "
                "to continue please follow the link below. Please note, this "
                "request will expire within 24 hours.</p>"
-               "<p><a href='~A://~A/reset-password?token=~A'>"
+               "<p><a href='~Areset-password?token=~A'>"
                "Reset my password</a></p>"))
 
 (setf (html-mode) :HTML5)
@@ -54,6 +54,10 @@
 ;;; General ----------------------------------------------------------------- END
 
 ;;; Utils
+(defun build-url (path)
+  "Build URL to this website."
+  (sf "~A://~A/~A" (if *debug* "http" "https") (host) path))
+
 ;;; TODO: Following is not being used
 (defmacro html-snippet (root-tag)
   "Generate HTML given a single root HTML tag."
@@ -661,7 +665,7 @@
            `(level :error message "Failed to reset password."))))
     ;; Send email to reset password
     (send-email "Reset Password"
-                (sf reset-pwd-msg (if *debug* "http" "https") (host) reset-token)
+                (sf reset-pwd-msg (build-url "") reset-token)
                 (player-email player))
     ;; Report success
     (json:encode-json-plist-to-string
@@ -1442,10 +1446,58 @@
       ;; Update game info (e.g. time, progress)
       (game-time
        (setf save-res (update-game-info game player game-time game-progress))
+       (if (and (succeeded? save-res)
+                (not (string-equal game-time (game-time game)))
+                (string-equal "new" (game-progress game))
+                ;; New game time within next 7 days
+                (local-time:timestamp<=
+                 (local-time:now)
+                 (local-time:parse-timestring game-time)
+                 (local-time:adjust-timestamp (local-time:now) (offset :day 7))))
+           (send-email-to-players
+            "Game time changed"
+            (sf '("<p>An <a href='~(~A~)'>upcoming game's</a> time changed "
+                  "from ~A to ~A.</p>")
+                (build-url (sf "~A/games/~A"
+                               (league-name league)
+                               (game-id game)))
+                (pretty-time (game-time game))
+                (pretty-time game-time))
+            league))
        (json-result save-res))
       ;; Update player's confirmation status
       (confirm-type
        (setf save-res (save-game-confirm game player confirm-type reason))
+       (if (and (succeeded? save-res)
+                (not (string-equal "final" (game-progress game)))
+                ;; Game time within next 3 days
+                (local-time:timestamp<=
+                 (local-time:now)
+                 (local-time:parse-timestring (game-time game))
+                 (local-time:adjust-timestamp (local-time:now) (offset :day 3))))
+           (send-email-to-players
+            "Game confirmation change"
+            (sf '("<p><a href='~(~A~)'>~A</a> updated their confirmation status "
+                  "for the <a href='~(~A~)'>upcoming game</a> on ~A.</p>"
+                  "<p>Status: <b>~(~A~)</b></p>"
+                  "~A")
+                (build-url (sf "~A/players/~A/~A"
+                               (league-name league)
+                               (player-name player)
+                               (player-id player)))
+                (player-name player)
+                (build-url (sf "~A/games/~A"
+                               (league-name league)
+                               (game-id game)))
+                (pretty-time (game-time game))
+                (getf confirm-types
+                      (find confirm-type confirm-types :test #'string-equal))
+                (if (empty? reason)
+                    ""
+                    (sf '("<p>Reason:</p>"
+                          "<blockquote>~A</blockquote>")
+                        reason)))
+            league))
        (json:encode-json-plist-to-string
         (if (succeeded? save-res)
             `(level :success

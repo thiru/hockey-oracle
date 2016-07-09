@@ -92,6 +92,7 @@
    :get-all-players
    :get-players
    :get-player
+   :get-player-emails
    :is-commissioner?
    :update-player
    :change-player-pwd
@@ -104,7 +105,8 @@
    :team-logo
    :get-teams
    :get-team
-   :send-email))
+   :send-email
+   :send-email-to-players))
 
 (defpackage :hockey-oracle.web
   (:use :alexandria :cl :cl-who :glu :hockey-oracle.app :hockey-oracle.core
