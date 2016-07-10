@@ -889,7 +889,11 @@
 ;;; League List Page -------------------------------------------------------- END
 
 ;;; League Detail Page
+;;; NOTE: Disabling this page for now as it doesn't add much value over the
+;;;       games page.
 (defun www-league-detail-page (&key player league)
+  (redirect (sf "/~(~A~)/games" (league-name league))))
+#||
   (let* ((upcoming-games (get-upcoming-games league 3)))
     (standard-page
         (:title (league-name league)
@@ -917,6 +921,7 @@
       (:p
        (:a :href (sf "/~(~A~)/games#scores" (league-name league))
            "Scores")))))
+||#
 ;;; League Detail Page ------------------------------------------------------ END
 
 ;;; Game List Page
