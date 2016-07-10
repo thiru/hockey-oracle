@@ -8,7 +8,7 @@
 var page= {};
 
 // NOTE: This format needs to be in sync with back-end date/time format
-page.dateAndTimeFmt = "ddd, MMM D YYYY @ h:mm a";
+page.dateAndTimeFmt = "ddd MMM D, h:mm a";
 
 $(document).ready(function() {
     page.init();

@@ -95,8 +95,8 @@
              (timestamp (local-time:parse-timestring time-str)))
 
         ;; NOTE: This format needs to be in sync with front-end date/time format
-        (setf format-desc '(:short-weekday ", " :short-month " " :day " "
-                            :year " @ " :hour12 ":" (:min 2) " " :ampm))
+        (setf format-desc '(:short-weekday " " :short-month " " :day
+                            ", " :hour12 ":" (:min 2) " " :ampm))
 
         (local-time:format-timestring nil timestamp :format format-desc))))
 ;;; Utils ------------------------------------------------------------------- END
