@@ -290,7 +290,8 @@
                              (string-equal "new" (game-progress game)))
                          (push game games)))
                     (exclude-unstarted
-                     (if (not (empty? (game-progress game)))
+                     (if (or (string-equal "underway" (game-progress game))
+                             (string-equal "final" (game-progress game)))
                          (push game games)))
                     (t (push game games)))))
           (sort games #'string< :key #'game-time)))))

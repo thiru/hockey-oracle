@@ -922,7 +922,7 @@
 ;;; Game List Page
 (defun www-game-list-page (&key player league)
   (let* ((started-games (get-games league :exclude-unstarted t))
-         (unstarted-games (get-games league :exclude-started t)))
+         (new-games (get-games league :exclude-started t)))
     (standard-page
         (:title "Games"
          :player player
@@ -976,7 +976,7 @@
       (:section :id "new-games-section" :style "display:none"
                 (:h2 :class "blue-heading" "New Games")
                 (:ul :id "new-games-list" :class "data-list"))
-      (if (and (empty? started-games) (empty? unstarted-games))
+      (if (and (empty? started-games) (empty? new-games))
           ;; No Games Notice
           (htm (:h2 :id "no-games" "No games have been created for this league."))
           (htm
@@ -984,7 +984,7 @@
            (:h2 :id "schedule" :class "blue-heading" "Schedule")
            (:ul :id "schedule-list"
                 :class "data-list"
-                (dolist (game unstarted-games)
+                (dolist (game new-games)
                   (htm
                    (:li
                     (:a :class "game-date"
