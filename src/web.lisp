@@ -824,7 +824,7 @@
          (curr-pwd (post-parameter "currentPwd"))
          (new-pwd (post-parameter "newPwd"))
          (save-res nil))
-    ;; Verify target player is same is current player or is admin
+    ;; Verify target player is same as current player or is admin
     (when (not (or (= id (player-id player)) (player-admin? player)))
       (setf (return-code*) +http-forbidden+)
       (return-from api-user-save

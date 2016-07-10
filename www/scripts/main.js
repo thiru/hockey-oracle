@@ -271,6 +271,15 @@ page.initUserDetailPage = function() {
         // Get player email
         player.email = $("#player-email-edit").val().trim();
 
+        if (dataChanged("player-email-edit") && isBlank(player.email)) {
+            var confirmed = confirm("Are you sure you want to remove your " +
+                                    "email address? It won't be possible to " +
+                                    "notify you of important game changes, " +
+                                    "etc.");
+            if (!confirmed)
+                return;
+        }
+
         // Get immediate email notifications option
         player.notifyImmediately = get("player-immediate-notify-edit").checked;
 

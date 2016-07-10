@@ -716,11 +716,12 @@
                (sf "Invalid player position '~A'. Position must be one of: ~A."
                    (player-position player) players-positions)
                player)))
-  (if (find-if (lambda (p)
-                 (and
-                  (/= (player-id player) (player-id p))
-                  (string-equal (player-email player) (player-email p))))
-               (get-all-players))
+  (if (and (not (empty? (player-email player)))
+           (find-if (lambda (p)
+                      (and
+                       (/= (player-id player) (player-id p))
+                       (string-equal (player-email player) (player-email p))))
+                    (get-all-players)))
       (return-from update-player
         (new-r :error
                (sf "Sorry, this email address is taken by another player."))))
