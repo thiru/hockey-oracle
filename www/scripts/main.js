@@ -469,28 +469,34 @@ page.initSchedulePage = function() {
 // Game Detail Page
 page.initGameDetailPage = function() {
     page.editGame = function() {
+        $("#edit-btn").hide();
         $("#time-status-rw").show();
         $("#save-game-info-btn").show();
+        $("#edit-actions").show();
+        $("#game-info").addClass("background-highlight");
     };
 
     page.deleteGame = function() {
         if (!confirm("Are you sure you want to delete this game?"))
             return;
 
-        showLoading("#delete-res");
+        $("#edit-actions .button").prop("disabled", true);
+        showLoading("#save-res");
 
         var gameId = parseInt(get("game-info").dataset.game);
         var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
         $.post(url, { deleteGame: true })
             .done(function (result) {
                 if (!result) {
-                    showResult($("#delete-res"),
+                    showResult($("#save-res"),
                                Result.error("No response from server."));
+                    $("#edit-actions .button").prop("disabled", false);
                 }
                 else {
                     result = new Result(result.level, result.message,
                                         result.data);
-                    showResult($("#delete-res"), result);
+                    showResult($("#save-res"), result);
+                    $("#edit-actions .button").hide();
                 }
             })
             .fail(function(data) {
@@ -501,7 +507,8 @@ page.initGameDetailPage = function() {
                 else
                     result = new Result(result.level, result.message,
                                         result.data);
-                showResult($("#delete-res"), result);
+                showResult($("#save-res"), result);
+                $("#edit-actions .button").prop("disabled", false);
             });
     }
 
@@ -515,6 +522,7 @@ page.initGameDetailPage = function() {
 
         var gameProgress = $("#game-status-ddl :selected").val().trim();
 
+        $("#edit-actions .button").prop("disabled", true);
         showLoading("#save-res");
 
         var gameId = parseInt(get("game-info").dataset.game);
@@ -530,6 +538,7 @@ page.initGameDetailPage = function() {
                                         result.data);
                     showResult($("#save-res"), result);
                 }
+                $("#edit-actions .button").prop("disabled", false);
             })
             .fail(function(data) {
                 var result = data.responseJSON;
@@ -540,6 +549,7 @@ page.initGameDetailPage = function() {
                     result = new Result(result.level, result.message,
                                         result.data);
                 showResult($("#save-res"), result);
+                $("#edit-actions .button").prop("disabled", false);
             });
     };
 

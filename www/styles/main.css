@@ -231,6 +231,12 @@ img
     display: none;
 }
 
+.background-highlight
+{
+    background-color: #FFF2CC; /* VAR LIGHT-YELLOW */
+    padding: 1em;
+}
+
 /* Get rid of ugly system-outline */
 :focus {outline:none;}
 ::-moz-focus-inner {border:0;}
@@ -473,9 +479,14 @@ main
         Game detail page
 *******************************/
 
+#game-detail-page #edit-btn
+{
+    float: right;
+}
+
 #game-detail-page #confirm-inputs
 {
-    background-color: #FFF2CC;
+    background-color: #FFF2CC; /* VAR LIGHT-YELLOW */
     border-radius: 0.3em;
     margin: 1.5em 0;
     padding: 1em;

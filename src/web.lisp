@@ -1100,19 +1100,6 @@
                :player player
                :league league
                :page-id "game-detail-page")
-            ;; Edit button
-            (if (is-commissioner? player league)
-                (htm
-                 (:div
-                  (:div :class "col col-2"
-                        (:button :class "button wide-button"
-                                 :onclick "page.editGame()"
-                                 (:span :class "button-text" "Edit")))
-                  (:div :class "col col-2"
-                        (:button :class "button wide-button"
-                                 :onclick "page.deleteGame()"
-                                 (:span :class "button-text" "Delete"))))
-                 (:div :id "delete-res")))
             ;; Game Time/Status (main heading)
             (:div :id "game-info"
                   :data-game game-id
@@ -1162,6 +1149,13 @@
                                                   :value gps
                                                   (fmt "~A" gps))))))
                        (:div :class "clear-fix"))
+                  ;; Edit button
+                  (if (is-commissioner? player league)
+                      (htm
+                       (:button :id "edit-btn"
+                                :class "button"
+                                :onclick "page.editGame()"
+                                "Edit")))
                   ;; Game Time Display
                   (:h1 :id "time-status-ro"
                        (:span :id "game-time-ro"
@@ -1170,15 +1164,23 @@
                            (htm
                             (:span :id "game-state-ro"
                                    :class "uppercase"
-                                   (fmt " - ~A" (game-progress game)))))))
-            ;; Save button/result
-            (if (is-commissioner? player league)
-                (htm
-                 (:button :id "save-game-info-btn"
-                          :class "button wide-button hidden"
-                          :onclick "page.saveGame()"
-                          (:span :class "button-text" "Save"))
-                 (:div :id "save-res")))
+                                   (fmt " - ~A" (game-progress game))))))
+                  ;; Save button/result
+                  (if (is-commissioner? player league)
+                      (htm
+                       (:div :id "edit-actions"
+                             :style "display:none"
+                        (:div :class "col col-2"
+                              (:button :id "save-game-info-btn"
+                                       :class "button wide-button hidden"
+                                       :onclick "page.saveGame()"
+                                       (:span :class "button-text" "Save")))
+                        (:div :class "col col-2"
+                              (:button :class "button wide-button"
+                                       :onclick "page.deleteGame()"
+                                       (:span :class "button-text" "Delete")))
+                        (:div :class "clear-fix")
+                        (:div :id "save-res")))))
             ;; Player-Specific Game Confirmation
             (when show-confirm-inputs
               (htm
