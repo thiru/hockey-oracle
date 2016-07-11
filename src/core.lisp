@@ -619,9 +619,12 @@
 
 (defun is-commissioner? (player league)
   "Check whether PLAYER is a commission of LEAGUE."
-  (if (or (null player) (null league))
-      (return-from is-commissioner? nil))
-  (find (player-id player) (league-commissioners league) :key #'player-id))
+  (or (and player (player-admin? player))
+      (and player
+           league
+           (find (player-id player)
+                 (league-commissioners league)
+                 :key #'player-id))))
 
 (defun reset-pwd-get-token (player)
   "Get the password reset request key.
