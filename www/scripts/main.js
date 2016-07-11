@@ -14,12 +14,10 @@ $(document).ready(function() {
     page.init();
     if (get("user-detail-page"))
         page.initUserDetailPage();
-    if (get("league-detail-page"))
-        page.initLeagueDetailPage();
     if (get("manage-league-page"))
         page.initManageLeaguePage();
-    if (get("game-list-page"))
-        page.initGameListPage();
+    if (get("schedule-page"))
+        page.initSchedulePage();
     if (get("game-detail-page"))
         page.initGameDetailPage();
     if (get("player-list-page"))
@@ -342,16 +340,6 @@ page.initUserDetailPage = function() {
 };
 // User Detail Page --------------------------------------------------------- END
 
-// League Detail Page
-page.initLeagueDetailPage = function() {
-    $(".upcoming-game-item").each(function() {
-        var gameTimeStamp = $(this).find(".upcoming-game-time").text().trim();
-        var gameTimeRel = moment(gameTimeStamp, page.dateAndTimeFmt).fromNow();
-        $(this).find(".upcoming-game-rel-time").text("(" + gameTimeRel + ")");
-    });
-};
-// League Detail Page ------------------------------------------------------- END
-
 // Manage League Page
 page.initManageLeaguePage = function() {
     page.save = function() {
@@ -390,8 +378,19 @@ page.initManageLeaguePage = function() {
 };
 // Manage League Page ------------------------------------------------------- END
 
-// Game List Page
-page.initGameListPage = function() {
+// Schedule Page
+page.initSchedulePage = function() {
+    // Show relative times for next 5 games
+    var count = 5;
+    $("#schedule-list .game-item").each(function() {
+        if (count <= 0) return false;
+
+        var gameTimeStamp = $(this).find(".game-time").text().trim();
+        var gameTimeRel = moment(gameTimeStamp, page.dateAndTimeFmt).fromNow();
+        $(this).find(".game-rel-time").text("(" + gameTimeRel + ")");
+        count--;
+    });
+
     page.openGameEditor = function() {
         page.showDialog("#new-game-dialog");
         get("date-picker").focus();
@@ -465,7 +464,7 @@ page.initGameListPage = function() {
         page.closeDialog("#new-game-dialog");
     };
 };
-// Game List Page ----------------------------------------------------------- END
+// Schedule Page ------------------------------------------------------------ END
 
 // Game Detail Page
 page.initGameDetailPage = function() {

@@ -415,46 +415,55 @@ main
 }
 
 /*******************************
-        Game list page
+         Schedul page
 *******************************/
 
-#game-list-page #edit-controls
+#schedule-page #edit-controls
 {
     margin-bottom: 1em;
 }
 
-#game-list-page #new-game-dialog
+#schedule-page #new-game-dialog
 {
     padding: 1em;
 }
-#game-list-page #new-game-dialog .actions
+#schedule-page #new-game-dialog .actions
 {
     text-align: right;
 }
 
-#game-list-page .data-list
+#schedule-page .data-list
 {
     font-size: 1.2em;
 }
 
-#game-list-page .data-list .game-date
+/*******************************
+           Scores page
+*******************************/
+
+#scores-page .data-list
+{
+    font-size: 1.2em;
+}
+
+#scores-page .data-list .game-time
 {
     float: left;
 }
-#game-list-page .data-list .game-score
+#scores-page .data-list .game-score
 {
     float: right;
 }
-#game-list-page .data-list .game-score .team-logo
+#scores-page .data-list .game-score .team-logo
 {
     width: 1.5em;
     vertical-align: middle;
 }
-#game-list-page .data-list .game-score .team-name
+#scores-page .data-list .game-score .team-name
 {
     margin-right: 2em;
 }
-#game-list-page .data-list .game-score .score
+#scores-page .data-list .game-score .score
 {
     float: right;
     text-align: right;

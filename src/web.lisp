@@ -55,7 +55,7 @@
 
 ;;; Utils
 (defun build-url (path)
-  "Build URL to this website."
+  "Build absolute qualified URL to this website."
   (sf "~A://~A/~A" (if *debug* "http" "https") (host) path))
 
 ;;; TODO: Following is not being used
@@ -75,19 +75,16 @@
   (setf input (cl-ppcre:regex-replace-all "[ ]+" input "-"))
   (cl-ppcre:regex-replace-all "[^A-Za-z0-9-]" input ""))
 
-(defun based-on-path? (path base-path)
-  "Determine whether 'path' is based on 'base-path'."
-  (let ((path-segs (split-sequence #\/
-                                   path
-                                   :remove-empty-subseqs t)))
-    (or (string-equal (first path-segs) base-path)
-        (string-equal (second path-segs) base-path))))
-
-(defun at-league-home? (league req)
-  "Determine whether we are at the league's home page."
-  (let ((path-segs (path-segments req)))
-    (and (= 1 (length path-segs))
-         (string-equal (league-name league) (first path-segs)))))
+(defun based-on-path? (current-path test-path &optional league)
+  "Determine whether CURRENT-PATH is rooted in TEST-PATH.
+   If LEAGUE is given, the league's name is expected to be at the root of
+   CURRENT-PATH.
+   All paths are expected to be relative and only contain the 'file' path. I.e.
+   no query parameters or hash segments."
+  (if league
+      (cl-ppcre:scan (sf "^/~(~A~)/~(~A~)" (league-name league) test-path)
+                     current-path)
+      (cl-ppcre:scan (sf "^/~(~A~)" test-path) current-path)))
 
 (defun path-segments (req)
   "Gets a list of path segments, excluding query parameters."
@@ -202,9 +199,12 @@
                                      (lambda ()
                                        (base-league-page 'www-league-list-page
                                                          :require-league? nil)))
-            (create-regex-dispatcher "^/[\\w-]+/games/?$"
+            (create-regex-dispatcher "^/[\\w-]+/games/schedule/?$"
                                      (lambda ()
-                                       (base-league-page 'www-game-list-page)))
+                                       (base-league-page 'www-schedule-page)))
+            (create-regex-dispatcher "^/[\\w-]+/games/scores/?$"
+                                     (lambda ()
+                                       (base-league-page 'www-scores-page)))
             (create-regex-dispatcher "^/[\\w-]+/games/[0-9-]+/?$"
                                      (lambda ()
                                        (base-league-page 'www-game-detail-page)))
@@ -364,21 +364,27 @@
                       (if ,league
                           (htm
                            (:li
-                            (:a :class (if (at-league-home? ,league *request*)
+                            (:a :class (if (based-on-path? path
+                                                           "games/schedule"
+                                                           ,league)
                                            "active"
                                            nil)
-                                :href (sf "/~(~A~)"
-                                          (league-name,league))
-                                (fmt "~A" (league-name ,league))))
-                           (:li
-                            (:a :class (if (based-on-path? path "games")
-                                           "active"
-                                           nil)
-                                :href (sf "/~(~A~)/games"
+                                :href (sf "/~(~A~)/games/schedule"
                                           (league-name ,league))
-                                "Games"))
+                                "Schedule"))
                            (:li
-                            (:a :class (if (based-on-path? path "players")
+                            (:a :class (if (based-on-path? path
+                                                           "games/scores"
+                                                           ,league)
+                                           "active"
+                                           nil)
+                                :href (sf "/~(~A~)/games/scores"
+                                          (league-name ,league))
+                                "Scores"))
+                           (:li
+                            (:a :class (if (based-on-path? path
+                                                           "players"
+                                                           ,league)
                                            "active"
                                            nil)
                                 :href (sf "/~(~A~)/players"
@@ -408,7 +414,9 @@
                                                          "big-screen")
                                               :href "/about" "About")))
                                 (htm (:li
-                                      (:a :class (if (based-on-path? path "about")
+                                      (:a :class (if (based-on-path? path
+                                                                     "about"
+                                                                     ,league)
                                                      "active"
                                                      nil)
                                           :href (sf "/~A/about"
@@ -890,9 +898,9 @@
 
 ;;; League Detail Page
 ;;; NOTE: Disabling this page for now as it doesn't add much value over the
-;;;       games page.
+;;;       schedule/score pages.
 (defun www-league-detail-page (&key player league)
-  (redirect (sf "/~(~A~)/games" (league-name league))))
+  (redirect (sf "/~(~A~)/games/schedule" (league-name league))))
 #||
   (let* ((upcoming-games (get-upcoming-games league 3)))
     (standard-page
@@ -924,20 +932,19 @@
 ||#
 ;;; League Detail Page ------------------------------------------------------ END
 
-;;; Game List Page
-(defun www-game-list-page (&key player league)
-  (let* ((started-games (get-games league :exclude-unstarted t))
-         (new-games (get-games league :exclude-started t)))
+;;; Schedule Page
+(defun www-schedule-page (&key player league)
+  (let* ((games (get-games league :exclude-started t)))
     (standard-page
-        (:title "Games"
+        (:title "Schedule"
          :player player
          :league league
-         :page-id "game-list-page")
+         :page-id "schedule-page")
       ;; Template Items
       (:div :class "template-items"
             (:ul
              (:li :id "template-game-item"
-                  (:a :class "game-date"
+                  (:a :class "game-time"
                       :href (sf "/~(~A~)/games/<GAME-ID>" (league-name league)))
                   (:span :class "game-state" "")
                   (:span :class "clear-fix"))))
@@ -981,31 +988,46 @@
       (:section :id "new-games-section" :style "display:none"
                 (:h2 :class "blue-heading" "New Games")
                 (:ul :id "new-games-list" :class "data-list"))
-      (if (and (empty? started-games) (empty? new-games))
+      (if (empty? games)
           ;; No Games Notice
-          (htm (:h2 :id "no-games" "No games have been created for this league."))
           (htm
-           ;; List of Incomplete Games
+           (:h2 :id "no-games" "No games have been created for this league."))
+          (htm
+           ;; List of Games
            (:h2 :id "schedule" :class "blue-heading" "Schedule")
            (:ul :id "schedule-list"
                 :class "data-list"
-                (dolist (game new-games)
+                (dolist (game games)
                   (htm
-                   (:li
-                    (:a :class "game-date"
+                   (:li :class "game-item"
+                    (:a :class "game-time"
                         :href (sf "/~(~A~)/games/~(~A~)"
                                   (league-name league)
                                   (game-id game))
                         (esc (pretty-time (game-time game))))
-                    (:span :class "game-state" "")
-                    (:span :class "clear-fix")))))
-           ;; List of Complete Games
+                    (:span :class "game-rel-time")
+                    (:span :class "clear-fix"))))))))))
+;;; Schedule Page ----------------------------------------------------------- END
+
+;;; Scores Page
+(defun www-scores-page (&key player league)
+  (let* ((games (reverse (get-games league :exclude-unstarted t))))
+    (standard-page
+        (:title "Scores"
+         :player player
+         :league league
+         :page-id "scores-page")
+      (if (empty? games)
+          ;; No Games Notice
+          (htm (:h2 :id "no-games" "No scores available yet."))
+          (htm
+           ;; List of Games
            (:h2 :id "scores" :class "blue-heading" "Scores")
            (:ul :class "data-list"
-                (dolist (game (reverse started-games))
+                (dolist (game games)
                   (htm
                    (:li
-                    (:div :class "game-date"
+                    (:div :class "game-time"
                           (:a
                            :href (sf "/~(~A~)/games/~(~A~)"
                                      (league-name league)
@@ -1033,7 +1055,7 @@
                            (:span :class "score"
                                   (esc (sf "~A" (game-home-score game))))))
                     (:div :class "clear-fix"))))))))))
-;;; Game List Page ---------------------------------------------------------- END
+;;; Scores Page ------------------------------------------------------------- END
 
 ;;; New Game API
 (defun api-new-game (&key player league)
