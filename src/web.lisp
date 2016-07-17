@@ -1470,7 +1470,20 @@
     (cond
       ;; Delete game
       (delete-game?
-       (json-result (delete-game game player)))
+       (setf save-res (delete-game game player))
+       (if (and (succeeded? save-res)
+                (string-equal "new" (game-progress game))
+                ;; New game time within next 7 days
+                (local-time:timestamp<=
+                 (local-time:now)
+                 (local-time:parse-timestring (game-time game))
+                 (local-time:adjust-timestamp (local-time:now) (offset :day 7))))
+           (send-email-to-players
+            "Game cancelled"
+            (sf '("<p>An upcoming game on ~A was cancelled.</p>")
+                (pretty-time (game-time game)))
+            league))
+       (json-result save-res))
       ;; Update game info (e.g. time, progress)
       (game-time
        (setf save-res (update-game-info game player game-time game-progress))
