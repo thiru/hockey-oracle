@@ -1525,7 +1525,8 @@
                     (sf '("<p>Reason:</p>"
                           "<blockquote>~A</blockquote>")
                         reason)))
-            league))
+            league
+            :immediate-notify-only? t))
        (json:encode-json-plist-to-string
         (if (succeeded? save-res)
             `(level :success
