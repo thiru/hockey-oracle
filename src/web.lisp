@@ -508,8 +508,7 @@
    (:a :href "/" "Go back to the home page")))
 
 (defmethod acceptor-status-message (acceptor (http-status-code (eql 500)) &key)
-  (bt:make-thread (lambda () (send-email "Server Error"
-                                         "A <b>server error</b> occurred.")))
+  (send-email "Server Error" "A <b>server error</b> occurred.")
   (www-server-error-page nil))
 
 (defun www-test-server-error (&key player league)

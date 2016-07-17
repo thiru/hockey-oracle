@@ -760,7 +760,7 @@
 ;;; Email
 (defun send-email (subject message &optional to)
   "Sends an HTML email with the specified parameters. If TO is not specified the
-   email is sent to the administrator."
+   email is sent to the administrator. The email is sent in a background thread."
   (redis:with-persistent-connection ()
     (let ((username (red-hget "admin:email" "username"))
           (pwd (red-hget "admin:email" "pwd"))
@@ -768,11 +768,12 @@
           (reply-to (red-hget "admin:email" "reply-to")))
       (if (empty? to)
           (setf to (red-hget "admin:email" "admin")))
-      (cl-smtp:send-email server reply-to to subject ""
-                          :display-name "Hockey Oracle"
-                          :html-message message
-                          :ssl :tls
-                          :authentication `(,username ,pwd)))))
+      (bt:make-thread (lambda ()
+                        (cl-smtp:send-email server reply-to to subject ""
+                                            :display-name "Hockey Oracle"
+                                            :html-message message
+                                            :ssl :tls
+                                            :authentication `(,username ,pwd)))))))
 
 (defun send-email-to-players (subject message league &key immediate-notify-only?)
   "Sends an HTML email to certain players belonging to LEAGUE.
