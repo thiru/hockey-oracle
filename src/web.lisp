@@ -352,10 +352,10 @@
                 (:nav
                  (:ul :class "nav-items"
                       (:li
-                       (:a :id "main-menu"
-                           :onclick "page.toggleMainMenu()"
-                           :href "javascript:void(0)"
-                           (:i :class "fa fa-bars")))
+                       (:button :id "main-menu"
+                                :class "clear-button"
+                                :onclick "page.toggleMainMenu()"
+                                (:i :class "fa fa-bars")))
                       (:li :class "big-screen"
                        (:a :class (if (based-on-path? path "leagues")
                                       "active"
