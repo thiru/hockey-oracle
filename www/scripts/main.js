@@ -439,10 +439,10 @@ page.initSchedulePage = function() {
                     showResult($("#save-result"), result);
                     if (result.succeeded()) {
                         var item = $("#template-game-item").clone();
-                        item.find(".game-date")
+                        item.find(".game-time")
                             .text(result.data[1])
                             .attr("href",
-                                  item.find(".game-date")
+                                  item.find(".game-time")
                                   .attr("href")
                                   .replace("<GAME-ID>", result.data[0]));
                         $("#new-games-list").append(item);
