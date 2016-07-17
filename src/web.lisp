@@ -213,7 +213,7 @@
                                        (base-league-page 'api-new-game)))
             (create-regex-dispatcher "^/[\\w-]+/api/games/[0-9-]+/?$"
                                      (lambda ()
-                                       (base-league-page 'api-game-confirm)))
+                                       (base-league-page 'api-game-update)))
             (create-regex-dispatcher "^/[\\w-]+/players/?$"
                                      (lambda ()
                                        (base-league-page 'www-player-list-page)))
@@ -1453,7 +1453,7 @@
 ;;; Game Detail Page -------------------------------------------------------- END
 
 ;;; Game Update API
-(defun api-game-confirm (&key player league)
+(defun api-game-update (&key player league)
   (setf (content-type*) "application/json")
   (let* ((game-id (last1 (path-segments *request*)))
          (game (get-game league game-id))
@@ -1465,7 +1465,7 @@
          (save-res (new-r :info "Nothing updated.")))
     (when (null game)
       (setf (return-code*) +http-not-found+)
-      (return-from api-game-confirm
+      (return-from api-game-update
         (json-result (new-r :error "Game not found."))))
     (cond
       ;; Delete game
