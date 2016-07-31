@@ -301,7 +301,9 @@
                     :content "IE=edge")
              (:meta :name "viewport"
                     :content "width=device-width, initial-scale=1")
+             (:meta :name "theme-color" :content "#0F83BC")
              (:title (fmt "~A - Hockey Oracle" ,title))
+             (:link :rel "manifest" :href "/manifest.json")
              (:link :rel "shortcut icon"
                     :href "/images/favicon.ico")
              (:link
