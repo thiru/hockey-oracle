@@ -305,10 +305,6 @@
              (:link :rel "shortcut icon"
                     :href "/images/favicon.ico")
              (:link
-              :href "/deps/fira/fira.css"
-              :rel "stylesheet"
-              :type "text/css")
-             (:link
               :href "/deps/font-awesome/css/font-awesome.min.css"
               :rel "stylesheet"
               :type "text/css")
