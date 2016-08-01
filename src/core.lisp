@@ -32,6 +32,10 @@
   "Determine whether OBJ represents a 'failed' object."
   (not (succeeded? obj)))
 
+(defmacro to-string (obj)
+  "Shortcut of `PRINC-TO-STRING'"
+  `(princ-to-string ,obj))
+
 (defun first1 (obj)
   "Gets the first item in OBJ if it's a list, otherwise OBJ is simply returned."
   (if (listp obj) (first obj) obj))
@@ -439,28 +443,23 @@
              (p-to-update? (= (player-id player)
                               (player-id (game-confirm-player gc)))))
         (setf (getf new-gcs p-id)
-              ;; NOTE: Seem to have to surround each string value in quotes in
-              ;; order to be able to read it back in
               (list
                (if p-to-update?
                    confirm-type
                    (game-confirm-confirm-type gc))
-               (sf "\"~A\""
-                   (if p-to-update?
-                       (local-time:now)
-                       (game-confirm-time gc)))
-               (sf "\"~A\""
-                   (if (and p-to-update? (not (null reason)))
-                       reason
-                       (game-confirm-reason gc)))))))
+               (if p-to-update?
+                   (to-string (local-time:now))
+                   (game-confirm-time gc))
+               (if (and p-to-update? (not (null reason)))
+                   reason
+                   (game-confirm-reason gc))))))
     (dolist (p (get-players (game-league game)))
       (if (and (not (getf new-gcs (player-id p)))
                (= (player-id p) (player-id player)))
           (setf (getf new-gcs (player-id p))
-                (list
-                 confirm-type
-                 (sf "\"~A\"" (local-time:now))
-                 (sf "\"~A\"" (or reason ""))))))
+                (list confirm-type
+                      (to-string (local-time:now))
+                      (or reason "")))))
     (redis:with-persistent-connection ()
       (red-hset (sf "leagues:~A:game:~A"
                     (league-id (game-league game))
