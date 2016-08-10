@@ -1143,7 +1143,8 @@
             (:h1 :id "time-status-ro"
                  (:span :id "game-time-ro"
                         (esc (pretty-time (game-time game))))
-                 (if (not (empty? (game-progress game)))
+                 (if (and (non-empty? (game-progress game))
+                          (not (string-equal "new" (game-progress game))))
                      (htm
                       (:span :id "game-state-ro"
                              :class "uppercase"
