@@ -559,17 +559,17 @@
 
 ;;; Login API
 (defun api-login (&key player league)
-  (sleep 2)
   (setf (content-type*) "application/json")
   (let* ((email (post-parameter "email"))
          (pwd (post-parameter "pwd"))
          (player nil))
     ;; Verify password provided by user is correct
     (setf player (get-player :email email :pwd pwd))
-    (if (null player) ; Password incorrect
-        (return-from api-login
-          (json:encode-json-plist-to-string
-           `(level :error message "Incorrect login..."))))
+    (when (null player) ; Password incorrect
+      (sleep 2) ; Deliberate sleep to help against DOS attack
+      (return-from api-login
+        (json:encode-json-plist-to-string
+         `(level :error message "Incorrect login..."))))
     (set-auth-cookie player :perm? t)
     (json:encode-json-plist-to-string
      `(level :success message "Login successful!"))))
