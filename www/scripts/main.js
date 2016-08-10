@@ -454,6 +454,7 @@ page.initSchedulePage = function() {
                                   .replace("<GAME-ID>", result.data[0]));
                         $("#new-games-list").append(item);
                         $("#new-games-section").show();
+                        $("#no-games").hide();
                     }
                 }
 

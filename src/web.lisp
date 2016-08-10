@@ -1000,7 +1000,7 @@
       (if (empty? games)
           ;; No Games Notice
           (htm
-           (:h2 :id "no-games" "No games have been created for this league."))
+           (:h2 :id "no-games" "No games scheduled."))
           (htm
            ;; List of Games
            (:h2 :id "schedule" :class "blue-heading" "Schedule")
