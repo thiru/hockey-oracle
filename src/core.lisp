@@ -666,16 +666,16 @@
         (new-r :error
                (sf '("Name is too long (~A characters). "
                      "The maximum length is ~A characters.")
-                   player-name-max-length
-                   (length (player-name player)))
+                   (length (player-name player))
+                   player-name-max-length)
                player)))
   (if (> (length (player-email player)) player-email-max-length)
       (return-from update-player
         (new-r :error
                (sf '("Email address is too long (~A characters). "
                      "The maximum length is ~A characters.")
-                   player-email-max-length
-                   (length (player-email player)))
+                   (length (player-email player))
+                   player-email-max-length)
                player)))
   (if (null (find (player-position player)
                   players-positions
