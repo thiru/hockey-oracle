@@ -3,39 +3,6 @@
 (in-package :hockey-oracle.core)
 
 ;;; Utils
-(defparameter levels '(:success 2
-                       :info 1
-                       :debug 0
-                       :warning -1
-                       :error -2
-                       :fatal -3))
-
-(defstruct r
-  "Encapsulates a 'result' indicating the success/failure stated of a function
-   or operation. An optional DATA object includes the 'natural' return type of
-   the function."
-  (level :info)
-  (message "")
-  (data nil))
-
-(defun new-r (level &optional msg data)
-  "Creates a new R."
-  (make-r :level (find level levels) :message msg :data data))
-
-(defun succeeded? (obj)
-  "Determine whether OBJ represents a 'successful' object."
-  (typecase obj
-    (r (>= (or (getf levels (r-level obj)) -1) 0))
-    (t obj)))
-
-(defun failed? (obj)
-  "Determine whether OBJ represents a 'failed' object."
-  (not (succeeded? obj)))
-
-(defmacro to-string (obj)
-  "Shortcut of `PRINC-TO-STRING'"
-  `(princ-to-string ,obj))
-
 (defun first1 (obj)
   "Gets the first item in OBJ if it's a list, otherwise OBJ is simply returned."
   (if (listp obj) (first obj) obj))
