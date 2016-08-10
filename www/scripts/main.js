@@ -232,11 +232,10 @@ page.init = function() {
 
 // User Detail Page
 page.initUserDetailPage = function() {
-    page.saveSucceeded = false;
+    page.isSaving = false;
 
     page.inputChanged = function() {
-        if (page.saveSucceeded)
-            return;
+        if (page.isSaving) return;
 
         if (dataChanged("player-name-edit")
             || dataChanged("player-email-edit")
@@ -303,6 +302,7 @@ page.initUserDetailPage = function() {
         }
 
         // Saving...
+        page.isSaving = true;
         $("#save-btn").prop("disabled", true);
         $("#save-result")
             .attr("class", "")
@@ -315,9 +315,16 @@ page.initUserDetailPage = function() {
                 else
                     result = new Result(result.level, result.message,
                                         result.data);
-                page.saveSucceeded = result.succeeded();
                 showResult($("#save-result"), result);
                 $("#save-btn").prop("disabled", false);
+                if (result.succeeded()) {
+                    updateOrigDataVal("player-name-edit");
+                    updateOrigDataVal("player-email-edit");
+                    updateOrigDataVal("player-immediate-notify-edit");
+                    updateOrigDataVal("player-pos-edit");
+                    $("#save-btn").hide();
+                }
+                page.isSaving = false;
             })
             .fail(function (data) {
                 var result = data.responseJSON;
@@ -329,6 +336,7 @@ page.initUserDetailPage = function() {
                                         result.data);
                 showResult($("#save-result"), result);
                 $("#save-btn").prop("disabled", false);
+                page.isSaving = false;
             });
     };
 

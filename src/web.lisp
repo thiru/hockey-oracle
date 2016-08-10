@@ -788,9 +788,15 @@
                               (:span :class "comma" ","))))))
                   (:p
                    (:label
-                    :title "Notify me immediately when the state of the upcoming game changes. E.g. when a player changes their status."
+                    :title (sf '("Notify me immediately when the state of the "
+                                 "upcoming game changes. E.g. when a player "
+                                 "changes their status."))
                     (:input :id "player-immediate-notify-edit"
                             :checked (player-notify-immediately? target-player)
+                            :data-orig-val
+                            (if (player-notify-immediately? target-player)
+                                "true"
+                                "false")
                             :type "checkbox")
                     (:span "Immediate email notifications")))
                   (:br)

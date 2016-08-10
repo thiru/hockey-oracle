@@ -120,20 +120,30 @@ function dataChanged(eleId) {
     if (isBlank(eleId))
         return false;
 
-    var ele = document.getElementById(eleId);
+    var ele = get(eleId);
     if (!ele)
         return false;
 
-    // Special handling for checkboxes
-    if (ele.type.toLowerCase() === "checkbox") {
-        var isInitiallyChecked = !!ele.getAttribute("checked");
-        return ele.checked !== isInitiallyChecked;
-    }
-
-    var currVal = (ele.value || "").trim();
     var origVal = ele.dataset.origVal || "";
 
+    var currVal;
+    if (ele.type.toLowerCase() === "checkbox")
+        currVal = ele.checked + "";
+    else
+        currVal = (ele.value || "").trim();
+
     return currVal !== origVal;
+}
+
+function updateOrigDataVal(eleId) {
+    var ele = get(eleId);
+    if (!ele)
+        throw new Error("Element with id '" + eleId + "' not found.");
+
+    if (ele.type.toLowerCase() === "checkbox")
+        ele.dataset.origVal = ele.checked;
+    else
+        ele.dataset.origVal = ele.value;
 }
 
 function showLoading(jqSel, msg) {
