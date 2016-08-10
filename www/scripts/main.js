@@ -261,20 +261,17 @@ page.initUserDetailPage = function() {
         // Get player name
         player.name = $("#player-name-edit").val().trim();
         if (isBlank(player.name)) {
-            alert("Player name can't be blank.");
+            alert("Name can't be blank.");
+            $("#save-result").empty();
             return;
         }
 
         // Get player email
         player.email = $("#player-email-edit").val().trim();
-
-        if (dataChanged("player-email-edit") && isBlank(player.email)) {
-            var confirmed = confirm("Are you sure you want to remove your " +
-                                    "email address? It won't be possible to " +
-                                    "notify you of important game changes, " +
-                                    "etc.");
-            if (!confirmed)
-                return;
+        if (isBlank(player.email)) {
+            $("#save-result").empty();
+            alert("Email address can't be blank.");
+            return;
         }
 
         // Get immediate email notifications option
@@ -287,12 +284,14 @@ page.initUserDetailPage = function() {
         if (!isBlank(newPwd)) {
             var newPwdRepeat = get("pwd-new-repeat").value;
             if (newPwd !== newPwdRepeat) {
+                $("#save-result").empty();
                 alert("New passwords don't match.");
                 return;
             }
 
             var currPwd = get("pwd-curr").value;
             if (isBlank(currPwd)) {
+                $("#save-result").empty();
                 alert("Original password not provided.");
                 return;
             }
