@@ -476,34 +476,32 @@ page.initSchedulePage = function() {
 // Game Detail Page
 page.initGameDetailPage = function() {
     page.editGame = function() {
-        $("#edit-btn").hide();
-        $("#time-status-rw").show();
-        $("#save-game-info-btn").show();
-        $("#edit-actions").show();
-        $("#game-info").addClass("background-highlight");
+        $("#game-info-edit").toggle();
+        $("#save-res").empty();
+        $("#delete-res").empty();
     };
 
     page.deleteGame = function() {
         if (!confirm("Are you sure you want to delete this game?"))
             return;
 
-        $("#edit-actions .button").prop("disabled", true);
-        showLoading("#save-res");
+        $(".crud-btn").prop("disabled", true);
+        showLoading("#delete-res");
 
-        var gameId = parseInt(get("game-info").dataset.game);
+        var gameId = parseInt(get("game-info-edit").dataset.game);
         var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
         $.post(url, { deleteGame: true })
             .done(function (result) {
                 if (!result) {
-                    showResult($("#save-res"),
+                    showResult($("#delete-res"),
                                Result.error("No response from server."));
-                    $("#edit-actions .button").prop("disabled", false);
+                    $("crud-btn").prop("disabled", false);
                 }
                 else {
                     result = new Result(result.level, result.message,
                                         result.data);
-                    showResult($("#save-res"), result);
-                    $("#edit-actions .button").hide();
+                    showResult($("#delete-res"), result);
+                    $("crud-btn").hide();
                 }
             })
             .fail(function(data) {
@@ -515,7 +513,7 @@ page.initGameDetailPage = function() {
                     result = new Result(result.level, result.message,
                                         result.data);
                 showResult($("#save-res"), result);
-                $("#edit-actions .button").prop("disabled", false);
+                $("crud-btn").prop("disabled", false);
             });
     }
 
@@ -532,7 +530,7 @@ page.initGameDetailPage = function() {
         $("#edit-actions .button").prop("disabled", true);
         showLoading("#save-res");
 
-        var gameId = parseInt(get("game-info").dataset.game);
+        var gameId = parseInt(get("game-info-edit").dataset.game);
         var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
         $.post(url, { gameTime: gameTime, gameProgress: gameProgress})
             .done(function (result) {
@@ -618,7 +616,7 @@ page.initGameDetailPage = function() {
         $("#reason-input-info")
             .html("<i class='fa fa-spinner fa-pulse'></i> Updating...");
 
-        var gameId = parseInt(get("game-info").dataset.game);
+        var gameId = parseInt(get("game-info-edit").dataset.game);
         var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
         $.post(url, { confirmType: confirmType, reason: reason})
             .done(function (result) {

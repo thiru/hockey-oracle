@@ -245,7 +245,6 @@ img
 .background-highlight
 {
     background-color: #FFF2CC; /* VAR LIGHT-YELLOW */
-    padding: 1em;
 }
 
 /* Get rid of ugly system-outline */
@@ -490,9 +489,17 @@ main
         Game detail page
 *******************************/
 
-#game-detail-page #edit-btn
+#game-detail-page #edit-btn,
+#game-detail-page #delete-btn,
+#game-detail-page #delete-res
 {
     float: right;
+    margin-left: 1em;
+}
+
+#game-detail-page #game-info-edit
+{
+    padding: 0.5em;
 }
 
 #game-detail-page #confirm-inputs
