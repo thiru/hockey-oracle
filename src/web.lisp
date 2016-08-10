@@ -818,6 +818,7 @@
 
 ;;; User Save API
 (defun api-user-save (&key player league)
+  (declare (ignorable league))
   (setf (content-type*) "application/json")
   (let* ((curr-player-id (player-id player))
          (id (safe-parse-int (post-parameter "id")))
@@ -841,23 +842,28 @@
     (setf (player-notify-immediately? player) notify-immediately?)
     (setf (player-position player) pos)
     (setf save-res (update-player player))
-    ;; Player update failed or no password change attempted
-    (when (or (failed? save-res) (empty? new-pwd))
+    ;; Abort if basic player update failed
+    (when (failed? save-res)
       (setf (return-code*) +http-internal-server-error+)
       (return-from api-user-save (json-result save-res)))
-    ;; Verify current password provided by user is correct
-    (setf player (get-player :id (player-id player) :pwd curr-pwd))
-    (when (null player) ; Current password incorrect
-      (setf (return-code*) +http-bad-request+)
-      (return-from api-user-save
-        (json-result (new-r :error "Current password is incorrect."))))
-    ;; Save new password
-    (setf save-res (change-player-pwd player new-pwd))
-    (when (failed? save-res) ; Save new password failed
-      (setf (return-code*) +http-internal-server-error+)
-      (return-from api-user-save (json-result save-res)))
-    (if (= curr-player-id (player-id player))
-        (set-auth-cookie (r-data save-res) :perm? t))
+    ;; If user is attempting to change their password..
+    (when (non-empty? new-pwd)
+      ;; Verify current password provided by user is correct
+      (setf player (get-player :id (player-id player) :pwd curr-pwd))
+      ;; Abort if current password provided by user is incorrect
+      (when (null player)
+        (setf (return-code*) +http-bad-request+)
+        (return-from api-user-save
+          (json-result (new-r :error "Current password is incorrect."))))
+      ;; Save new password
+      (setf save-res (change-player-pwd player new-pwd))
+      (when (failed? save-res) ; Save new password failed
+        (setf (return-code*) +http-internal-server-error+)
+        (return-from api-user-save (json-result save-res)))
+      ;; If the current user is changing their own password update their
+      ;; authorisation cookie
+      (if (= curr-player-id (player-id player))
+          (set-auth-cookie (r-data save-res) :perm? t)))
     (json-result (new-r :success "Update successful!"))))
 ;;; User Save API ----------------------------------------------------------- END
 
