@@ -968,7 +968,7 @@
                       (:input :id "date-picker"
                               :class "full-width"
                               :onchange "page.updateRelTime()"
-                              :onkeyup "page.updateRelTime()"
+                              :onkeyup "page.gameTimeKeyUp(event)"
                               :placeholder "YYYY-MM-DD"
                               :type "date"))
                      (:p
@@ -976,7 +976,7 @@
                       (:input :id "time-picker"
                               :class "full-width"
                               :onchange "page.updateRelTime()"
-                              :onkeyup "page.updateRelTime()"
+                              :onkeyup "page.gameTimeKeyUp(event)"
                               :placeholder "HH:MM AM/PM"
                               :type "text"))
                      (:p :class "actions"

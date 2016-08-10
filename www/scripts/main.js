@@ -406,6 +406,12 @@ page.initSchedulePage = function() {
         page.updateRelTime();
     };
 
+    page.gameTimeKeyUp = function(event) {
+        page.updateRelTime();
+        if (event.keyCode === 13) // Enter
+            page.saveGame();
+    };
+
     page.updateRelTime = function() {
         var gameTime = page.parseDateTime("date-picker", "time-picker");
         var relTime = gameTime.fromNow();
