@@ -11,7 +11,7 @@
    :version))
 
 (defpackage :hockey-oracle.core
-  (:use :alexandria :cl :glu :redis :split-sequence)
+  (:use :alexandria :cl :glu :local-time :redis :split-sequence)
   (:documentation "Hockey Oracle core domain.")
   (:export
    :levels
@@ -110,7 +110,7 @@
 
 (defpackage :hockey-oracle.web
   (:use :alexandria :cl :cl-who :glu :hockey-oracle.app :hockey-oracle.core
-        :hunchentoot :split-sequence)
+        :hunchentoot :local-time :split-sequence)
   (:documentation "Hockey Oracle web interface.")
   (:export
    :web-app

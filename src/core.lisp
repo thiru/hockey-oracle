@@ -63,13 +63,13 @@
   (if (empty? time-str)
       ""
       (let* ((format-desc '())
-             (timestamp (local-time:parse-timestring time-str)))
+             (timestamp (parse-timestring time-str)))
 
         ;; NOTE: This format needs to be in sync with the front-end date format
         (setf format-desc '(:short-weekday " " :short-month " " :day
                             ", " :hour12 ":" (:min 2) " " :ampm))
 
-        (local-time:format-timestring nil timestamp :format format-desc))))
+        (format-timestring nil timestamp :format format-desc))))
 ;;; Utils ------------------------------------------------------------------- END
 
 ;;; Leagues
@@ -281,13 +281,12 @@
 (defun get-upcoming-games (league count)
   "Get the next COUNT games that haven't yet started."
   (let* ((new-games (get-games league :exclude-started t))
-         (compare-time (local-time:adjust-timestamp (local-time:now)
-                         (offset :hour -6)))
+         (compare-time (adjust-timestamp (now) (offset :hour -6)))
          (upcoming-games '()))
     (setf upcoming-games
           (remove-if-not (lambda (x)
-                           (local-time:timestamp>=
-                            (local-time:parse-timestring (game-time x))
+                           (timestamp>=
+                            (parse-timestring (game-time x))
                             compare-time))
                          new-games))
     (subseq upcoming-games 0 (min (length upcoming-games) count))))
@@ -302,7 +301,7 @@
   (if (empty? time)
       (return-from save-new-game
         (new-r :error "No game time specified.")))
-  (if (null (local-time:parse-timestring time :fail-on-error nil))
+  (if (null (parse-timestring time :fail-on-error nil))
       (return-from save-new-game
         (new-r :error (sf "Game date/time '~A' invalid." time))))
   (if (null user)
@@ -318,7 +317,7 @@
            (game-id (red-get id-seed-key))
            (game-key (sf "leagues:~A:game:~A" (league-id league) game-id))
            (new-game))
-      (red-hset game-key "created-at" (local-time:now))
+      (red-hset game-key "created-at" (now))
       (red-hset game-key "created-by" (player-id user))
       (red-hset game-key "time" time)
       (red-hset game-key "home-team" 1) ; TODO: remove hard-coding
@@ -352,7 +351,7 @@
                          (league-id (game-league game))
                          (game-id game)))
            (updated-game nil))
-      (red-hset game-key "updated-at" (local-time:now))
+      (red-hset game-key "updated-at" (now))
       (red-hset game-key "updated-by" (player-id user))
       (red-hset game-key "time" time)
       (red-hset game-key "progress" progress)
@@ -415,7 +414,7 @@
                    confirm-type
                    (game-confirm-confirm-type gc))
                (if p-to-update?
-                   (to-string (local-time:now))
+                   (to-string (now))
                    (game-confirm-time gc))
                (if (and p-to-update? (not (null reason)))
                    reason
@@ -425,7 +424,7 @@
                (= (player-id p) (player-id player)))
           (setf (getf new-gcs (player-id p))
                 (list confirm-type
-                      (to-string (local-time:now))
+                      (to-string (now))
                       (or reason "")))))
     (redis:with-persistent-connection ()
       (red-hset (sf "leagues:~A:game:~A"

@@ -1076,10 +1076,10 @@
               (data '()))
           (if (and (succeeded? save-res)
                    ;; New game time within next 7 days
-                   (local-time:timestamp<=
-                    (local-time:now)
-                    (local-time:parse-timestring game-time)
-                    (local-time:adjust-timestamp (local-time:now) (offset :day 7))))
+                   (timestamp<=
+                    (now)
+                    (parse-timestring game-time)
+                    (adjust-timestamp (now) (offset :day 7))))
               (send-email-to-players
                "New game"
                (sf '("<p>A <a href='~(~A~)'>new game</a> was added on "
@@ -1164,10 +1164,9 @@
                                       :onkeyup "page.updateGameTime()"
                                       :placeholder "Game date (e.g. Dec 12 2016)"
                                       :title "Game date (e.g. Dec 12 2016)"
-                                      :value (local-time:format-timestring
+                                      :value (format-timestring
                                               nil
-                                              (local-time:parse-timestring
-                                               (game-time game))
+                                              (parse-timestring (game-time game))
                                               :format
                                               '(:short-month " " :day " " :year))))
                         (:div :class "col col-3"
@@ -1177,10 +1176,9 @@
                                       :onkeyup "page.updateGameTime()"
                                       :placeholder "Game time (e.g. 7:00 pm)"
                                       :title "Game time (e.g. 7:00 pm)"
-                                      :value (local-time:format-timestring
+                                      :value (format-timestring
                                               nil
-                                              (local-time:parse-timestring
-                                               (game-time game))
+                                              (parse-timestring (game-time game))
                                               :format '(:hour12
                                                         ":"
                                                         (:min 2)
@@ -1528,10 +1526,10 @@
        (if (and (succeeded? save-res)
                 (string-equal "new" (game-progress game))
                 ;; New game time within next 7 days
-                (local-time:timestamp<=
-                 (local-time:now)
-                 (local-time:parse-timestring (game-time game))
-                 (local-time:adjust-timestamp (local-time:now) (offset :day 7))))
+                (timestamp<=
+                 (now)
+                 (parse-timestring (game-time game))
+                 (adjust-timestamp (now) (offset :day 7))))
            (send-email-to-players
             "Game cancelled"
             (sf '("<p>An upcoming game on ~A was cancelled.</p>")
@@ -1545,10 +1543,10 @@
                 (not (string-equal game-time (game-time game)))
                 (string-equal "new" (game-progress game))
                 ;; New game time within next 7 days
-                (local-time:timestamp<=
-                 (local-time:now)
-                 (local-time:parse-timestring game-time)
-                 (local-time:adjust-timestamp (local-time:now) (offset :day 7))))
+                (timestamp<=
+                 (now)
+                 (parse-timestring game-time)
+                 (adjust-timestamp (now) (offset :day 7))))
            (send-email-to-players
             "Game time changed"
             (sf '("<p>An <a href='~(~A~)'>upcoming game's</a> time changed "
@@ -1587,10 +1585,10 @@
        (if (and (succeeded? save-res)
                 (not (string-equal "final" (game-progress game)))
                 ;; Game time within next 3 days
-                (local-time:timestamp<=
-                 (local-time:now)
-                 (local-time:parse-timestring (game-time game))
-                 (local-time:adjust-timestamp (local-time:now) (offset :day 3))))
+                (timestamp<=
+                 (now)
+                 (parse-timestring (game-time game))
+                 (adjust-timestamp (now) (offset :day 3))))
            (send-email-to-players
             "Game confirmation change"
             (sf '("<p><a href='~(~A~)'>~A</a> updated their confirmation status "
