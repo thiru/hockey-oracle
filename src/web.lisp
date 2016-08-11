@@ -1211,6 +1211,9 @@
                                  (:i :class "fa fa-chevron-circle-down")))
                        (:div :id "email-reminders-content"
                              :style "display:none"
+                             (:ul
+                              (:li (fmt "~A"
+                                        (pretty-time (game-email-reminder game)))))
                              (:button :id "email-reminder-btn"
                                       :class "button wide-button crud-btn"
                                       :onclick "page.sendEmailReminder()"

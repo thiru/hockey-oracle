@@ -183,7 +183,9 @@
   "Describes a hockey game.
    * TIME: date/time of the game
    * PROGRESS: is the state of the game, and defined in GAME-PROGRESS-STATES
-   * CONFIRMS: list of GAME-CONFIRM structs"
+   * CONFIRMS: list of GAME-CONFIRM structs
+   * EMAIL-REMINDER: the time to send an email reminder to players about this
+     game"
   (id 0)
   (created-at "")
   (created-by "")
@@ -194,6 +196,7 @@
   (away-team nil)
   (home-score 0)
   (away-score 0)
+  (email-reminder "")
   (confirms '()))
 
 (defparameter game-progress-states '(:new :underway :final))
@@ -316,6 +319,9 @@
     (let* ((id-seed-key (sf "leagues:~A:games:id-seed" (league-id league)))
            (game-id (red-get id-seed-key))
            (game-key (sf "leagues:~A:game:~A" (league-id league) game-id))
+           ;; TODO: make the day offset and time of day configurable
+           (email-time (adjust-timestamp (parse-timestring time)
+                         (offset :day -4)))
            (new-game))
       (red-hset game-key "created-at" (now))
       (red-hset game-key "created-by" (player-id user))
@@ -324,7 +330,11 @@
       (red-hset game-key "away-team" 2) ; TODO: remove hard-coding
       (red-hset game-key "home-score" 0)
       (red-hset game-key "away-score" 0)
+      (red-hset game-key "email-reminder" (to-string email-time))
       (red-incr id-seed-key)
+      (red-zadd "emails:game-reminders"
+                (timestamp-to-universal email-time)
+                game-id)
       (setf new-game (get-game league game-id))
       (new-r :success (sf "Created new game on ~A!" (pretty-time time)) new-game))))
 
@@ -350,11 +360,19 @@
     (let* ((game-key (sf "leagues:~A:game:~A"
                          (league-id (game-league game))
                          (game-id game)))
+           ;; TODO: make the day offset and time of day configurable
+           (email-time (adjust-timestamp (parse-timestring time)
+                         (offset :day -4)))
            (updated-game nil))
       (red-hset game-key "updated-at" (now))
       (red-hset game-key "updated-by" (player-id user))
       (red-hset game-key "time" time)
       (red-hset game-key "progress" progress)
+      (red-hset game-key "email-reminder" (to-string email-time))
+      (red-zrem "emails:game-reminders" (game-id game))
+      (red-zadd "emails:game-reminders"
+                (timestamp-to-universal email-time)
+                (game-id game))
       (setf updated-game (get-game (game-league game) (game-id game)))
       (new-r :success "Updated game!" updated-game))))
 
@@ -377,6 +395,7 @@
                          (league-id (game-league game))
                          (game-id game))))
       (red-del game-key)
+      (red-zrem "emails:game-reminders" (game-id game))
       (new-r :success "Deleted game!" game))))
 
 ;; TODO: transactify
@@ -451,6 +470,7 @@
                                                           "away-team")))
                :home-score (parse-integer (red-hget game-key "home-score"))
                :away-score (parse-integer (red-hget game-key "away-score"))
+               :email-reminder (red-hget game-key "email-reminder")
                :confirms (new-game-confirm
                           (read-code (red-hget game-key "confirms"))))))
 

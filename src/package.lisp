@@ -54,6 +54,7 @@
    :game-home-score
    :game-away-score
    :game-progress-states
+   :game-email-reminder
    :game-confirms
    :get-game
    :get-games
