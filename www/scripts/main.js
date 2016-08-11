@@ -10,6 +10,8 @@ var page= {};
 // NOTE: This format needs to be in sync with the back-end date format
 page.dateAndTimeFmt = "ddd MMM D, h:mm a";
 
+page.dialogs = [];
+
 $(document).ready(function() {
     page.init();
     if (get("user-detail-page"))
@@ -32,13 +34,24 @@ page.init = function() {
         $("#ham-menu-group").toggleClass("hidden");
     };
 
-    page.showDialog = function(jqId) {
+    $(document).keyup(function(event) {
+        if (event.keyCode === 27) // Escape key
+            page.closeAllDialogs();
+    });
+
+    page.openDialog = function(jqId) {
         $("#overlay").show();
         $(jqId).show();
+        page.dialogs.push(jqId);
     };
-    page.closeDialog = function(jqId) {
-        $("#overlay").hide();
+    page.closeDialog = function(jqId, keepOverlay) {
+        if (!keepOverlay) $("#overlay").hide();
         $(jqId).hide();
+    };
+    page.closeAllDialogs = function() {
+        for (var i = 0; i < page.dialogs.length; i++)
+            page.closeDialog(page.dialogs[i], /*keepOverlay*/ true);
+        $("#overlay").hide();
     };
 
     page.parseDateTime = function(dateEleId, timeEleId) {
@@ -75,7 +88,7 @@ page.init = function() {
     };
 
     page.showLogin = function() {
-        page.showDialog("#login-dialog");
+        page.openDialog("#login-dialog");
         $("#login-email-address").focus().select();
     };
     page.closeLogin = function() {
@@ -395,7 +408,7 @@ page.initSchedulePage = function() {
     });
 
     page.openGameEditor = function() {
-        page.showDialog("#new-game-dialog");
+        page.openDialog("#new-game-dialog");
         get("date-picker").focus();
         get("date-picker").value = moment().add(1, "day").format("YYYY-MM-DD");
         get("time-picker").value = moment().format("h:00 a");
@@ -939,7 +952,7 @@ page.initGameDetailPage = function() {
         $("#edit-dialog .save-btn").data().id = 0;
         $("#player-name-edit").val("Extra");
         $("#player-pos-edit option").removeAttr("selected");
-        page.showDialog("#edit-dialog");
+        page.openDialog("#edit-dialog");
         $("#player-name-edit").focus().select();
     };
 
@@ -952,7 +965,7 @@ page.initGameDetailPage = function() {
 
         $("#edit-dialog .save-btn").data().id = player.id;
 
-        page.showDialog("#edit-dialog");
+        page.openDialog("#edit-dialog");
         $("#player-name-edit").focus().select();
     };
 
