@@ -7,7 +7,7 @@
 // Global
 var page= {};
 
-// NOTE: This format needs to be in sync with back-end date/time format
+// NOTE: This format needs to be in sync with the back-end date format
 page.dateAndTimeFmt = "ddd MMM D, h:mm a";
 
 $(document).ready(function() {
@@ -29,11 +29,7 @@ page.init = function() {
     page.leagueName = get("root").dataset.league;
 
     page.toggleMainMenu = function() {
-        var hamMenu = $("#ham-menu-group");
-        if (hamMenu.hasClass("hidden"))
-            hamMenu.removeClass("hidden");
-        else
-            hamMenu.addClass("hidden");
+        $("#ham-menu-group").toggleClass("hidden");
     };
 
     page.showDialog = function(jqId) {

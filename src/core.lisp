@@ -65,7 +65,7 @@
       (let* ((format-desc '())
              (timestamp (local-time:parse-timestring time-str)))
 
-        ;; NOTE: This format needs to be in sync with front-end date/time format
+        ;; NOTE: This format needs to be in sync with the front-end date format
         (setf format-desc '(:short-weekday " " :short-month " " :day
                             ", " :hour12 ":" (:min 2) " " :ampm))
 
