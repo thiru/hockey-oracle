@@ -1155,51 +1155,73 @@
                   :data-game game-id
                   :style "display:none"
                   ;; Game Time/Status Edit
-                  (:h1 :id "time-status-rw"
-                       (:div :class "col col-3"
-                             (:input :id "game-date-rw"
-                                     :class "full-width"
-                                     :onchange "page.updateGameTime()"
-                                     :onkeyup "page.updateGameTime()"
-                                     :placeholder "Game date (e.g. Dec 12 2016)"
-                                     :title "Game date (e.g. Dec 12 2016)"
-                                     :value (local-time:format-timestring
-                                             nil
-                                             (local-time:parse-timestring
-                                              (game-time game))
-                                             :format
-                                             '(:short-month " " :day " " :year))))
-                       (:div :class "col col-3"
-                             (:input :id "game-time-rw"
-                                     :class "full-width"
-                                     :onchange "page.updateGameTime()"
-                                     :onkeyup "page.updateGameTime()"
-                                     :placeholder "Game time (e.g. 7:00 pm)"
-                                     :title "Game time (e.g. 7:00 pm)"
-                                     :value (local-time:format-timestring
-                                             nil
-                                             (local-time:parse-timestring
-                                              (game-time game))
-                                             :format '(:hour12
-                                                       ":"
-                                                       (:min 2)
-                                                       " "
-                                                       :ampm))))
-                       (:div :class "col col-3"
-                             (:select :id "game-status-ddl"
+                  (:div :id "time-status-rw"
+                        (:h2 "Game Time")
+                        (:div :class "col col-3"
+                              (:input :id "game-date-rw"
                                       :class "full-width"
-                                      :onchange "page.updateGameState()"
-                                      :onkeyup "page.updateGameState()"
-                                      :title "Game state"
-                                      (dolist (gps game-progress-states)
-                                        (htm
-                                         (:option :selected
-                                                  (string-equal
-                                                   gps
-                                                   (game-progress game))
-                                                  :value gps
-                                                  (fmt "~A" gps))))))
-                       (:div :class "clear-fix"))
+                                      :onchange "page.updateGameTime()"
+                                      :onkeyup "page.updateGameTime()"
+                                      :placeholder "Game date (e.g. Dec 12 2016)"
+                                      :title "Game date (e.g. Dec 12 2016)"
+                                      :value (local-time:format-timestring
+                                              nil
+                                              (local-time:parse-timestring
+                                               (game-time game))
+                                              :format
+                                              '(:short-month " " :day " " :year))))
+                        (:div :class "col col-3"
+                              (:input :id "game-time-rw"
+                                      :class "full-width"
+                                      :onchange "page.updateGameTime()"
+                                      :onkeyup "page.updateGameTime()"
+                                      :placeholder "Game time (e.g. 7:00 pm)"
+                                      :title "Game time (e.g. 7:00 pm)"
+                                      :value (local-time:format-timestring
+                                              nil
+                                              (local-time:parse-timestring
+                                               (game-time game))
+                                              :format '(:hour12
+                                                        ":"
+                                                        (:min 2)
+                                                        " "
+                                                        :ampm))))
+                        (:div :class "col col-3"
+                              (:select :id "game-status-ddl"
+                                       :class "full-width"
+                                       :onchange "page.updateGameState()"
+                                       :onkeyup "page.updateGameState()"
+                                       :title "Game state"
+                                       (dolist (gps game-progress-states)
+                                         (htm
+                                          (:option :selected
+                                                   (string-equal
+                                                    gps
+                                                    (game-progress game))
+                                                   :value gps
+                                                   (fmt "~A" gps))))))
+                        (:div :class "clear-fix"))
+                  (:br)
+                  ;; Email Reminders
+                  (if (is-commissioner? player league)
+                      (htm
+                       (:button :id "email-reminders-toggle"
+                                :class "clear-button"
+                                :onclick "page.showEmailRemindersSection()"
+                                (:h2
+                                 "Email Reminders"
+                                 (:i :class "fa fa-chevron-circle-down")))
+                       (:div :id "email-reminders-content"
+                             :style "display:none"
+                             (:button :id "email-reminder-btn"
+                                      :class "button wide-button crud-btn"
+                                      :onclick "page.sendEmailReminder()"
+                                      :title
+                                      (sf '("Send email reminder to all active "
+                                            "players of this game now"))
+                                      "Send email reminder now")
+                             (:div :id "email-res"))
+                       (:br)))
                   ;; Save button/result
                   (if (is-commissioner? player league)
                       (htm
@@ -1487,6 +1509,9 @@
   (let* ((game-id (last1 (path-segments *request*)))
          (game (get-game league game-id))
          (delete-game? (string-equal "true" (post-parameter "deleteGame")))
+         (send-email-reminder? (string-equal "true"
+                                             (post-parameter
+                                              "sendEmailReminder")))
          (game-time (post-parameter "gameTime"))
          (game-progress (post-parameter "gameProgress"))
          (confirm-type (post-parameter "confirmType"))
@@ -1535,6 +1560,27 @@
                 (pretty-time game-time))
             league))
        (json-result save-res))
+      (send-email-reminder?
+       (if (string-equal "final" (game-progress game))
+           (return-from api-game-update
+             (json-result
+              (new-r :warning
+                     "Can't send email reminders for games marked final."))))
+       (send-email-to-players
+        "Upcoming game"
+        (sf '("<p>This is a reminder of an <a href='~(~A~)'>upcoming game</a> "
+              "on ~A.</p>"
+              "<p>Please update your <a href='~(~A~)'>game status</a> if you "
+              "haven't done so already.</p>")
+            (build-url (sf "~A/games/~A"
+                           (league-name league)
+                           (game-id game)))
+            (pretty-time (game-time game))
+            (build-url (sf "~A/games/~A"
+                           (league-name league)
+                           (game-id game))))
+        league)
+       (json-result (new-r :success "Emails sent!")))
       ;; Update player's confirmation status
       (confirm-type
        (setf save-res (save-game-confirm game player confirm-type reason))

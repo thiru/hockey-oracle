@@ -489,6 +489,49 @@ page.initGameDetailPage = function() {
         $("#delete-res").empty();
     };
 
+    page.showEmailRemindersSection = function() {
+        $("#email-reminders-content").toggle();
+        $("#email-reminders-toggle i").toggleClass("fa-chevron-circle-down");
+        $("#email-reminders-toggle i").toggleClass("fa-chevron-circle-up");
+    };
+
+    page.sendEmailReminder = function() {
+        if (!confirm("Are you sure you want to send all active players an " +
+                     "email reminder of this game right now?"))
+            return;
+
+        $("#email-reminder-btn").prop("disabled", true);
+        showLoading("#email-res");
+
+        var gameId = parseInt(get("game-info-edit").dataset.game);
+        var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
+        $.post(url, { sendEmailReminder: true })
+            .done(function (result) {
+                if (!result) {
+                    showResult($("#email-res"),
+                               Result.error("No response from server."));
+                    $("#email-reminder-btn").prop("disabled", false);
+                }
+                else {
+                    result = new Result(result.level, result.message,
+                                        result.data);
+                    showResult($("#email-res"), result);
+                    $("#email-reminder-btn").hide();
+                }
+            })
+            .fail(function(data) {
+                var result = data.responseJSON;
+                if (!result)
+                    result = Result.error("Unexpected error. " + data.statusText +
+                                          " (" + data.status + ").");
+                else
+                    result = new Result(result.level, result.message,
+                                        result.data);
+                showResult($("#email-res"), result);
+                $("#email-reminder-btn").prop("disabled", false);
+            });
+    };
+
     page.deleteGame = function() {
         if (!confirm("Are you sure you want to delete this game?"))
             return;
@@ -503,13 +546,13 @@ page.initGameDetailPage = function() {
                 if (!result) {
                     showResult($("#delete-res"),
                                Result.error("No response from server."));
-                    $("crud-btn").prop("disabled", false);
+                    $(".crud-btn").prop("disabled", false);
                 }
                 else {
                     result = new Result(result.level, result.message,
                                         result.data);
                     showResult($("#delete-res"), result);
-                    $("crud-btn").hide();
+                    $(".crud-btn").hide();
                 }
             })
             .fail(function(data) {
@@ -520,8 +563,8 @@ page.initGameDetailPage = function() {
                 else
                     result = new Result(result.level, result.message,
                                         result.data);
-                showResult($("#save-res"), result);
-                $("crud-btn").prop("disabled", false);
+                showResult($("#delete-res"), result);
+                $(".crud-btn").prop("disabled", false);
             });
     }
 
