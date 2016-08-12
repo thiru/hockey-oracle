@@ -80,6 +80,9 @@
    * CREATED: date/time created
    * ACTIVE?: whether it is active/visible
    * COMMISSIONERS: a list of users who act as commissioners of this league
+   * GAME-REMINDER-DAY-OFFSET: the number of days ahead of game to send an email
+     reminder to players
+   * GAME-REMINDER-TIME: the time of day to send the game email reminder
    * SEND-AUTOMATED-EMAILS?: whether to send automated email reminders,
      notifications, etc. to players"
   (id 0)
@@ -87,6 +90,8 @@
   (created "")
   (active? t)
   (commissioners '())
+  (game-reminder-day-offset 0)
+  (game-reminder-time "")
   (send-automated-emails? t))
 
 (defun get-all-leagues ()
@@ -112,18 +117,30 @@
 (defun update-league (league)
   "Update editable league details.
    Returns an R."
-  (check-type league LEAGUE)
   (if (empty? league)
       (return-from update-league
-        (new-r :error (sf "Failed to retrieve league with id ~A."
-                          (league-id league))
-               league)))
+        (new-r :error "No league provided." league)))
+  (check-type league LEAGUE)
+  (if (minusp (league-game-reminder-day-offset league))
+      (return-from update-league
+        (new-r :error (sf '("Day offset for game email reminder must be a "
+                            "positive integer but was ~A.")
+                          (league-game-reminder-day-offset league)))))
+  (if (empty? (league-game-reminder-time league))
+      (return-from update-league
+        (new-r :error "Game email reminder time was not specified.")))
   (let ((league-key (sf "league:~A" (league-id league))))
     (redis:with-persistent-connection ()
       (when (red-exists league-key)
         (red-hset league-key
                   "send-automated-emails?"
-                  (if (league-send-automated-emails? league) 1 0)))))
+                  (if (league-send-automated-emails? league) 1 0))
+        (red-hset league-key
+                  "game-reminder-day-offset"
+                  (league-game-reminder-day-offset league))
+        (red-hset league-key
+                  "game-reminder-time"
+                  (league-game-reminder-time league)))))
   (new-r :success "Update successful!" league))
 
 (defun new-league-from-db (league-key)
@@ -140,6 +157,10 @@
                    (dolist (id commish-ids)
                      (push (get-player :id id) players))
                    (sort players #'string< :key #'player-name))
+                 :game-reminder-day-offset
+                 (parse-integer
+                  (or (red-hget league-key "game-reminder-day-offset") "0"))
+                 :game-reminder-time (red-hget league-key "game-reminder-time")
                  :send-automated-emails?
                  (to-bool (red-hget league-key "send-automated-emails?")))))
 ;;; Leagues ----------------------------------------------------------------- END
@@ -319,9 +340,20 @@
     (let* ((id-seed-key (sf "leagues:~A:games:id-seed" (league-id league)))
            (game-id (red-get id-seed-key))
            (game-key (sf "leagues:~A:game:~A" (league-id league) game-id))
-           ;; TODO: make the day offset and time of day configurable
            (email-time (adjust-timestamp (parse-timestring time)
-                         (offset :day -4)))
+                         (offset :day
+                                 (- (league-game-reminder-day-offset league)))
+                         (set :hour
+                              (parse-integer
+                               (first1 (split-sequence
+                                        #\:
+                                        (league-game-reminder-time league)))))
+                         (set :minute
+                              (parse-integer
+                               (second1
+                                (split-sequence
+                                 #\:
+                                 (league-game-reminder-time league)))))))
            (new-game))
       (red-hset game-key "created-at" (now))
       (red-hset game-key "created-by" (player-id user))
@@ -357,12 +389,22 @@
                (sf "You do not have permission to update games in ~A."
                    (league-name league)))))
   (redis:with-persistent-connection ()
-    (let* ((game-key (sf "leagues:~A:game:~A"
-                         (league-id (game-league game))
-                         (game-id game)))
-           ;; TODO: make the day offset and time of day configurable
+    (let* ((league (game-league game))
+           (game-key (sf "leagues:~A:game:~A" (league-id league) (game-id game)))
            (email-time (adjust-timestamp (parse-timestring time)
-                         (offset :day -4)))
+                         (offset :day
+                                 (- (league-game-reminder-day-offset league)))
+                         (set :hour
+                              (parse-integer
+                               (first1 (split-sequence
+                                        #\:
+                                        (league-game-reminder-time league)))))
+                         (set :minute
+                              (parse-integer
+                               (second1
+                                (split-sequence
+                                 #\:
+                                 (league-game-reminder-time league)))))))
            (updated-game nil))
       (red-hset game-key "updated-at" (now))
       (red-hset game-key "updated-by" (player-id user))
@@ -373,7 +415,7 @@
       (red-zadd "emails:game-reminders"
                 (timestamp-to-universal email-time)
                 (game-id game))
-      (setf updated-game (get-game (game-league game) (game-id game)))
+      (setf updated-game (get-game league (game-id game)))
       (new-r :success "Updated game!" updated-game))))
 
 (defun delete-game (game user)

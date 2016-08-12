@@ -31,8 +31,10 @@
    :league-name
    :league-created
    :league-active?
-   :league-commissioners
+   :league-game-reminder-day-offset
+   :league-game-reminder-time
    :league-send-automated-emails?
+   :league-commissioners
    :get-all-leagues
    :get-league
    :update-league

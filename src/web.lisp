@@ -1785,6 +1785,15 @@
                (esc (player-name p)))
            (:span :class "comma" ","))))
     (:p
+     (:span "Send email reminder")
+     (:input :id "email-reminder-day-offset"
+             :type "text"
+             :value (league-game-reminder-day-offset league))
+     (:span "day(s) ahead of game at")
+     (:input :id "email-reminder-time"
+             :type "text"
+             :value (league-game-reminder-time league)))
+    (:p
      (:label
       (:input :id "send-automated-emails"
               :checked (league-send-automated-emails? league)
@@ -1807,5 +1816,8 @@
        (new-r :error "Sorry you don't have permission to make this change."))))
   (setf (league-send-automated-emails? league)
         (string-equal "true" (post-parameter "sendAutomatedEmails")))
+  (setf (league-game-reminder-day-offset league)
+        (safe-parse-int (post-parameter "gameReminderDayOffset")))
+  (setf (league-game-reminder-time league) (post-parameter "gameReminderTime"))
   (json-result (update-league league)))
 ;;; League Save API --------------------------------------------------------- END

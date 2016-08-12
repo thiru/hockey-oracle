@@ -8,7 +8,11 @@
 var page= {};
 
 // NOTE: This format needs to be in sync with the back-end date format
+page.dateFmt = "ddd MMM D";
+page.timeFmt = "h:mm a";
 page.dateAndTimeFmt = "ddd MMM D, h:mm a";
+page.inputDateFmts = ["MMM D YYYY", "MMMM D YYYY", "YYYY MM DD"];
+page.inputTimeFmts = ["h:mm a", "HH:mm"];
 
 page.dialogs = [];
 
@@ -54,16 +58,28 @@ page.init = function() {
         $("#overlay").hide();
     };
 
+    page.parseTime = function(eleId) {
+        var strTime = get(eleId).value;
+        var parsedTime = moment(strTime,
+                                page.inputTimeFmts,
+                                /*strictMode*/ false);
+
+        if (!parsedTime.isValid())
+            return Result.error("Time is invalid.", strTime);
+
+        return Result.success("", parsedTime.format("HH:mm"));
+    };
+
     page.parseDateTime = function(dateEleId, timeEleId) {
         var rawDate = get(dateEleId).value;
         var rawTime = get(timeEleId).value;
 
         var parsedDate = moment(rawDate,
-                                ["MMM D YYYY", "MMMM D YYYY", "YYYY MM DD"],
-                                /*stricMode:*/ false);
+                                page.inputDateFmts,
+                                /*strictMode:*/ false);
         var parsedTime = moment(rawTime,
-                                ["h:mm a", "HH:mm"],
-                                /*stricMode:*/ false);
+                                page.inputTimeFmts,
+                                /*strictMode:*/ false);
 
         // Validate date & time
         if (!parsedDate.isValid() && !parsedTime.isValid()) {
@@ -359,8 +375,28 @@ page.initUserDetailPage = function() {
 // Manage League Page
 page.initManageLeaguePage = function() {
     page.save = function() {
-        var league = {};
-        league.sendAutomatedEmails = get("send-automated-emails").checked;
+        var league = {
+            sendAutomatedEmails: get("send-automated-emails").checked,
+            gameReminderDayOffset: parseInt(
+                get("email-reminder-day-offset").value)
+        };
+
+        if (isNaN(league.gameReminderDayOffset) ||
+            league.gameReminderDayOffset < 0)
+            return showResult($("#save-result"),
+                              Result.error("Day offset for game email " +
+                                           "reminder must be a positive " +
+                                           "integer."));
+
+        var parsedTime = page.parseTime("email-reminder-time");
+        if (parsedTime.failed())
+            return showResult($("#save-result"),
+                              Result.error("Time of game email reminder is " +
+                                           "not valid. Try one of the " +
+                                           "following formats: " +
+                                           page.inputTimeFmts.join(", ") + "."));
+
+        league.gameReminderTime = parsedTime.data;
 
         // Saving...
         $("#save-btn").prop("disabled", true);

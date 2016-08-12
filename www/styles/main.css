@@ -688,3 +688,19 @@ main
     font-size: 1.5em;
     font-weight: bold;
 }
+
+
+/*******************************
+     League management page
+*******************************/
+
+#manage-league-page #email-reminder-day-offset,
+#manage-league-page #email-reminder-time
+{
+    text-align: center;
+    width: 2em;
+}
+#manage-league-page #email-reminder-time
+{
+    width: 5em;
+}
