@@ -45,7 +45,7 @@ page.init = function() {
 
     page.openDialog = function(jqId) {
         $("#overlay").show();
-        $(jqId).show();
+        $(jqId).css("display", "flex");
         page.dialogs.push(jqId);
     };
     page.closeDialog = function(jqId, keepOverlay) {

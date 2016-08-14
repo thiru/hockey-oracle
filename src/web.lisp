@@ -426,37 +426,38 @@
                                  "Close")))))))
              (:section :id "login-dialog"
                        :class "dialog"
-                       (:h2 "Welcome!")
-                       (:p
-                        (:input :id "login-email-address"
-                                :class "full-width"
-                                :onkeyup "onEnter(event, page.login)"
-                                :placeholder "Email Address"
-                                :title "Email Address"
-                                :type "text"))
-                       (:p
-                        (:input :id "login-pwd"
-                                :class "full-width"
-                                :onkeyup "onEnter(event, page.login)"
-                                :placeholder "Password"
-                                :title "Password"
-                                :type "password"))
-                       (:p :id "login-result")
-                       (:p
-                        (:button :id "login-btn"
-                                 :class "button wide-button"
-                                 :onclick "page.login()"
-                                 "Log In"))
-                       (:p
-                        (:a :id "forgot-pwd"
-                            :href "javascript:void(0)"
-                            :onclick "page.forgotPwd()"
-                            :style "float:left"
-                            "Forgot password")
-                        (:a :href "javascript:void(0)"
-                            :onclick "page.closeLogin()"
-                            :style "float:right"
-                            "Close")))
+                       (:div :class "dialog-content"
+                             (:h2 "Welcome!")
+                             (:p
+                              (:input :id "login-email-address"
+                                      :class "full-width"
+                                      :onkeyup "onEnter(event, page.login)"
+                                      :placeholder "Email Address"
+                                      :title "Email Address"
+                                      :type "text"))
+                             (:p
+                              (:input :id "login-pwd"
+                                      :class "full-width"
+                                      :onkeyup "onEnter(event, page.login)"
+                                      :placeholder "Password"
+                                      :title "Password"
+                                      :type "password"))
+                             (:p :id "login-result")
+                             (:p
+                              (:button :id "login-btn"
+                                       :class "button wide-button"
+                                       :onclick "page.login()"
+                                       "Log In"))
+                             (:p
+                              (:a :id "forgot-pwd"
+                                  :href "javascript:void(0)"
+                                  :onclick "page.forgotPwd()"
+                                  :style "float:left"
+                                  "Forgot password")
+                              (:a :href "javascript:void(0)"
+                                  :onclick "page.closeLogin()"
+                                  :style "float:right"
+                                  "Close"))))
              (:main :id ,page-id
                     ,@body)))))
 ;;; Template Page ----------------------------------------------------------- END
@@ -962,32 +963,33 @@
            ;; Edit Game Dialog
            (:section :id "new-game-dialog"
                      :class "dialog"
-                     (:h2 "New Game")
-                     (:p
-                      (:label :for "date-picker" "Date:")
-                      (:input :id "date-picker"
-                              :class "full-width"
-                              :onchange "page.updateRelTime()"
-                              :onkeyup "page.gameTimeKeyUp(event)"
-                              :placeholder "YYYY-MM-DD"
-                              :type "date"))
-                     (:p
-                      (:label :for "time-picker" "Time:")
-                      (:input :id "time-picker"
-                              :class "full-width"
-                              :onchange "page.updateRelTime()"
-                              :onkeyup "page.gameTimeKeyUp(event)"
-                              :placeholder "HH:MM AM/PM"
-                              :type "text"))
-                     (:p :class "actions"
-                         (:button :id "save-game-btn"
-                                  :class "button"
-                                  :onclick "page.saveGame()"
-                                  "Save")
-                         (:button :class "button"
-                                  :onclick "page.closeGameEditor()"
-                                  "Close"))
-                     (:p :id "save-result"))
+                     (:div :class "dialog-content"
+                           (:h2 "New Game")
+                           (:p
+                            (:label :for "date-picker" "Date:")
+                            (:input :id "date-picker"
+                                    :class "full-width"
+                                    :onchange "page.updateRelTime()"
+                                    :onkeyup "page.gameTimeKeyUp(event)"
+                                    :placeholder "YYYY-MM-DD"
+                                    :type "date"))
+                           (:p
+                            (:label :for "time-picker" "Time:")
+                            (:input :id "time-picker"
+                                    :class "full-width"
+                                    :onchange "page.updateRelTime()"
+                                    :onkeyup "page.gameTimeKeyUp(event)"
+                                    :placeholder "HH:MM AM/PM"
+                                    :type "text"))
+                           (:p :class "actions"
+                               (:button :id "save-game-btn"
+                                        :class "button"
+                                        :onclick "page.saveGame()"
+                                        "Save")
+                               (:button :class "button"
+                                        :onclick "page.closeGameEditor()"
+                                        "Close"))
+                           (:p :id "save-result")))
            ;; New Game Button
            (:section :id "edit-controls"
                      (:button :class "button"
@@ -1284,42 +1286,6 @@
                                 :onclick "page.saveConfirmInfo()"
                                 "Update")
                        (:div :class "clear-fix"))))))
-            ;; Edit Player Dialog
-            (:div :id "edit-dialog" :class "dialog"
-                  (:header "Editing Player")
-                  (:section :class "content"
-                            (:table
-                             (:tr :class "input-row"
-                                  (:td :class "label-col"
-                                       (:label :for "player-name-edit" "Name: "))
-                                  (:td :class "input-col"
-                                       (:input :id "player-name-edit"
-                                               :type "text")))
-                             (:tr
-                              (:td
-                               (:label :for "player-pos-edit" "Position: "))
-                              (:td
-                               (:select :id "player-pos-edit"
-                                        (dolist (pos players-positions)
-                                          (htm
-                                           (:option :value pos (esc pos)))))))
-                             (:tr
-                              (:td
-                               (:label :for "player-active-edit" "Is Active: "))
-                              (:td
-                               (:input :id "player-active-edit"
-                                       :type "checkbox"))))
-                            (:div :class "actions"
-                                  (:button
-                                   :class "button save-btn"
-                                   :data-player-id "0"
-                                   :onclick "page.savePlayer()"
-                                   "Save")
-                                  (:button
-                                   :class "button cancel-btn"
-                                   :onclick
-                                   "page.closeDialog(\"#edit-dialog\")"
-                                   "Cancel"))))
             ;; Players Confirmed To Play
             (:section
              :id "confirmed-players-section"
@@ -1501,7 +1467,46 @@
                      :onclick "page.pickPlayers()"
                      :title "Choose players"
                      (:i :class "fa fa-check-circle-o")
-                     (:span :class "button-text" "Pick Players")))))))
+                     (:span :class "button-text" "Pick Players"))
+            ;; Edit Player Dialog
+            (:div :id "edit-dialog" :class "dialog"
+                  (:div :class "dialog-content"
+                        (:header "Editing Player")
+                        (:section :class "content"
+                                  (:table
+                                   (:tr :class "input-row"
+                                        (:td :class "label-col"
+                                             (:label :for "player-name-edit"
+                                                     "Name: "))
+                                        (:td :class "input-col"
+                                             (:input :id "player-name-edit"
+                                                     :type "text")))
+                                   (:tr
+                                    (:td
+                                     (:label :for "player-pos-edit" "Position: "))
+                                    (:td
+                                     (:select :id "player-pos-edit"
+                                              (dolist (pos players-positions)
+                                                (htm
+                                                 (:option :value pos (esc pos)))))))
+                                   (:tr
+                                    (:td
+                                     (:label :for "player-active-edit"
+                                             "Is Active: "))
+                                    (:td
+                                     (:input :id "player-active-edit"
+                                             :type "checkbox"))))
+                                  (:div :class "actions"
+                                        (:button
+                                         :class "button save-btn"
+                                         :data-player-id "0"
+                                         :onclick "page.savePlayer()"
+                                         "Save")
+                                        (:button
+                                         :class "button cancel-btn"
+                                         :onclick
+                                         "page.closeDialog(\"#edit-dialog\")"
+                                         "Cancel"))))))))))
 ;;; Game Detail Page -------------------------------------------------------- END
 
 ;;; Game Update API
@@ -1673,42 +1678,43 @@
                     (:span :class "player-position" "&nbsp;")
                     (:span :class "clear-fix"))))
     (:div :id "edit-dialog" :class "dialog"
-          (:header "Editing Player")
-          (:section :class "content"
-                    (:table
-                     (:tr :class "input-row"
-                          (:td :class "label-col"
-                               (:label :for "player-name-edit" "Name: "))
-                          (:td :class "input-col"
-                               (:input :id "player-name-edit"
-                                       :type "text")))
-                     (:tr
-                      (:td
-                       (:label :for "player-pos-edit" "Position: "))
-                      (:td
-                       (:select :id "player-pos-edit"
-                                (dolist (pos players-positions)
-                                  (htm
-                                   (:option :selected t
-                                            :value pos (esc pos)))))))
-                     (:tr
-                      (:td
-                       (:label :for "player-active-edit" "Is Active: "))
-                      (:td
-                       (:input :id "player-active-edit"
-                               :checked t
-                               :type "checkbox"))))
-                    (:div :class "actions"
-                          (:button
-                           :class "button save-btn"
-                           :data-player-id "0"
-                           :onclick "page.savePlayer(\"#all-players\", \".template-player-item .player-item\")"
-                           "Save")
-                          (:button
-                           :class "button cancel-btn"
-                           :onclick
-                           "page.closeDialog(\"#edit-dialog\")"
-                           "Cancel"))))))
+          (:div :class "dialog-content"
+                (:header "Editing Player")
+                (:section :class "content"
+                          (:table
+                           (:tr :class "input-row"
+                                (:td :class "label-col"
+                                     (:label :for "player-name-edit" "Name: "))
+                                (:td :class "input-col"
+                                     (:input :id "player-name-edit"
+                                             :type "text")))
+                           (:tr
+                            (:td
+                             (:label :for "player-pos-edit" "Position: "))
+                            (:td
+                             (:select :id "player-pos-edit"
+                                      (dolist (pos players-positions)
+                                        (htm
+                                         (:option :selected t
+                                                  :value pos (esc pos)))))))
+                           (:tr
+                            (:td
+                             (:label :for "player-active-edit" "Is Active: "))
+                            (:td
+                             (:input :id "player-active-edit"
+                                     :checked t
+                                     :type "checkbox"))))
+                          (:div :class "actions"
+                                (:button
+                                 :class "button save-btn"
+                                 :data-player-id "0"
+                                 :onclick "page.savePlayer(\"#all-players\", \".template-player-item .player-item\")"
+                                 "Save")
+                                (:button
+                                 :class "button cancel-btn"
+                                 :onclick
+                                 "page.closeDialog(\"#edit-dialog\")"
+                                 "Cancel")))))))
 ;;; Player List Page -------------------------------------------------------- END
 
 ;;; Player Detail Page

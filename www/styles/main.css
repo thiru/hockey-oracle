@@ -358,15 +358,21 @@ main
 
 .dialog
 {
-  background: white;
-  border-radius: 5px;
-  display: none;
-  position: fixed;
-  left: 50%;
-  margin-left: -175px;
-  top: 20%;
-  width: 350px;
-  z-index: 100;
+    align-items: center;
+    display: none;
+    justify-content: center;
+    width: 100%;
+    z-index: 200;
+}
+.dialog-content
+{
+    background: white;
+    border: solid 1px #EEE;
+    border-radius: 5px;
+    float: left;
+    padding: 1em;
+    width: 80%;
+    z-index: 200;
 }
 .dialog header
 {
@@ -388,6 +394,10 @@ main
 #login-dialog
 {
     padding: 1em;
+}
+#login-dialog .dialog-content
+{
+    max-width: 400px;
 }
 
 /*******************************
