@@ -7,6 +7,8 @@
 (defvar main-acceptor nil "The global web-server instance.")
 (defvar static-files-dir (merge-pathnames "www/" base-dir))
 
+(defparameter server-info (get-server-info))
+
 (defparameter reset-pwd-msg
   (concatenate 'string
                "<p>A request was made to reset your password. If you would like "
@@ -53,10 +55,31 @@
       (stop main-acceptor :soft t)))
 ;;; General ----------------------------------------------------------------- END
 
+;;; Email
+(defun email-game-reminder (game)
+  "Sends an email reminder of an upcoming game."
+  (check-type game GAME)
+  (let* ((league (game-league game)))
+    (send-email-to-players
+     "Upcoming game"
+     (sf '("<p>This is a reminder of an <a href='~(~A~)'>upcoming game</a> "
+           "on ~A.</p>"
+           "<p>Please update your <a href='~(~A~)'>game status</a> if you "
+           "haven't done so already.</p>")
+         (build-url (sf "~A/games/~A"
+                        (league-name league)
+                        (game-id game)))
+         (pretty-time (game-time game))
+         (build-url (sf "~A/games/~A"
+                        (league-name league)
+                        (game-id game))))
+     league)))
+;;; Email ------------------------------------------------------------------- END
+
 ;;; Utils
 (defun build-url (path)
   "Build absolute qualified URL to this website."
-  (sf "~A://~A/~A" (if *debug* "http" "https") (host) path))
+  (sf "~A/~(~A~)" (server-info-host server-info) path))
 
 ;;; TODO: Following is not being used
 (defmacro html-snippet (root-tag)
@@ -1572,20 +1595,7 @@
              (json-result
               (new-r :warning
                      "Can't send email reminders for games marked final."))))
-       (send-email-to-players
-        "Upcoming game"
-        (sf '("<p>This is a reminder of an <a href='~(~A~)'>upcoming game</a> "
-              "on ~A.</p>"
-              "<p>Please update your <a href='~(~A~)'>game status</a> if you "
-              "haven't done so already.</p>")
-            (build-url (sf "~A/games/~A"
-                           (league-name league)
-                           (game-id game)))
-            (pretty-time (game-time game))
-            (build-url (sf "~A/games/~A"
-                           (league-name league)
-                           (game-id game))))
-        league)
+       (email-game-reminder game)
        (json-result (new-r :success "Emails sent!")))
       ;; Update player's confirmation status
       (confirm-type

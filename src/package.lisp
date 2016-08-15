@@ -58,6 +58,7 @@
    :game-progress-states
    :game-email-reminder
    :game-confirms
+   :game-league
    :get-game
    :get-games
    :get-upcoming-games
@@ -108,6 +109,9 @@
    :team-logo
    :get-teams
    :get-team
+   :server-info
+   :server-info-host
+   :get-server-info
    :send-email
    :send-email-to-players))
 

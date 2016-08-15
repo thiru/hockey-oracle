@@ -784,6 +784,19 @@
                  :active? (red-sismember "players:active" id))))
 ;;; Players ----------------------------------------------------------------- END
 
+;;; Web Server
+(defstruct server-info
+  "Describes web server details."
+  (host ""))
+
+(defun get-server-info ()
+  "Get web server details."
+  (let* ((key "web"))
+    (redis:with-persistent-connection ()
+      (make-server-info :host
+                        (red-hget key "host")))))
+;;; Web Server -------------------------------------------------------------- END
+
 ;;; Email
 (defun send-email (subject message &optional to)
   "Sends an HTML email with the specified parameters. If TO is not specified the
