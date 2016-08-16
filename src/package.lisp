@@ -29,6 +29,7 @@
    :make-league
    :league-id
    :league-name
+   :league-full-name
    :league-created
    :league-active?
    :league-game-reminder-day-offset

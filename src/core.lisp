@@ -76,7 +76,8 @@
 (defstruct league
   "Defines a hockey league.
    * ID: unique identifier
-   * NAME: unique name
+   * NAME: unique short name (e.g. NHL)
+   * FULL-NAME: full-length name (e.g. National Hockey League)
    * CREATED: date/time created
    * ACTIVE?: whether it is active/visible
    * COMMISSIONERS: a list of users who act as commissioners of this league
@@ -87,6 +88,7 @@
      notifications, etc. to players"
   (id 0)
   (name "")
+  (full-name "")
   (created "")
   (active? t)
   (commissioners '())
@@ -147,6 +149,7 @@
   (let ((id (parse-id league-key)))
     (make-league :id id
                  :name (red-hget league-key "name")
+                 :full-name (red-hget league-key "full-name")
                  :created (red-hget league-key "created")
                  :active? (to-bool (red-hget league-key "active?"))
                  :commissioners
