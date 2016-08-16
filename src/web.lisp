@@ -61,14 +61,15 @@
   (check-type game GAME)
   (let* ((league (game-league game)))
     (send-email-to-players
-     "Upcoming game"
+     (sf "Upcoming game in ~A" (league-name league))
      (sf '("<p>This is a reminder of an <a href='~(~A~)'>upcoming game</a> "
-           "on ~A.</p>"
+           "in the ~A on ~A.</p>"
            "<p>Please update your <a href='~(~A~)'>game status</a> if you "
            "haven't done so already.</p>")
          (build-url (sf "~A/games/~A"
                         (league-name league)
                         (game-id game)))
+         (league-full-name league)
          (pretty-time (game-time game))
          (build-url (sf "~A/games/~A"
                         (league-name league)
@@ -1107,12 +1108,13 @@
                     (parse-timestring game-time)
                     (adjust-timestamp (now) (offset :day 7))))
               (send-email-to-players
-               "New game"
-               (sf '("<p>A <a href='~(~A~)'>new game</a> was added on "
-                     "~A.</p>")
+               (sf "New game in ~A" (league-name league))
+               (sf '("<p>A <a href='~(~A~)'>new game</a> was added in the ~A "
+                     "on ~A.</p>")
                    (build-url (sf "~A/games/~A"
                                   (league-name league)
                                   (game-id (r-data save-res))))
+                   (league-full-name league)
                    (pretty-time game-time))
                league))
           (push (pretty-time (game-time (r-data save-res))) data)
@@ -1563,8 +1565,9 @@
                  (parse-timestring (game-time game))
                  (adjust-timestamp (now) (offset :day 7))))
            (send-email-to-players
-            "Game cancelled"
-            (sf '("<p>An upcoming game on ~A was cancelled.</p>")
+            (sf "Game cancelled in ~A" (league-name league))
+            (sf '("<p>An upcoming game in the ~A on ~A was cancelled.</p>")
+                (league-full-name league)
                 (pretty-time (game-time game)))
             league))
        (json-result save-res))
@@ -1580,12 +1583,13 @@
                  (parse-timestring game-time)
                  (adjust-timestamp (now) (offset :day 7))))
            (send-email-to-players
-            "Game time changed"
-            (sf '("<p>An <a href='~(~A~)'>upcoming game's</a> time changed "
-                  "from ~A to ~A.</p>")
+            (sf "Game time changed in ~A" (league-name league))
+            (sf '("<p>An <a href='~(~A~)'>upcoming game's</a> time changed in "
+                  "the ~A from ~A to ~A.</p>")
                 (build-url (sf "~A/games/~A"
                                (league-name league)
                                (game-id game)))
+                (league-full-name league)
                 (pretty-time (game-time game))
                 (pretty-time game-time))
             league))
@@ -1609,9 +1613,10 @@
                  (parse-timestring (game-time game))
                  (adjust-timestamp (now) (offset :day 3))))
            (send-email-to-players
-            "Game confirmation change"
+            (sf "Game confirmation change in ~A" (league-name league))
             (sf '("<p><a href='~(~A~)'>~A</a> updated their confirmation status "
-                  "for the <a href='~(~A~)'>upcoming game</a> on ~A.</p>"
+                  "for the <a href='~(~A~)'>upcoming game</a> in the ~A on ~A."
+                  "</p>"
                   "<p>Status: <b>~(~A~)</b></p>"
                   "~A")
                 (build-url (sf "~A/players/~A/~A"
@@ -1622,6 +1627,7 @@
                 (build-url (sf "~A/games/~A"
                                (league-name league)
                                (game-id game)))
+                (league-full-name league)
                 (pretty-time (game-time game))
                 (getf confirm-types
                       (find confirm-type confirm-types :test #'string-equal))
