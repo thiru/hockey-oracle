@@ -851,8 +851,11 @@
                            :immediate-notify-only? immediate-notify-only?)))
     (if (empty? email-addresses)
         (return-from send-email-to-players
-          (new-r :info "No email addresses retrieved.")))
-    (send-email subject message email-addresses)
-    (new-r :success (sf "Successfully sent email to ~A recipients."
+          (new-r :info
+                 (sf "No players have email addresses in the league, '~A'."
+                     (league-name league)))))
+    (dolist (email-address email-addresses)
+      (send-email subject message email-address))
+    (new-r :success (sf "Sent email to ~A recipients."
                         (length email-addresses)))))
 ;;; Email ------------------------------------------------------------------- END
