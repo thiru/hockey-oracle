@@ -788,12 +788,14 @@
                                  "Change Password"))
                             (:div :id "pwd-group"
                                   :style "display:none"
-                                  (:p
-                                   (:input :id "pwd-curr"
-                                           :class "full-width"
-                                           :type "password"
-                                           :placeholder "Current password"
-                                           :title "Current password"))
+                                  (if (non-empty? (player-perm-auth target-player))
+                                      (htm
+                                       (:p
+                                        (:input :id "pwd-curr"
+                                                :class "full-width"
+                                                :type "password"
+                                                :placeholder "Current password"
+                                                :title "Current password"))))
                                   (:p
                                    (:input :id "pwd-new"
                                            :class "full-width"
@@ -891,10 +893,10 @@
       (return-from api-user-save (json-result save-res)))
     ;; If user is attempting to change their password..
     (when (non-empty? new-pwd)
-      ;; Verify current password provided by user is correct
-      (setf player (get-player :id (player-id player) :pwd curr-pwd))
+      (setf player (get-player :id (player-id player)))
       ;; Abort if current password provided by user is incorrect
-      (when (null player)
+      (when (and (non-empty? (player-perm-auth player))
+                 (null (get-player :id (player-id player) :pwd curr-pwd)))
         (setf (return-code*) +http-bad-request+)
         (return-from api-user-save
           (json-result (new-r :error "Current password is incorrect."))))

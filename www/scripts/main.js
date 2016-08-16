@@ -314,11 +314,14 @@ page.initUserDetailPage = function() {
                 return;
             }
 
-            var currPwd = get("pwd-curr").value;
-            if (isBlank(currPwd)) {
-                $("#save-result").empty();
-                alert("Original password not provided.");
-                return;
+            var currPwd = "";
+            if (get("pwd-curr") !== null) {
+                currPwd = get("pwd-curr").value;
+                if (isBlank(currPwd)) {
+                    $("#save-result").empty();
+                    alert("Original password not provided.");
+                    return;
+                }
             }
 
             player.currentPwd = currPwd;
