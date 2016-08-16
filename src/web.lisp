@@ -574,31 +574,43 @@
 ;;; About Page
 (defun www-about-page (&key player league)
   (standard-page
-   (:title "About"
-    :player player
-    :league league
-    :page-id "about-page")
-   (:p
-    "The Hockey Oracle is a simple app that generates teams by randomly "
-    "selecting from a pool of active players.")
-   (:p
-    (:span "Please note this is an")
-    (:b "alpha")
-    (:span "version of the website with very limited functionality."))
-   (:table :class "brief-table"
-           (:tr
-            (:td "Version")
-            (:td (fmt "~a" version)))
-           (:tr
-            (:td "Last Updated")
-            (:td (fmt "~a" (pretty-time updated))))
-           (:tr
-            (:td "License")
-            (:td
-             (:a :href "https://www.gnu.org/licenses/gpl-2.0.html" "GPL v2")))
-           (:tr
-            (:td "Copyright")
-            (:td "2014-2015 Thirushanth Thirunavukarasu")))))
+      (:title "About"
+       :player player
+       :league league
+       :page-id "about-page")
+    (:p "The Hockey Oracle is a simple app intended to ease management of "
+        "amateur hockey leauges.")
+    (:p "Current features:")
+    (:ul
+     (:li "Generate random teams from a pool of players marked"
+          (:em "active"))
+     (:li "Manage a schedule of games including")
+     (:ul
+      (:li "Sending out email reminders of upcoming games")
+      (:li "Keeping track of player status per game, e.g.:")
+      (:ul
+       (:li "confirmed to play")
+       (:li "unable to play")
+       (:li "undecided"))
+      (:li "Recording game scores")))
+    (:p
+     (:span "Please note that this is an")
+     (:strong "alpha")
+     (:span "version of the website with limited functionality."))
+    (:table :class "brief-table"
+            (:tr
+             (:td "Version")
+             (:td (fmt "~a" version)))
+            (:tr
+             (:td "Last Updated")
+             (:td (fmt "~a" (pretty-time updated))))
+            (:tr
+             (:td "License")
+             (:td
+              (:a :href "https://www.gnu.org/licenses/gpl-2.0.html" "GPL v2")))
+            (:tr
+             (:td "Copyright")
+             (:td "2014-2016 Thirushanth Thirunavukarasu")))))
 ;;; About Page -------------------------------------------------------------- END
 
 ;;; Login API
