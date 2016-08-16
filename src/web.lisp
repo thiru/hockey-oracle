@@ -64,7 +64,7 @@
      (sf "Upcoming game in ~A" (league-name league))
      (lambda (player)
        (sf '("<p>This is a reminder of an <a href='~(~A~)'>upcoming game</a> "
-             "in the ~A on ~A.</p>"
+             "in the <b>~A</b> on ~A.</p>"
              "<p>Please update your <a href='~(~A~)'>game status</a> if you "
              "haven't done so already.</p>")
            (build-url (sf "~A/games/~A"
@@ -1124,8 +1124,8 @@
               (send-email-to-players
                (sf "New game in ~A" (league-name league))
                (lambda (player)
-                 (sf '("<p>A <a href='~(~A~)'>new game</a> was added in the ~A "
-                       "on ~A.</p>")
+                 (sf '("<p>A <a href='~(~A~)'>new game</a> was added in the "
+                       "<b>~A</b> on ~A.</p>")
                      (build-url (sf "~A/games/~A"
                                     (league-name league)
                                     (game-id (r-data save-res)))
@@ -1583,7 +1583,8 @@
            (send-email-to-players
             (sf "Game cancelled in ~A" (league-name league))
             (lambda (player)
-              (sf '("<p>An upcoming game in the ~A on ~A was cancelled.</p>")
+              (sf '("<p>An upcoming game in the <b>~A</b> on ~A was "
+                    "cancelled.</p>")
                   (league-full-name league)
                   (pretty-time (game-time game))))
             league))
@@ -1603,7 +1604,7 @@
             (sf "Game time changed in ~A" (league-name league))
             (lambda (player)
               (sf '("<p>An <a href='~(~A~)'>upcoming game's</a> time changed in "
-                    "the ~A from ~A to ~A.</p>")
+                    "the <b>~A</b> from ~A to ~A.</p>")
                   (build-url (sf "~A/games/~A"
                                  (league-name league)
                                  (game-id game))
@@ -1636,7 +1637,7 @@
             (lambda (player)
               (sf '("<p><a href='~(~A~)'>~A</a> updated their confirmation "
                     "status for the <a href='~(~A~)'>upcoming game</a> in the "
-                    "~A on ~A.</p>"
+                    "<b>~A</b> on ~A.</p>"
                     "<p>Status: <b>~(~A~)</b></p>"
                     "~A")
                   (build-url (sf "~A/players/~A/~A"
