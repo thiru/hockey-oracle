@@ -64,7 +64,7 @@
      (sf "Upcoming game in ~A" (league-name league))
      (lambda (player)
        (sf '("<p>This is a reminder of an <a href='~(~A~)'>upcoming game</a> "
-             "in the <b>~A</b> on ~A.</p>"
+             "in the <strong title='~A'>~A</strong> on ~A.</p>"
              "<p>Please update your <a href='~(~A~)'>game status</a> if you "
              "haven't done so already.</p>")
            (build-url (sf "~A/games/~A"
@@ -72,6 +72,7 @@
                           (game-id game))
                       player)
            (league-full-name league)
+           (league-name league)
            (pretty-time (game-time game))
            (build-url (sf "~A/games/~A"
                           (league-name league)
@@ -1125,12 +1126,13 @@
                (sf "New game in ~A" (league-name league))
                (lambda (player)
                  (sf '("<p>A <a href='~(~A~)'>new game</a> was added in the "
-                       "<b>~A</b> on ~A.</p>")
+                       "<strong title='~A'>~A</strong> on ~A.</p>")
                      (build-url (sf "~A/games/~A"
                                     (league-name league)
                                     (game-id (r-data save-res)))
                                 player)
                      (league-full-name league)
+                     (league-name league)
                      (pretty-time game-time)))
                league))
           (push (pretty-time (game-time (r-data save-res))) data)
@@ -1583,9 +1585,10 @@
            (send-email-to-players
             (sf "Game cancelled in ~A" (league-name league))
             (lambda (player)
-              (sf '("<p>An upcoming game in the <b>~A</b> on ~A was "
-                    "cancelled.</p>")
+              (sf '("<p>An upcoming game in the <strong title='~A'>~A</strong> "
+                    "on ~A was cancelled.</p>")
                   (league-full-name league)
+                  (league-name league)
                   (pretty-time (game-time game))))
             league))
        (json-result save-res))
@@ -1604,12 +1607,13 @@
             (sf "Game time changed in ~A" (league-name league))
             (lambda (player)
               (sf '("<p>An <a href='~(~A~)'>upcoming game's</a> time changed in "
-                    "the <b>~A</b> from ~A to ~A.</p>")
+                    "the <strong title'~A'>~A</strong> from ~A to ~A.</p>")
                   (build-url (sf "~A/games/~A"
                                  (league-name league)
                                  (game-id game))
                              player)
                   (league-full-name league)
+                  (league-name league)
                   (pretty-time (game-time game))
                   (pretty-time game-time)))
             league))
@@ -1637,7 +1641,7 @@
             (lambda (player)
               (sf '("<p><a href='~(~A~)'>~A</a> updated their confirmation "
                     "status for the <a href='~(~A~)'>upcoming game</a> in the "
-                    "<b>~A</b> on ~A.</p>"
+                    "<strong title='~A'>~A</strong> on ~A.</p>"
                     "<p>Status: <b>~(~A~)</b></p>"
                     "~A")
                   (build-url (sf "~A/players/~A/~A"
@@ -1651,6 +1655,7 @@
                                  (game-id game))
                              player)
                   (league-full-name league)
+                  (league-name league)
                   (pretty-time (game-time game))
                   (getf confirm-types
                         (find confirm-type confirm-types :test #'string-equal))
