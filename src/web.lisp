@@ -941,8 +941,8 @@
            (:li
             (:a :class "button wide-button"
                 :href (sf "/~(~A~)" (league-name league))
-                :title (esc (league-full-name league))
-                (esc (league-name league)))))))))
+                :title (esc (league-name league))
+                (esc (league-full-name league)))))))))
 ;;; League List Page -------------------------------------------------------- END
 
 ;;; League Detail Page
