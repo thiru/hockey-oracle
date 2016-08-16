@@ -645,18 +645,16 @@
                    player))
               (t player)))))
 
-(defun get-player-emails (league &key immediate-notify-only?)
+(defun get-emailable-players (league &key immediate-notify-only?)
   "Get email addresses of all players in LEAGUE.
    If IMMEDIATE-NOTIFY-ONLY? is T, only players who requested immediate email
    notification will be returned."
-  (map 'list
-       #'player-email
-       (remove-if (complement
-                   (lambda (p)
-                     (and (or (not immediate-notify-only?)
-                              (player-notify-immediately? p))
-                          (not (empty? (player-email p))))))
-                  (get-players league))))
+  (remove-if (complement
+              (lambda (p)
+                (and (or (not immediate-notify-only?)
+                         (player-notify-immediately? p))
+                     (not (empty? (player-email p))))))
+             (get-players league)))
 
 (defun is-commissioner? (player league)
   "Check whether PLAYER is a commission of LEAGUE."
@@ -815,6 +813,12 @@
 (defun send-email (subject message &optional to)
   "Sends an HTML email with the specified parameters. If TO is not specified the
    email is sent to the administrator. The email is sent in a background thread."
+  (if (empty? subject)
+      (return-from send-email
+        (new-r :error "No subject provided.")))
+  (if (empty? message)
+      (return-from send-email
+        (new-r :error "No message provided.")))
   (redis:with-persistent-connection ()
     (let ((username (red-hget "admin:email" "username"))
           (pwd (red-hget "admin:email" "pwd"))
@@ -829,16 +833,17 @@
                                             :ssl :tls
                                             :authentication `(,username ,pwd)))))))
 
-(defun send-email-to-players (subject message league &key immediate-notify-only?)
+(defun send-email-to-players (subject get-message league &key immediate-notify-only?)
   "Sends an HTML email to certain players belonging to LEAGUE.
+   GET-MESSAGE is a func that takes a PLAYER and returns the body of the email.
    If IMMEDIATE-NOTIFY-ONLY? is T, only players who requested immediate email
    notification will be included."
   (if (empty? subject)
       (return-from send-email-to-players
         (new-r :error "No subject provided.")))
-  (if (empty? message)
+  (if (null get-message)
       (return-from send-email-to-players
-        (new-r :error "No message provided.")))
+        (new-r :error "No func provided to get message.")))
   (if (null league)
       (return-from send-email-to-players
         (new-r :error "No league provided.")))
@@ -846,16 +851,15 @@
       (return-from send-email-to-players
         (new-r :info (sf "Automated emails currently disabled for league, '~A'."
                          (league-name league)))))
-  (let* ((email-addresses (get-player-emails
-                           league
-                           :immediate-notify-only? immediate-notify-only?)))
-    (if (empty? email-addresses)
+  (let* ((players (get-emailable-players
+                   league
+                   :immediate-notify-only? immediate-notify-only?)))
+    (if (empty? players)
         (return-from send-email-to-players
           (new-r :info
                  (sf "No players have email addresses in the league, '~A'."
                      (league-name league)))))
-    (dolist (email-address email-addresses)
-      (send-email subject message email-address))
-    (new-r :success (sf "Sent email to ~A recipients."
-                        (length email-addresses)))))
+    (dolist (player players)
+      (send-email subject (funcall get-message player) (player-email player)))
+    (new-r :success (sf "Sent email to ~A recipients." (length players)))))
 ;;; Email ------------------------------------------------------------------- END

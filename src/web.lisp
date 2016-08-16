@@ -62,25 +62,37 @@
   (let* ((league (game-league game)))
     (send-email-to-players
      (sf "Upcoming game in ~A" (league-name league))
-     (sf '("<p>This is a reminder of an <a href='~(~A~)'>upcoming game</a> "
-           "in the ~A on ~A.</p>"
-           "<p>Please update your <a href='~(~A~)'>game status</a> if you "
-           "haven't done so already.</p>")
-         (build-url (sf "~A/games/~A"
-                        (league-name league)
-                        (game-id game)))
-         (league-full-name league)
-         (pretty-time (game-time game))
-         (build-url (sf "~A/games/~A"
-                        (league-name league)
-                        (game-id game))))
+     (lambda (player)
+       (sf '("<p>This is a reminder of an <a href='~(~A~)'>upcoming game</a> "
+             "in the ~A on ~A.</p>"
+             "<p>Please update your <a href='~(~A~)'>game status</a> if you "
+             "haven't done so already.</p>")
+           (build-url (sf "~A/games/~A"
+                          (league-name league)
+                          (game-id game))
+                      player)
+           (league-full-name league)
+           (pretty-time (game-time game))
+           (build-url (sf "~A/games/~A"
+                          (league-name league)
+                          (game-id game))
+                      player)))
      league)))
 ;;; Email ------------------------------------------------------------------- END
 
 ;;; Utils
-(defun build-url (path)
-  "Build absolute qualified URL to this website."
-  (sf "~A/~(~A~)" (server-info-host server-info) path))
+(defun build-url (path &optional player)
+  "Builds an absolute URL to this website at the specified path. The player is
+   used to include a temporary authentication token in case they have not set a
+   permanent password."
+  (if player
+      (check-type player PLAYER))
+  (sf "~A/~(~A~)~(~A~)"
+      (server-info-host server-info)
+      path
+      (if (and player (empty? (player-perm-auth player)))
+          (sf "?me=~A-~A" (player-id player) (player-temp-auth player))
+          "")))
 
 ;;; TODO: Following is not being used
 (defmacro html-snippet (root-tag)
@@ -1109,13 +1121,15 @@
                     (adjust-timestamp (now) (offset :day 7))))
               (send-email-to-players
                (sf "New game in ~A" (league-name league))
-               (sf '("<p>A <a href='~(~A~)'>new game</a> was added in the ~A "
-                     "on ~A.</p>")
-                   (build-url (sf "~A/games/~A"
-                                  (league-name league)
-                                  (game-id (r-data save-res))))
-                   (league-full-name league)
-                   (pretty-time game-time))
+               (lambda (player)
+                 (sf '("<p>A <a href='~(~A~)'>new game</a> was added in the ~A "
+                       "on ~A.</p>")
+                     (build-url (sf "~A/games/~A"
+                                    (league-name league)
+                                    (game-id (r-data save-res)))
+                                player)
+                     (league-full-name league)
+                     (pretty-time game-time)))
                league))
           (push (pretty-time (game-time (r-data save-res))) data)
           (push (game-id (r-data save-res)) data)
@@ -1566,9 +1580,10 @@
                  (adjust-timestamp (now) (offset :day 7))))
            (send-email-to-players
             (sf "Game cancelled in ~A" (league-name league))
-            (sf '("<p>An upcoming game in the ~A on ~A was cancelled.</p>")
-                (league-full-name league)
-                (pretty-time (game-time game)))
+            (lambda (player)
+              (sf '("<p>An upcoming game in the ~A on ~A was cancelled.</p>")
+                  (league-full-name league)
+                  (pretty-time (game-time game))))
             league))
        (json-result save-res))
       ;; Update game info (e.g. time, progress)
@@ -1584,14 +1599,16 @@
                  (adjust-timestamp (now) (offset :day 7))))
            (send-email-to-players
             (sf "Game time changed in ~A" (league-name league))
-            (sf '("<p>An <a href='~(~A~)'>upcoming game's</a> time changed in "
-                  "the ~A from ~A to ~A.</p>")
-                (build-url (sf "~A/games/~A"
-                               (league-name league)
-                               (game-id game)))
-                (league-full-name league)
-                (pretty-time (game-time game))
-                (pretty-time game-time))
+            (lambda (player)
+              (sf '("<p>An <a href='~(~A~)'>upcoming game's</a> time changed in "
+                    "the ~A from ~A to ~A.</p>")
+                  (build-url (sf "~A/games/~A"
+                                 (league-name league)
+                                 (game-id game))
+                             player)
+                  (league-full-name league)
+                  (pretty-time (game-time game))
+                  (pretty-time game-time)))
             league))
        (json-result save-res))
       (send-email-reminder?
@@ -1614,28 +1631,31 @@
                  (adjust-timestamp (now) (offset :day 3))))
            (send-email-to-players
             (sf "Game confirmation change in ~A" (league-name league))
-            (sf '("<p><a href='~(~A~)'>~A</a> updated their confirmation status "
-                  "for the <a href='~(~A~)'>upcoming game</a> in the ~A on ~A."
-                  "</p>"
-                  "<p>Status: <b>~(~A~)</b></p>"
-                  "~A")
-                (build-url (sf "~A/players/~A/~A"
-                               (league-name league)
-                               (player-name player)
-                               (player-id player)))
-                (player-name player)
-                (build-url (sf "~A/games/~A"
-                               (league-name league)
-                               (game-id game)))
-                (league-full-name league)
-                (pretty-time (game-time game))
-                (getf confirm-types
-                      (find confirm-type confirm-types :test #'string-equal))
-                (if (empty? reason)
-                    ""
-                    (sf '("<p>Reason:</p>"
-                          "<blockquote>~A</blockquote>")
-                        reason)))
+            (lambda (player)
+              (sf '("<p><a href='~(~A~)'>~A</a> updated their confirmation "
+                    "status for the <a href='~(~A~)'>upcoming game</a> in the "
+                    "~A on ~A.</p>"
+                    "<p>Status: <b>~(~A~)</b></p>"
+                    "~A")
+                  (build-url (sf "~A/players/~A/~A"
+                                 (league-name league)
+                                 (player-name player)
+                                 (player-id player))
+                             player)
+                  (player-name player)
+                  (build-url (sf "~A/games/~A"
+                                 (league-name league)
+                                 (game-id game))
+                             player)
+                  (league-full-name league)
+                  (pretty-time (game-time game))
+                  (getf confirm-types
+                        (find confirm-type confirm-types :test #'string-equal))
+                  (if (empty? reason)
+                      ""
+                      (sf '("<p>Reason:</p>"
+                            "<blockquote>~A</blockquote>")
+                          reason))))
             league
             :immediate-notify-only? t))
        (json:encode-json-plist-to-string

@@ -97,7 +97,6 @@
    :get-all-players
    :get-players
    :get-player
-   :get-player-emails
    :is-commissioner?
    :update-player
    :change-player-pwd
