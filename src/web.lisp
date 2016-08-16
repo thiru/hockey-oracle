@@ -967,7 +967,7 @@
 
 ;;; Schedule Page
 (defun www-schedule-page (&key player league)
-  (let* ((games (get-games league :exclude-started t)))
+  (let* ((games (get-games :league league :exclude-started t)))
     (standard-page
         (:title "Schedule"
          :player player
@@ -1045,7 +1045,7 @@
 
 ;;; Scores Page
 (defun www-scores-page (&key player league)
-  (let* ((games (reverse (get-games league :exclude-unstarted t))))
+  (let* ((games (reverse (get-games :league league :exclude-unstarted t))))
     (standard-page
         (:title "Scores"
          :player player
@@ -1122,7 +1122,7 @@
 ;;; Game Detail Page
 (defun www-game-detail-page (&key player league)
   (let* ((game-id (last1 (path-segments *request*)))
-         (game (get-game league game-id))
+         (game (get-game game-id))
          (player-gc (if game (or (game-confirm-for game player)
                                  (make-game-confirm
                                   :player player
@@ -1536,7 +1536,7 @@
 (defun api-game-update (&key player league)
   (setf (content-type*) "application/json")
   (let* ((game-id (last1 (path-segments *request*)))
-         (game (get-game league game-id))
+         (game (get-game game-id))
          (delete-game? (string-equal "true" (post-parameter "deleteGame")))
          (send-email-reminder? (string-equal "true"
                                              (post-parameter

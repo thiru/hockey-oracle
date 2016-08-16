@@ -96,13 +96,12 @@
 
 (defun get-all-leagues ()
   "Gets a list of all LEAGUE's sorted by name (A -> Z)."
-  ;; TODO: Use (red-scan) instead of (red-keys) to get player keys
   ;; TODO: Use pipelines to send multiple commands at once
   (redis:with-persistent-connection ()
-    (let* ((league-keys (red-keys "league:*"))
+    (let* ((league-ids (red-smembers "leagues"))
            (leagues nil))
-      (dolist (league-key league-keys)
-        (push (new-league-from-db league-key) leagues))
+      (dolist (league-id league-ids)
+        (push (new-league-from-db (sf "league:~A" league-id)) leagues))
       (sort leagues #'string< :key #'league-name))))
 
 (defun get-league (&key id name)
@@ -272,39 +271,46 @@
                               :cant-play "Can't play"
                               :playing "Playing"))
 
-(defun get-games (league &key exclude-started exclude-unstarted)
-  "Get all GAME's belonging to the given LEAGUE."
-  (if league
-      (redis:with-persistent-connection ()
-        (let* ((game-keys (red-keys (sf "leagues:~A:game:*" (-> league id))))
-               (games '()))
-          (dolist (game-key game-keys)
-            (let ((game (new-game-from-db game-key league)))
-              (cond (exclude-started
-                     (if (or (empty? (game-progress game))
-                             (string-equal "new" (game-progress game)))
-                         (push game games)))
-                    (exclude-unstarted
-                     (if (or (string-equal "underway" (game-progress game))
-                             (string-equal "final" (game-progress game)))
-                         (push game games)))
-                    (t (push game games)))))
-          (sort games #'string< :key #'game-time)))))
+(defun get-games (&key league exclude-started exclude-unstarted)
+  "Get all GAME's belonging with the specified criteria."
+  (if (non-empty? league)
+      (check-type league LEAGUE))
+  (redis:with-persistent-connection ()
+    (let* ((league-ids '())
+           (games '()))
+      (setf league-ids
+            (if league
+                (list (league-id league))
+                (map 'list #'parse-integer (red-smembers "leagues"))))
+      (if (empty? league-ids)
+          (return-from get-games))
+      (dolist (league-id league-ids)
+        (dolist (game-id (red-smembers (sf "league:~A:games" league-id)))
+          (let* ((game-key (sf "game:~A" game-id))
+                 (game (if (red-exists game-key) (new-game-from-db game-key))))
+            (if game
+                (cond (exclude-started
+                       (if (or (empty? (game-progress game))
+                               (string-equal "new" (game-progress game)))
+                           (push game games)))
+                      (exclude-unstarted
+                       (if (or (string-equal "underway" (game-progress game))
+                               (string-equal "final" (game-progress game)))
+                           (push game games)))
+                      (t (push game games)))))))
+      (sort games #'string< :key #'game-time))))
 
-(defun get-game (league game-id)
-  "Get the GAME with the given LEAGUE and GAME-ID."
-  (if (or (empty? league) (null game-id))
-      nil
+(defun get-game (id)
+  "Get the GAME with the specified id."
+  (if id
       (redis:with-persistent-connection ()
-        (let* ((game-key (sf "leagues:~A:game:~A"
-                             (-> league id)
-                             game-id)))
+        (let* ((game-key (sf "game:~A" id)))
           (if (redis:red-exists game-key)
-              (new-game-from-db game-key league))))))
+              (new-game-from-db game-key))))))
 
 (defun get-upcoming-games (league count)
   "Get the next COUNT games that haven't yet started."
-  (let* ((new-games (get-games league :exclude-started t))
+  (let* ((new-games (get-games :league league :exclude-started t))
          (compare-time (adjust-timestamp (now) (offset :hour -6)))
          (upcoming-games '()))
     (setf upcoming-games
@@ -317,11 +323,12 @@
 
 ;; TODO: transactify
 (defun save-new-game (league time user)
-  "Save a new game for LEAGUE at TIME.
+  "Save a new game for LEAGUE at TIME by USER.
    Returns an R, containing the new game if successful."
   (if (null league)
       (return-from save-new-game
         (new-r :error "No league specified.")))
+  (check-type league LEAGUE)
   (if (empty? time)
       (return-from save-new-game
         (new-r :error "No game time specified.")))
@@ -331,15 +338,16 @@
   (if (null user)
       (return-from save-new-game
         (new-r :error "No user/player specified.")))
+  (check-type user PLAYER)
   (if (not (is-commissioner? user league))
       (return-from save-new-game
         (new-r :error
                (sf "You do not have permission to create new games in ~A."
                    (league-name league)))))
   (redis:with-persistent-connection ()
-    (let* ((id-seed-key (sf "leagues:~A:games:id-seed" (league-id league)))
+    (let* ((id-seed-key "games:id-seed")
            (game-id (red-get id-seed-key))
-           (game-key (sf "leagues:~A:game:~A" (league-id league) game-id))
+           (game-key (sf "game:~A" game-id))
            (email-time (adjust-timestamp (parse-timestring time)
                          (offset :day
                                  (- (league-game-reminder-day-offset league)))
@@ -358,17 +366,21 @@
       (red-hset game-key "created-at" (now))
       (red-hset game-key "created-by" (player-id user))
       (red-hset game-key "time" time)
+      (red-hset game-key "league" (league-id league))
       (red-hset game-key "home-team" 1) ; TODO: remove hard-coding
       (red-hset game-key "away-team" 2) ; TODO: remove hard-coding
       (red-hset game-key "home-score" 0)
       (red-hset game-key "away-score" 0)
       (red-hset game-key "email-reminder" (to-string email-time))
+      (red-sadd (sf "league:~A:games" (league-id league)) game-id)
       (red-incr id-seed-key)
       (red-zadd "emails:game-reminders"
                 (timestamp-to-universal email-time)
                 game-id)
-      (setf new-game (get-game league game-id))
-      (new-r :success (sf "Created new game on ~A!" (pretty-time time)) new-game))))
+      (setf new-game (get-game game-id))
+      (new-r :success
+             (sf "Created new game on ~A!" (pretty-time time))
+             new-game))))
 
 ;; TODO: transactify
 (defun update-game-info (game user time progress)
@@ -390,7 +402,7 @@
                    (league-name league)))))
   (redis:with-persistent-connection ()
     (let* ((league (game-league game))
-           (game-key (sf "leagues:~A:game:~A" (league-id league) (game-id game)))
+           (game-key (sf "game:~A" (game-id game)))
            (email-time (adjust-timestamp (parse-timestring time)
                          (offset :day
                                  (- (league-game-reminder-day-offset league)))
@@ -415,7 +427,7 @@
       (red-zadd "emails:game-reminders"
                 (timestamp-to-universal email-time)
                 (game-id game))
-      (setf updated-game (get-game league (game-id game)))
+      (setf updated-game (get-game (game-id game)))
       (new-r :success "Updated game!" updated-game))))
 
 (defun delete-game (game user)
@@ -424,18 +436,20 @@
   (if (null game)
       (return-from delete-game
         (new-r :error "No game specified." game)))
+  (check-type game GAME)
   (if (null user)
       (return-from delete-game
         (new-r :error "No user/player specified." game)))
+  (check-type user PLAYER)
   (if (not (is-commissioner? user (game-league game)))
       (return-from delete-game
         (new-r :error
                (sf "You do not have permission to update games in ~A."
                    (league-name league)))))
   (redis:with-persistent-connection ()
-    (let* ((game-key (sf "leagues:~A:game:~A"
-                         (league-id (game-league game))
-                         (game-id game))))
+    (let* ((league-id (league-id (game-league game)))
+           (game-key (sf "game:~A" (game-id game))))
+      (red-srem (sf "league:~A:games" league-id) (game-id game))
       (red-del game-key)
       (red-zrem "emails:game-reminders" (game-id game))
       (new-r :success "Deleted game!" game))))
@@ -464,7 +478,7 @@
                                 (length reason)))))
   (let* ((new-gcs nil))
     ;; Get latest game info
-    (setf game (get-game (game-league game) (game-id game)))
+    (setf game (get-game (game-id game)))
     (dolist (gc (game-confirms game))
       (let* ((p-id (player-id (game-confirm-player gc)))
              (p-to-update? (= (player-id player)
@@ -488,20 +502,17 @@
                       (to-string (now))
                       (or reason "")))))
     (redis:with-persistent-connection ()
-      (red-hset (sf "leagues:~A:game:~A"
-                    (league-id (game-league game))
-                    (game-id game))
-                "confirms"
-                new-gcs))
-    (new-r :success "" (get-game (game-league game) (game-id game)))))
+      (red-hset (sf "game:~A" (game-id game)) "confirms" new-gcs))
+    (new-r :success "" (get-game (game-id game)))))
 
-(defun new-game-from-db (game-key league)
+(defun new-game-from-db (game-key)
   "Create a GAME struct based on the given redis key."
   (let ((id (parse-id game-key)))
     (make-game :id id
                :created-at (red-hget game-key "created-at")
                :created-by (get-player :id (red-hget game-key "created-by"))
-               :league league
+               :league
+               (get-league :id (parse-integer (red-hget game-key "league")))
                :time (red-hget game-key "time")
                :progress (red-hget game-key "progress")
                :home-team (new-team-from-db (sf "team:~A"
