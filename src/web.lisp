@@ -1591,8 +1591,10 @@
            (send-email-to-players
             (sf "Game cancelled in ~A" (league-name league))
             (lambda (player)
-              (sf '("<p>An upcoming game in the <strong title='~A'>~A</strong> "
+              (sf '("<p>An upcoming game in the <a href='~A' title='~A'>~A</a> "
                     "on ~A was cancelled.</p>")
+                  (build-url (sf "~A/games/schedule" (league-name league))
+                             player)
                   (league-full-name league)
                   (league-name league)
                   (pretty-time (game-time game))))
