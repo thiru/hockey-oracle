@@ -1602,11 +1602,11 @@
                  (adjust-timestamp (now) (offset :day 7))))
            (send-email-to-players
             (sf "Game cancelled in ~A" (league-name league))
-            (lambda (player)
+            (lambda (player-to-email)
               (sf '("<p>An upcoming game in the <a href='~A' title='~A'>~A</a> "
                     "on ~A was cancelled.</p>")
                   (build-url (sf "~A/games/schedule" (league-name league))
-                             player)
+                             player-to-email)
                   (league-full-name league)
                   (league-name league)
                   (pretty-time (game-time game))))
@@ -1625,13 +1625,13 @@
                  (adjust-timestamp (now) (offset :day 7))))
            (send-email-to-players
             (sf "Game time changed in ~A" (league-name league))
-            (lambda (player)
+            (lambda (player-to-email)
               (sf '("<p>An <a href='~(~A~)'>upcoming game's</a> time changed in "
                     "the <strong title'~A'>~A</strong> from ~A to ~A.</p>")
                   (build-url (sf "~A/games/~A"
                                  (league-name league)
                                  (game-id game))
-                             player)
+                             player-to-email)
                   (league-full-name league)
                   (league-name league)
                   (pretty-time (game-time game))
@@ -1658,7 +1658,7 @@
                  (adjust-timestamp (now) (offset :day 3))))
            (send-email-to-players
             (sf "Game confirmation change in ~A" (league-name league))
-            (lambda (player)
+            (lambda (player-to-email)
               (sf '("<p><a href='~(~A~)'>~A</a> updated their confirmation "
                     "status for the <a href='~(~A~)'>upcoming game</a> in the "
                     "<strong title='~A'>~A</strong> on ~A.</p>"
@@ -1668,12 +1668,12 @@
                                  (league-name league)
                                  (player-name player)
                                  (player-id player))
-                             player)
+                             player-to-email)
                   (player-name player)
                   (build-url (sf "~A/games/~A"
                                  (league-name league)
                                  (game-id game))
-                             player)
+                             player-to-email)
                   (league-full-name league)
                   (league-name league)
                   (pretty-time (game-time game))
