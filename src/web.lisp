@@ -362,6 +362,12 @@
              (:div :id "top-shade")
              (:header :id "top-heading"
                       (:div :id "top-right-heading"
+                            (if ,league
+                                (htm
+                                 (:a :href (sf "/~(~A~)" (league-name ,league))
+                                     :title (esc (league-full-name ,league))
+                                     (esc (league-name ,league)))
+                                 (:span " - ")))
                             (if ,player
                                 (htm
                                  (:a :href (if ,league
