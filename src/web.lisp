@@ -603,6 +603,10 @@
              (:td "Last Updated")
              (:td (fmt "~a" (pretty-time updated))))
             (:tr
+             (:td "Source Code")
+             (:td (:a :href "https://github.com/thiru/hockey-oracle"
+                      "Hosted at Github")))
+            (:tr
              (:td "License")
              (:td
               (:a :href "https://www.gnu.org/licenses/gpl-2.0.html" "GPL v2")))
