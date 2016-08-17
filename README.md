@@ -2,17 +2,16 @@
 
 ## Overview
 
-The Hockey Oracle is a simple app intended to ease management of amateur hockey leauges.
+The Hockey Oracle is a simple app intended to ease management of amateur hockey leagues.
 
 Current features:
-* Generate random teams from a pool of players marked *active*
+* Generate random teams from a pool of *active* players
 * Manage a schedule of games including
   * Sending out email reminders of upcoming games
   * Keeping track of player status per game, e.g.:
     * confirmed to play
     * unable to play
     * undecided
-* Recording game scores
 
 Please note that this an **alpha** version of the app with limited functionality.
 

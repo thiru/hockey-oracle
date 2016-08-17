@@ -579,11 +579,10 @@
        :league league
        :page-id "about-page")
     (:p "The Hockey Oracle is a simple app intended to ease management of "
-        "amateur hockey leauges.")
+        "amateur hockey leagues.")
     (:p "Current features:")
     (:ul
-     (:li "Generate random teams from a pool of players marked"
-          (:em "active"))
+     (:li "Generate random teams from a pool of" (:em "active") "players")
      (:li "Manage a schedule of games including")
      (:ul
       (:li "Sending out email reminders of upcoming games")
@@ -591,8 +590,7 @@
       (:ul
        (:li "confirmed to play")
        (:li "unable to play")
-       (:li "undecided"))
-      (:li "Recording game scores")))
+       (:li "undecided"))))
     (:p
      (:span "Please note that this is an")
      (:strong "alpha")
