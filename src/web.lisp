@@ -762,8 +762,7 @@
           (commissions '()))
       (dolist (l leagues)
         (if (find (player-id target-player)
-                  (league-commissioners l)
-                  :key #'player-id)
+                  (league-commissioner-ids l))
             (push l commissions)))
       (standard-page
           (:title "User"

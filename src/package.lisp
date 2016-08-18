@@ -35,7 +35,7 @@
    :league-game-reminder-day-offset
    :league-game-reminder-time
    :league-send-automated-emails?
-   :league-commissioners
+   :league-commissioner-ids
    :get-all-leagues
    :get-league
    :update-league

@@ -80,7 +80,8 @@
    * FULL-NAME: full-length name (e.g. National Hockey League)
    * CREATED: date/time created
    * ACTIVE?: whether it is active/visible
-   * COMMISSIONERS: a list of users who act as commissioners of this league
+   * COMMISSIONER-IDS: a list of players ids considered commissioners of this
+     league
    * GAME-REMINDER-DAY-OFFSET: the number of days ahead of game to send an email
      reminder to players
    * GAME-REMINDER-TIME: the time of day to send the game email reminder
@@ -91,7 +92,7 @@
   (full-name "")
   (created "")
   (active? t)
-  (commissioners '())
+  (commissioner-ids '())
   (game-reminder-day-offset 0)
   (game-reminder-time "")
   (send-automated-emails? t))
@@ -146,19 +147,16 @@
 
 (defun new-league-from-db (league-key)
   "Create a LEAGUE struct from the given redis key."
-  (let ((id (parse-id league-key)))
+  (let* ((id (parse-id league-key))
+         (commish-key (sf "leagues:~A:commissioners" id)))
     (make-league :id id
                  :name (red-hget league-key "name")
                  :full-name (red-hget league-key "full-name")
                  :created (red-hget league-key "created")
                  :active? (to-bool (red-hget league-key "active?"))
-                 :commissioners
-                 (let* ((commish-key (sf "leagues:~A:commissioners" id))
-                        (commish-ids (red-smembers commish-key))
-                        (players '()))
-                   (dolist (id commish-ids)
-                     (push (get-player :id id) players))
-                   (sort players #'string< :key #'player-name))
+                 :commissioner-ids (map 'list
+                                        #'parse-integer
+                                        (red-smembers commish-key))
                  :game-reminder-day-offset
                  (parse-integer
                   (or (red-hget league-key "game-reminder-day-offset") "0"))
@@ -662,8 +660,7 @@
       (and player
            league
            (find (player-id player)
-                 (league-commissioners league)
-                 :key #'player-id))))
+                 (league-commissioner-ids league)))))
 
 (defun reset-pwd-get-token (player)
   "Get the password reset request key.
