@@ -864,7 +864,6 @@
                                 "false")
                             :type "checkbox")
                     (:span "Immediate email notifications")))
-                  (:br)
                   (:p
                    (:label
                     (:span "Default Position: ")
