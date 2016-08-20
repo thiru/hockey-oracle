@@ -244,7 +244,7 @@
   (let* ((unconfirmed (remove-if (lambda (x) (string-equal :playing
                                                            (-> x confirm-type)))
                                  (-> game confirms))))
-    (dolist (p (get-players (game-league game)))
+    (dolist (p (get-players :league (game-league game)))
       (unless (find (player-id p) (-> game confirms)
                     :key (lambda (x) (player-id (game-confirm-player x))))
         (push (make-game-confirm :player p
@@ -495,7 +495,7 @@
                (if (and p-to-update? (not (null reason)))
                    reason
                    (game-confirm-reason gc))))))
-    (dolist (p (get-players (game-league game)))
+    (dolist (p (get-players :league (game-league game)))
       (if (and (not (getf new-gcs (player-id p)))
                (= (player-id p) (player-id player)))
           (setf (getf new-gcs (player-id p))
@@ -573,34 +573,30 @@
 (defparameter player-name-max-length 100)
 (defparameter player-email-max-length 254)
 
-(defun get-all-players ()
-  "Gets a list of all PLAYER's sorted by first name."
-  ;; TODO: Use (red-scan) instead of (red-keys) to get player keys
+(defun get-players (&key league)
+  "Gets a list of all players matching the specified criteria."
+  (if league
+      (check-type league LEAGUE))
   ;; TODO: Use pipelines to send multiple commands at once
   (redis:with-persistent-connection ()
-    (let* ((player-keys (red-keys "player:*"))
-           (players nil))
-      (dolist (player-key player-keys)
-        (push (new-player-from-db player-key) players))
+    (let* ((leagues (if league
+                        (list (get-league :id (league-id league)))
+                        (get-all-leagues)))
+           (players '()))
+      (dolist (league leagues)
+        (let* ((player-ids (map 'list
+                                #'parse-integer
+                                (red-smembers (sf "leagues:~A:players"
+                                                  (league-id league))))))
+          (dolist (player-id player-ids)
+            (if (null (find player-id players :key #'player-id))
+                (push (new-player-from-db player-id) players)))))
       (sort players #'string< :key #'player-name))))
 
-(defun get-players (league)
-  "Gets a list of all PLAYER's belonging the given LEAGUE, sorted by first name."
-  ;; TODO: Use (red-scan) instead of (red-keys) to get player keys
-  ;; TODO: Use pipelines to send multiple commands at once
-  (if league
-      (redis:with-persistent-connection ()
-        (let* ((player-ids (red-smembers (sf "leagues:~A:players"
-                                             (league-id league))))
-               (players '()))
-          (dolist (player-id player-ids)
-            (push (new-player-from-db (sf "player:~A" player-id)) players))
-          (sort players #'string< :key #'player-name)))))
-
 (defun get-player (&key
-                     (id 0 id-given?)
-                     name
+                     (id 0)
                      email
+                     name
                      league
                      (pwd "" pwd-given?)
                      (perm-auth "" perm-auth-given?)
@@ -611,25 +607,21 @@
    they match. If PERM-AUTH is non-null it is compared against PLAYER-PERM-AUTH,
    and only returned if they match. If TEMP-AUTH is non-null it is compared
    against PLAYER-TEMP-AUTH, and only returned if non-null."
-  (let ((player nil))
-    (if id-given?
-        (let* ((player-key (sf "player:~A" id)))
-          (redis:with-persistent-connection ()
-            (when (red-exists player-key)
-              (setf player (new-player-from-db player-key)))))
-        (let* ((players (if (null league)
-                            (get-all-players)
-                            (get-players league)))
-               (players (remove-if-not
-                         (lambda (p)
-                           (and
-                            (or (empty? name)
-                                (string-equal name (player-name p)))
-                            (or (empty? email)
-                                (string-equal email (player-email p)))))
-                         players)))
-          (if (= 1 (length players))
-              (setf player (first players)))))
+  (let* ((id (loose-parse-int id))
+         (player nil)
+         (players (get-players :league league)))
+    (cond ((plusp id)
+           (setf player (first1 (find id players :key #'player-id))))
+          ((non-empty? email)
+           (setf player (first1 (find email
+                                      players
+                                      :key #'player-email
+                                      :test #'string-equal))))
+          ((non-empty? name)
+           (setf player (first1 (find name
+                                      players
+                                      :key #'player-name
+                                      :test #'string-equal)))))
     (if player
         (cond (pwd-given?
                (if (string= (player-auth player)
@@ -652,7 +644,7 @@
                 (and (or (not immediate-notify-only?)
                          (player-notify-immediately? p))
                      (not (empty? (player-email p))))))
-             (get-players league)))
+             (get-players :league league)))
 
 (defun is-commissioner? (player league)
   "Check whether PLAYER is a commission of LEAGUE."
@@ -760,7 +752,7 @@
                       (and
                        (/= (player-id player) (player-id p))
                        (string-equal (player-email player) (player-email p))))
-                    (get-all-players)))
+                    (get-players)))
       (return-from update-player
         (new-r :error
                (sf "Sorry, this email address is taken by another player."))))
@@ -774,23 +766,27 @@
         (red-hset player-key "position" (player-position player)))))
   (new-r :success "Update successful!" player))
 
-(defun new-player-from-db (player-key)
-  "Create a PLAYER struct from the given redis key."
-  (let ((id (parse-id player-key)))
-    (make-player :id id
-                 :name (red-hget player-key "name")
-                 :admin? (to-bool (find (sf "~A" id)
-                                        (red-smembers "admin:users")
-                                        :test #'string-equal))
-                 :email (red-hget player-key "email")
-                 :notify-immediately?
-                 (to-bool (red-hget player-key "notify-immediately?"))
-                 :auth (red-hget player-key "auth")
-                 :perm-auth (red-hget player-key "perm-auth")
-                 :temp-auth (red-hget player-key "temp-auth")
-                 :salt (red-hget player-key "salt")
-                 :position (red-hget player-key "position")
-                 :active? (red-sismember "players:active" id))))
+(defun new-player-from-db (id)
+  "Create a PLAYER struct for the specified player id."
+  (let ((id (if (typep id 'integer)
+                id
+                (parse-integer (to-string id))))
+        (player-key (sf "player:~A" id)))
+    (if (red-exists player-key)
+        (make-player :id id
+                     :name (red-hget player-key "name")
+                     :admin? (to-bool (find (to-string id)
+                                            (red-smembers "admin:users")
+                                            :test #'string-equal))
+                     :email (red-hget player-key "email")
+                     :notify-immediately?
+                     (to-bool (red-hget player-key "notify-immediately?"))
+                     :auth (red-hget player-key "auth")
+                     :perm-auth (red-hget player-key "perm-auth")
+                     :temp-auth (red-hget player-key "temp-auth")
+                     :salt (red-hget player-key "salt")
+                     :position (red-hget player-key "position")
+                     :active? (red-sismember "players:active" id)))))
 ;;; Players ----------------------------------------------------------------- END
 
 ;;; Web Server

@@ -94,7 +94,6 @@
    :player-activate
    :player-deactivate
    :players-positions
-   :get-all-players
    :get-players
    :get-player
    :is-commissioner?

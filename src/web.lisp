@@ -101,12 +101,6 @@
   `(with-html-output-to-string (*standard-output* nil :indent t)
      ,root-tag))
 
-(defmacro safe-parse-int (str &key (fallback 0))
-  "Lenient parsing of 'str'."
-  `(if (empty? ,str)
-       ,fallback
-       (or (parse-integer ,str :junk-allowed t) ,fallback)))
-
 (defun clean-uri-segment (input)
   "Replaces non-alphanumeric chars in INPUT for a cleaner URI segment."
   (setf input (cl-ppcre:regex-replace-all "[ ]+" input "-"))
@@ -289,14 +283,17 @@
          (given-auth "")
          (player nil))
     (when (not (empty? me-query))
-      (setf player-id (subseq me-query 0 (position #\- me-query)))
+      (setf player-id
+            (loose-parse-int (subseq me-query 0 (position #\- me-query))))
       (setf given-auth (subseq me-query (1+ (or (position #\- me-query) 0))))
       (setf player (get-player :id player-id :temp-auth given-auth))
       (set-auth-cookie player))
     ;; Try to load player from long-lived cookie if player not yet found
     (when (and (null player) perm-user-cookie)
       (setf player-id
-            (subseq perm-user-cookie 0 (position #\- perm-user-cookie)))
+            (loose-parse-int (subseq perm-user-cookie
+                                     0
+                                     (position #\- perm-user-cookie))))
       (setf given-auth
             (subseq perm-user-cookie (1+ (or (position #\- perm-user-cookie)
                                              0))))
@@ -304,15 +301,20 @@
     ;; Try to load player from short-lived cookie if player not yet found
     (when (and (null player) temp-user-cookie)
       (setf player-id
-            (subseq temp-user-cookie 0 (position #\- temp-user-cookie)))
+            (loose-parse-int (subseq temp-user-cookie
+                                     0
+                                     (position #\- temp-user-cookie))))
       (setf given-auth
             (subseq temp-user-cookie (1+ (or (position #\- temp-user-cookie)
                                              0))))
       (setf player (get-player :id player-id :temp-auth given-auth)))
     (cond ((and require-league? (null league))
            (www-not-found-page :player player))
-          ((and require-league? (null player))
-           (www-not-authorised-page))
+          ((and require-league? (or (null player)
+                                    (null (get-player :id player-id
+                                                      :league league))))
+           (www-not-authorised-page :player player))
+          ;((and require-league? (league-pl)))
           (t (funcall actual-page :player player :league league)))))
 ;;; Base Page --------------------------------------------------------------- END
 
@@ -636,7 +638,7 @@
 ;;; Reset Password Page
 (defun www-reset-pwd (&key player league)
   (let* ((token (get-parameter "token"))
-         (player-id (safe-parse-int (subseq token 0 (position #\- token))))
+         (player-id (loose-parse-int (subseq token 0 (position #\- token))))
          (player (get-player :id player-id))
          (verified-token (if player (reset-pwd-get-token player))))
     (if (not (and player
@@ -678,7 +680,7 @@
 (defun api-reset-pwd (&key player league)
   (sleep 2)
   (setf (content-type*) "application/json")
-  (let* ((player-id (safe-parse-int (post-parameter "id")))
+  (let* ((player-id (loose-parse-int (post-parameter "id")))
          (reset-token (post-parameter "resetToken"))
          (new-pwd (post-parameter "pwd"))
          (player (get-player :id player-id))
@@ -739,7 +741,7 @@
 ;;; User Detail Page
 (defun www-user-detail-page (&key player league)
   (let* ((path-segs (path-segments *request*))
-         (target-player-id (safe-parse-int (last1 path-segs)))
+         (target-player-id (loose-parse-int (last1 path-segs)))
          (target-player (if (plusp target-player-id)
                             (get-player :id target-player-id))))
     ;; Abort if player id specified in URL but not found
@@ -886,7 +888,7 @@
   (declare (ignorable league))
   (setf (content-type*) "application/json")
   (let* ((curr-player-id (player-id player))
-         (id (safe-parse-int (post-parameter "id")))
+         (id (loose-parse-int (post-parameter "id")))
          (name (post-parameter "name"))
          (email (post-parameter "email"))
          (notify-immediately?
@@ -1709,7 +1711,7 @@
     (:h2 :class "blue-heading"
          "Players")
     (:ul :id "all-players" :class "data-list"
-         (dolist (p (get-players league))
+         (dolist (p (get-players :league league))
            (htm
             (:li :class "player-item"
                  :data-id (player-id p)
@@ -1786,7 +1788,7 @@
 ;;; Player Detail Page
 (defun www-player-detail-page (&key player league)
   (let* ((path-segs (path-segments *request*))
-         (target-player-id (safe-parse-int (last1 path-segs)))
+         (target-player-id (loose-parse-int (last1 path-segs)))
          (target-player (get-player :id target-player-id)))
     (if (null target-player)
         (return-from www-player-detail-page
@@ -1794,7 +1796,7 @@
     (let ((leagues (get-all-leagues))
           (commissions '()))
       (dolist (l leagues)
-        (if (find (player-id target-player) (league-commissioners l) :key #'player-id)
+        (if (find (player-id target-player) (league-commissioner-ids l))
             (push l commissions)))
       (standard-page
           (:title "Player"
@@ -1848,7 +1850,9 @@
     (:h2 (fmt "~A Management" (league-name league)))
     (:p :style "font-weight:bold"
         "Commissioners: "
-        (dolist (p (league-commissioners league))
+        (dolist (p (map 'list
+                        (lambda (p) (is-commissioner? p league))
+                        (get-players :league league)))
           (htm
            (:a :href (sf "/~(~A~)/players/~(~A~)/~A"
                          (league-name league)
@@ -1889,7 +1893,7 @@
   (setf (league-send-automated-emails? league)
         (string-equal "true" (post-parameter "sendAutomatedEmails")))
   (setf (league-game-reminder-day-offset league)
-        (safe-parse-int (post-parameter "gameReminderDayOffset")))
+        (loose-parse-int (post-parameter "gameReminderDayOffset")))
   (setf (league-game-reminder-time league) (post-parameter "gameReminderTime"))
   (json-result (update-league league)))
 ;;; League Save API --------------------------------------------------------- END
