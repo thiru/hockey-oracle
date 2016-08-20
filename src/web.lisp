@@ -576,6 +576,7 @@
 
 ;;; Home Page
 (defun www-home-page (&key player league)
+  (declare (ignorable player league))
   (redirect "/leagues"))
 ;;; Home Page --------------------------------------------------------------- END
 
@@ -625,6 +626,7 @@
 
 ;;; Login API
 (defun api-login (&key player league)
+  (declare (ignorable player league))
   (setf (content-type*) "application/json")
   (let* ((email (post-parameter "email"))
          (pwd (post-parameter "pwd"))
@@ -643,6 +645,7 @@
 
 ;;; Reset Password Page
 (defun www-reset-pwd (&key player league)
+  (declare (ignorable player))
   (let* ((token (get-parameter "token"))
          (player-id (loose-parse-int (subseq token 0 (position #\- token))))
          (player (get-player :id player-id))
@@ -684,6 +687,7 @@
 
 ;;; Reset Password API
 (defun api-reset-pwd (&key player league)
+  (declare (ignorable player league))
   (sleep 2)
   (setf (content-type*) "application/json")
   (let* ((player-id (loose-parse-int (post-parameter "id")))
@@ -718,6 +722,7 @@
 
 ;;; Forgot Password API
 (defun api-forgot-pwd (&key player league)
+  (declare (ignorable player league))
   (sleep 2)
   (setf (content-type*) "application/json")
   (let* ((email (post-parameter "email"))
@@ -941,6 +946,7 @@
 
 ;;; User Logout Page
 (defun www-user-logout-page (&key player league)
+  (declare (ignorable player))
   (remove-auth-cookies)
   (standard-page
       (:title "Log Out"
@@ -976,6 +982,7 @@
 ;;; NOTE: Disabling this page for now as it doesn't add much value over the
 ;;;       schedule/score pages.
 (defun www-league-detail-page (&key player league)
+  (declare (ignorable player))
   (redirect (sf "/~(~A~)/games/schedule" (league-name league))))
 #||
   (let* ((upcoming-games (get-upcoming-games league 3)))
