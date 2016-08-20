@@ -1519,24 +1519,6 @@
                                   "/images/leagues/phl/teams/panthers.png")
                             (:h2 :class "team-heading" "Panthers")
                             (:ul :class "team-players data-list")))
-            (:br)
-            (:button :id "make-teams"
-                     :class "button wide-button"
-                     :onclick "page.makeTeams()"
-                     :title "Generate random teams"
-                     (:i :class "fa fa-random")
-                     (:span :class "button-text" "Make Teams"))
-            (:button :id "add-player"
-                     :class "button wide-button"
-                     :onclick "page.addPlayer()"
-                     (:i :class "fa fa-user-plus")
-                     (:span :class "button-text" "Add Player"))
-            (:button :id "pick-players"
-                     :class "button wide-button"
-                     :onclick "page.pickPlayers()"
-                     :title "Choose players"
-                     (:i :class "fa fa-check-circle-o")
-                     (:span :class "button-text" "Pick Players"))
             ;; Edit Player Dialog
             (:div :id "edit-dialog" :class "dialog"
                   (:div :class "dialog-content"
@@ -1575,7 +1557,25 @@
                                          :class "button cancel-btn"
                                          :onclick
                                          "page.closeDialog(\"#edit-dialog\")"
-                                         "Cancel"))))))))))
+                                         "Cancel")))))
+            (:br)
+            (:button :id "make-teams"
+                     :class "button wide-button"
+                     :onclick "page.makeTeams()"
+                     :title "Generate random teams"
+                     (:i :class "fa fa-random")
+                     (:span :class "button-text" "Make Teams"))
+            (:button :id "add-player"
+                     :class "button wide-button"
+                     :onclick "page.addPlayer()"
+                     (:i :class "fa fa-user-plus")
+                     (:span :class "button-text" "Add Player"))
+            (:button :id "pick-players"
+                     :class "button wide-button"
+                     :onclick "page.pickPlayers()"
+                     :title "Choose players"
+                     (:i :class "fa fa-check-circle-o")
+                     (:span :class "button-text" "Pick Players")))))))
 ;;; Game Detail Page -------------------------------------------------------- END
 
 ;;; Game Update API
@@ -1733,22 +1733,6 @@
                                  (:i :class "fa fa-pencil-square-o")))
                  (:span :class "player-position" (esc (player-position p)))
                  (:span :class "clear-fix")))))
-    (:br)
-    (:button :id "add-player"
-             :class "button wide-button"
-             :onclick "page.addPlayer()"
-             (:i :class "fa fa-user-plus")
-             (:span :class "button-text" "Add Player"))
-    (:div :class "template-items"
-          (:ul :class "template-player-item"
-               (:li :class "player-item"
-                    (:span :class "player-name" "")
-                    (:span :class "action-buttons"
-                           (:button :class "button"
-                                    :onclick "page.editPlayer(this, \"#all-players\")"
-                                    (:i :class "fa fa-pencil-square-o")))
-                    (:span :class "player-position" "&nbsp;")
-                    (:span :class "clear-fix"))))
     (:div :id "edit-dialog" :class "dialog"
           (:div :class "dialog-content"
                 (:header "Editing Player")
@@ -1786,7 +1770,23 @@
                                  :class "button cancel-btn"
                                  :onclick
                                  "page.closeDialog(\"#edit-dialog\")"
-                                 "Cancel")))))))
+                                 "Cancel")))))
+    (:br)
+    (:button :id "add-player"
+             :class "button wide-button"
+             :onclick "page.addPlayer()"
+             (:i :class "fa fa-user-plus")
+             (:span :class "button-text" "Add Player"))
+    (:div :class "template-items"
+          (:ul :class "template-player-item"
+               (:li :class "player-item"
+                    (:span :class "player-name" "")
+                    (:span :class "action-buttons"
+                           (:button :class "button"
+                                    :onclick "page.editPlayer(this, \"#all-players\")"
+                                    (:i :class "fa fa-pencil-square-o")))
+                    (:span :class "player-position" "&nbsp;")
+                    (:span :class "clear-fix"))))))
 ;;; Player List Page -------------------------------------------------------- END
 
 ;;; Player Detail Page
