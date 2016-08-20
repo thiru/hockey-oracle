@@ -531,6 +531,18 @@ page.initSchedulePage = function() {
 
 // Game Detail Page
 page.initGameDetailPage = function() {
+
+    // Replace absolute times of individual player confirmations with relative
+    $(".confirm-time").each(function() {
+        var absConfirmTime = $(this).text().trim();
+        if (!isBlank(absConfirmTime)) {
+            $(this).attr("title", absConfirmTime);
+            var relConfirmTime =
+                moment(absConfirmTime, page.dateAndTimeFmt).fromNow();
+            $(this).text("(" + relConfirmTime + ")");
+        }
+    });
+
     page.editGame = function() {
         $("#game-info-edit").toggle();
         $("#save-res").empty();
