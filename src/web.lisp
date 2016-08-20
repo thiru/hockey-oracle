@@ -545,31 +545,33 @@
   (base-league-page #'www-not-found-page :require-league? nil))
 
 (defun www-server-error-page (&key player league)
+  (setf (return-code*) +http-internal-server-error+)
   (standard-page
-   (:title "Server Error"
-    :player player
-    :league league
-    :page-id "server-error-page")
-   (:h2 "Server Error")
-   (:p "Sorry, it looks like something unexpected happened on the server.")
-   (:p "An administrator has been notified of the error.")
-   (:a :href "/" "Go back to the home page")))
+      (:title "Server Error"
+       :player player
+       :league league
+       :page-id "server-error-page")
+    (:h2 "Server Error")
+    (:p "Sorry, it looks like something unexpected happened on the server.")
+    (:p "An administrator has been notified of the error.")
+    (:a :href "/" "Go back to the home page")))
 
 (defmethod acceptor-status-message (acceptor (http-status-code (eql 500)) &key)
   (send-email "Server Error" "A <b>server error</b> occurred.")
-  (www-server-error-page nil))
+  (base-league-page #'www-server-error-page :require-league? nil))
 
 (defun www-test-server-error (&key player league)
   (log-message* :error "Test error page \(error log level).")
   (log-message* :warning "Test error page \(warning log level).")
   (log-message* :info "Test error page \(info log level).")
-  (error "This is an intentional error for testing purposes.")
-  ;; The following should never be displayed
+  ;; The following page should not be displayed. Instead we should be redirected
+  ;; to the standard server error page.
   (standard-page
       (:title "Test Server Error"
        :player player
        :league league)
-   (:h2 "Test Server Error")))
+    (:h2 "Test Server Error"))
+  (error "This is an intentional error for testing purposes."))
 ;;; Error Pages ------------------------------------------------------------- END
 
 ;;; Home Page
