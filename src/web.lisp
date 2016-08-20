@@ -313,8 +313,9 @@
           ((and require-league? (or (null player)
                                     (null (get-player :id player-id
                                                       :league league))))
-           (www-not-authorised-page :player player))
-          ;((and require-league? (league-pl)))
+           (www-not-authorised-page
+            :player player
+            :message "Sorry, you must be a member of this league to access it."))
           (t (funcall actual-page :player player :league league)))))
 ;;; Base Page --------------------------------------------------------------- END
 
@@ -519,7 +520,7 @@
     (:p "The page or resource you requested could not be found.")
     (:a :href "/" "Go back to the home page")))
 
-(defun www-not-authorised-page (&key player league)
+(defun www-not-authorised-page (&key player league message)
   (setf (return-code*) +http-forbidden+)
   (standard-page
       (:title "Not Authorised"
@@ -527,8 +528,11 @@
        :league league
        :page-id "not-authorised-page")
     (:h2 "Not Authorised")
-    (:p "Sorry but you do not have permission to view the page or "
-        "resource you requested.")
+    (:p
+     (if (non-empty? message)
+         (esc message)
+         (esc (sf '("Sorry, you do not have permission to view the page or "
+                    "resource you requested.")))))
     (:a :href "/" "Go back to the home page")
     (if (null player)
         (htm
@@ -1889,7 +1893,7 @@
     (setf (return-code*) +http-forbidden+)
     (return-from api-league-save
       (json-result
-       (new-r :error "Sorry you don't have permission to make this change."))))
+       (new-r :error "Sorry, you don't have permission to make this change."))))
   (setf (league-send-automated-emails? league)
         (string-equal "true" (post-parameter "sendAutomatedEmails")))
   (setf (league-game-reminder-day-offset league)
