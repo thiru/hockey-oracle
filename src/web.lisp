@@ -1854,15 +1854,16 @@
     (:h2 (fmt "~A Management" (league-name league)))
     (:p :style "font-weight:bold"
         "Commissioners: "
-        (dolist (p (map 'list
-                        (lambda (p) (is-commissioner? p league))
-                        (get-players :league league)))
+        (dolist (commish
+                 (map 'list
+                      (lambda (commish-id) (get-player :id commish-id))
+                      (league-commissioner-ids league)))
           (htm
            (:a :href (sf "/~(~A~)/players/~(~A~)/~A"
                          (league-name league)
-                         (clean-uri-segment (player-name p))
-                         (player-id p))
-               (esc (player-name p)))
+                         (clean-uri-segment (player-name commish))
+                         (player-id commish))
+               (esc (player-name commish)))
            (:span :class "comma" ","))))
     (:p
      (:span "Send email reminder")

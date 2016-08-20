@@ -647,7 +647,7 @@
              (get-players :league league)))
 
 (defun is-commissioner? (player league)
-  "Check whether PLAYER is a commission of LEAGUE."
+  "Check whether PLAYER is a commissioner of LEAGUE."
   (or (and player (player-admin? player))
       (and player
            league
