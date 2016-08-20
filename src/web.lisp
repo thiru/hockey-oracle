@@ -1333,17 +1333,13 @@
                                    :title
                                    (esc (r-message confirm-save-res)))))))
                 (:div :id "reason-input-group"
-                      :class (if (string-equal :playing
-                                               (game-confirm-confirm-type
-                                                player-gc))
-                                 "hidden")
-                 (:textarea :id "reason-input"
-                            :maxlength game-confirm-reason-max-length
-                            :onchange "page.reasonTextChanged(this)"
-                            :onkeyup "page.reasonTextChanged(this)"
-                            :placeholder
-                            "Reason for not playing or indecisiveness"
-                            (esc (game-confirm-reason player-gc)))
+                      (:textarea :id "reason-input"
+                                 :maxlength game-confirm-reason-max-length
+                                 :onchange "page.reasonTextChanged(this)"
+                                 :onkeyup "page.reasonTextChanged(this)"
+                                 :placeholder
+                                 "Reason for not playing or indecisiveness"
+                                 (esc (game-confirm-reason player-gc)))
                  (:div :id "save-confirm-group"
                        (:div :id "reason-input-info"
                              (fmt "~A chars left"
