@@ -1432,7 +1432,8 @@
                                                      nil)
                                        (esc pos)))))
                           (:span :class "confirm-info"
-                                 (:span :class "confirm-reason" "")
+                                 (:span :class "confirm-reason"
+                                        (esc (game-confirm-reason pc)))
                                  (:span :class "confirm-time"
                                         :title "Date confirmed"
                                         (esc (pretty-time

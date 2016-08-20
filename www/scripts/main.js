@@ -676,10 +676,6 @@ page.initGameDetailPage = function() {
             $("#confirm-type-status").hide();
             return;
         }
-        else if ("PLAYING" == selectedVal) {
-            $("#reason-input-group").hide();
-            $("#reason-input").val("");
-        }
         else {
             $("#reason-input-group").show();
         }
@@ -946,8 +942,9 @@ page.initGameDetailPage = function() {
 
         moveToEle.data(player);
         moveToEle.find(".player-name").text(player.name);
-        moveToEle.find(".confirm-time").text(player.responseTime);
         moveToEle.find(".player-position").val(player.position);
+        moveToEle.find(".confirm-reason").text(player.reason);
+        moveToEle.find(".confirm-time").text(player.responseTime);
 
         page.moveToPlayerList($("#confirmed-players"), moveToEle);
         currPlayerEle.remove();
