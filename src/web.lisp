@@ -1347,7 +1347,9 @@
                                  :onchange "page.reasonTextChanged(this)"
                                  :onkeyup "page.reasonTextChanged(this)"
                                  :placeholder
-                                 "Reason for not playing or indecisiveness"
+                                 (sf '("Additional notes on status. E.g. "
+                                       "reason for not playing or "
+                                       "indecisiveness."))
                                  (esc (game-confirm-reason player-gc)))
                  (:div :id "save-confirm-group"
                        (:div :id "reason-input-info"
