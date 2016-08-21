@@ -2,12 +2,25 @@
 
 (in-package :hockey-oracle.core)
 
-(defparameter base-dir (asdf:system-relative-pathname :hockey-oracle ""))
-(defparameter version-file-path
-  (asdf:system-relative-pathname :hockey-oracle "version"))
-(defparameter version (asdf::read-file-form version-file-path))
-(defparameter updated (universal-to-timestamp
-                       (file-write-date version-file-path)))
+;;; App Info
+(defstruct app
+  "Defines high-level app details."
+  base-dir
+  updated
+  version)
+
+(defun get-app-info ()
+  "Get app details."
+  (make-app
+   :base-dir (asdf:system-relative-pathname :hockey-oracle "")
+   :version (asdf::read-file-form
+             (asdf:system-relative-pathname :hockey-oracle "version"))
+   :updated (universal-to-timestamp
+             (file-write-date
+              (asdf:system-relative-pathname :hockey-oracle "version")))))
+
+(defparameter *app* (get-app-info))
+;;; App Info --------------------------------------------------------------------
 
 ;;; Utils
 (defun first1 (obj)

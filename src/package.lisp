@@ -6,9 +6,12 @@
   (:use :alexandria :cl :glu :local-time :redis :split-sequence)
   (:documentation "Hockey Oracle core domain.")
   (:export
-   :base-dir
-   :updated
-   :version
+   :app
+   :make-app
+   :app-base-dir
+   :app-updated
+   :app-version
+   :*app*
    :random-string
    :gen-hash
    :pretty-time

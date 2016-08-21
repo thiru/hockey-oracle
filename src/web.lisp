@@ -5,7 +5,7 @@
 ;;; General
 (defvar *debug* t)
 (defvar main-acceptor nil "The global web-server instance.")
-(defvar static-files-dir (merge-pathnames "www/" base-dir))
+(defvar static-files-dir (merge-pathnames "www/" (app-base-dir *app*)))
 
 (defparameter server-info (get-server-info))
 
@@ -607,10 +607,10 @@
     (:table :class "brief-table"
             (:tr
              (:td "Version")
-             (:td (fmt "~a" version)))
+             (:td (fmt "~a" (app-version *app*))))
             (:tr
              (:td "Last Updated")
-             (:td (fmt "~a" (pretty-time updated))))
+             (:td (fmt "~a" (pretty-time (app-updated *app*)))))
             (:tr
              (:td "Source Code")
              (:td (:a :href "https://github.com/thiru/hockey-oracle"
