@@ -9,14 +9,6 @@
    :base-dir
    :updated
    :version
-   :levels
-   :r
-   :r-level
-   :r-message
-   :r-data
-   :new-r
-   :succeeded?
-   :failed?
    :random-string
    :gen-hash
    :pretty-time
