@@ -2,18 +2,13 @@
 
 (in-package :cl-user)
 
-(defpackage :hockey-oracle.app
-  (:use :asdf :cl :uiop)
-  (:documentation "Hockey Oracle build configuration.")
-  (:export
-   :base-dir
-   :updated
-   :version))
-
 (defpackage :hockey-oracle.core
   (:use :alexandria :cl :glu :local-time :redis :split-sequence)
   (:documentation "Hockey Oracle core domain.")
   (:export
+   :base-dir
+   :updated
+   :version
    :levels
    :r
    :r-level
@@ -115,8 +110,8 @@
    :send-email-to-players))
 
 (defpackage :hockey-oracle.web
-  (:use :alexandria :cl :cl-who :glu :hockey-oracle.app :hockey-oracle.core
-        :hunchentoot :local-time :split-sequence)
+  (:use :alexandria :cl :cl-who :glu :hockey-oracle.core :hunchentoot :local-time
+   :split-sequence)
   (:documentation "Hockey Oracle web interface.")
   (:export
    :web-app

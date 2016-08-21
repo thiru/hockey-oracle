@@ -2,6 +2,13 @@
 
 (in-package :hockey-oracle.core)
 
+(defparameter base-dir (asdf:system-relative-pathname :hockey-oracle ""))
+(defparameter version-file-path
+  (asdf:system-relative-pathname :hockey-oracle "version"))
+(defparameter version (asdf::read-file-form version-file-path))
+(defparameter updated (universal-to-timestamp
+                       (file-write-date version-file-path)))
+
 ;;; Utils
 (defun first1 (obj)
   "Gets the first item in OBJ if it's a list, otherwise OBJ is simply returned."
@@ -57,13 +64,15 @@
                              (ironclad:ascii-string-to-byte-array
                               (sf "~A~A" str (or salt ""))))))
 
-(defun pretty-time (time-str)
-  "Formats a date/time to a user-friendly form. 'time-str' is expected to be a
-   timestamp readable by LOCAL-TIME."
-  (if (empty? time-str)
+(defun pretty-time (time)
+  "Formats a date/time to a user-friendly form. TIME is expected to either be a
+   timestamp readable by LOCAL-TIME, or a LOCAL-TIME:TIMESTAMP object."
+  (if (empty? time)
       ""
       (let* ((format-desc '())
-             (timestamp (parse-timestring time-str)))
+             (timestamp (if (stringp time)
+                            (parse-timestring time)
+                            time)))
 
         ;; NOTE: This format needs to be in sync with the front-end date format
         (setf format-desc '(:short-weekday " " :short-month " " :day
