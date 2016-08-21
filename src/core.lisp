@@ -400,7 +400,7 @@
       (return-from update-game-info
         (new-r :error
                (sf "You do not have permission to update games in ~A."
-                   (league-name league)))))
+                   (league-name (game-league game))))))
   (redis:with-persistent-connection ()
     (let* ((league (game-league game))
            (game-key (sf "game:~A" (game-id game)))
@@ -446,7 +446,7 @@
       (return-from delete-game
         (new-r :error
                (sf "You do not have permission to update games in ~A."
-                   (league-name league)))))
+                   (league-name (game-league game))))))
   (redis:with-persistent-connection ()
     (let* ((league-id (league-id (game-league game)))
            (game-key (sf "game:~A" (game-id game))))
