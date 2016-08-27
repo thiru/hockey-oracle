@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Starts Hockey Oracle in a screen session with the following properties:
+# Starts the Hockey Oracle web server in a screen session:
 # * detached by default
 # * name of session is "howeb"
 # * session will not die even if sbcl process ends
