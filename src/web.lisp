@@ -442,7 +442,9 @@
                              (:a :class (if (based-on-path? path "leagues")
                                             "active"
                                             nil)
-                                 :href "/leagues" "Leagues"))
+                                 :href "/leagues"
+                                 (:i :class "fa fa-fw fa-users")
+                                 (:span "Leagues")))
                             (if (and ,league
                                      ,player
                                      (is-commissioner? ,player ,league))
@@ -450,13 +452,16 @@
                                  (:li
                                   (:a :href (sf "/~(~A~)/manage"
                                                 (league-name ,league))
-                                      "Manage"))))
+                                      (:i :class "fa fa-fw fa-pencil-square")
+                                      (:span "Manage")))))
                             (if (null ,league)
                                 (htm (:li (:a :class (if (based-on-path? path
                                                                          "about")
                                                          "big-screen active"
                                                          "big-screen")
-                                              :href "/about" "About")))
+                                              :href "/about"
+                                              (:i :class "fa fa-fw fa-info-circle")
+                                              (:span "About"))))
                                 (htm (:li
                                       (:a :class (if (based-on-path? path
                                                                      "about"
@@ -465,11 +470,12 @@
                                                      nil)
                                           :href (sf "/~A/about"
                                                     (league-name ,league))
-                                          "About"))))
+                                          (:i :class "fa fa-fw fa-info-circle")
+                                          (:span "About")))))
                             (:li
                              (:a :onclick "page.toggleMainMenu()"
                                  :href "javascript:void(0)"
-                                 (:i :class "fa fa-times-circle")
+                                 (:i :class "fa fa-fw fa-times-circle")
                                  (:span "Close"))))))))
              (:section :id "login-dialog"
                        :class "dialog"
