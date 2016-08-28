@@ -469,7 +469,8 @@
                             (:li
                              (:a :onclick "page.toggleMainMenu()"
                                  :href "javascript:void(0)"
-                                 "Close")))))))
+                                 (:i :class "fa fa-times-circle")
+                                 (:span "Close"))))))))
              (:section :id "login-dialog"
                        :class "dialog"
                        (:div :class "dialog-content"
