@@ -400,11 +400,6 @@
                                 :class "clear-button"
                                 :onclick "page.toggleMainMenu()"
                                 (:i :class "fa fa-bars")))
-                      (:li :class "big-screen"
-                       (:a :class (if (based-on-path? path "leagues")
-                                      "active"
-                                      nil)
-                           :href "/leagues" "Leagues"))
                       (if ,league
                           (htm
                            (:li
