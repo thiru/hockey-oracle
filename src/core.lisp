@@ -244,6 +244,24 @@
 
 (defparameter game-progress-states '(:new :underway :final))
 
+(defstruct game-confirm
+  "Describes the confirmation state of a player for a game.
+   * PLAYER: the respective PLAYER
+   * TIME: when the PLAYER made a response
+   * CONFIRM-TYPE: a key value of an item in the plist CONFIRM-TYPES
+   * REASON: typically a description of why a player is unable/unsure of
+     playing"
+  (player nil)
+  (time "")
+  (confirm-type nil)
+  (reason ""))
+
+(defparameter game-confirm-reason-max-length 500)
+(defparameter confirm-types '(:no-response "No response"
+                              :maybe "Maybe"
+                              :cant-play "Can't play"
+                              :playing "Playing"))
+
 (defun game-confirm-for (game player)
   "Get GAME-CONFIRM (if any) for PLAYER for the game GAME."
   (if game
@@ -275,24 +293,6 @@
     (sort unconfirmed
           #'string<
           :key (lambda (x) (player-name (game-confirm-player x))))))
-
-(defstruct game-confirm
-  "Describes the confirmation state of a player for a game.
-   * PLAYER: the respective PLAYER
-   * TIME: when the PLAYER made a response
-   * CONFIRM-TYPE: a key value of an item in the plist CONFIRM-TYPES
-   * REASON: typically a description of why a player is unable/unsure of
-     playing"
-  (player nil)
-  (time "")
-  (confirm-type nil)
-  (reason ""))
-
-(defparameter game-confirm-reason-max-length 500)
-(defparameter confirm-types '(:no-response "No response"
-                              :maybe "Maybe"
-                              :cant-play "Can't play"
-                              :playing "Playing"))
 
 (defun get-games (&key league exclude-started exclude-unstarted)
   "Get all GAME's belonging with the specified criteria."

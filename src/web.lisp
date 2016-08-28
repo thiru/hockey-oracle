@@ -63,21 +63,93 @@
     (send-email-to-players
      (sf "Upcoming game in ~A" (league-name league))
      (lambda (player)
-       (sf '("<p>This is a reminder of an <a href='~(~A~)'>upcoming game</a> "
-             "in the <strong title='~A'>~A</strong> on ~A.</p>"
-             "<p>Please update your <a href='~(~A~)'>game status</a> if you "
-             "haven't done so already.</p>")
-           (build-url (sf "~A/games/~A"
-                          (league-name league)
-                          (game-id game))
-                      player)
-           (league-full-name league)
-           (league-name league)
-           (pretty-time (game-time game))
-           (build-url (sf "~A/games/~A"
-                          (league-name league)
-                          (game-id game))
-                      player)))
+       (let* ((player-confirm (game-confirm-for game player))
+              (confirm-type (if player-confirm
+                                (game-confirm-confirm-type player-confirm)
+                                :no-response))
+              (all-confirmed (confirmed-players game))
+              (all-unconfirmed (unconfirmed-players game))
+              (all-maybes (remove-if-not
+                           (lambda (gc) (equal :maybe
+                                               (game-confirm-confirm-type gc)))
+                           all-unconfirmed))
+              (all-cant-play (remove-if-not
+                              (lambda (gc) (equal :cant-play
+                                                  (game-confirm-confirm-type
+                                                   gc)))
+                              all-unconfirmed))
+              (all-no-response (remove-if-not
+                                (lambda (gc) (equal :no-response
+                                                    (game-confirm-confirm-type
+                                                     gc)))
+                                all-unconfirmed)))
+         (mkstr
+          (sf '("<p>This is a reminder of an <strong>upcoming</strong> "
+                "<a href='~(~A~)'>game</a> in the "
+                "<a href='~(~A~)' title='~A'>~A</a> on ~A.</p>")
+              (build-url (sf "~A/games/~A"
+                             (league-name league)
+                             (game-id game))
+                         player)
+              (build-url (league-name league) player)
+              (league-full-name league)
+              (league-name league)
+              (pretty-time (game-time game)))
+          (if (or (null player-confirm)
+                  (equal :no-response confirm-type))
+              (sf '("<p>Please update your <a href='~(~A~)'>game status"
+                    "</a>.</p>")
+                  (build-url (sf "~A/games/~A"
+                                 (league-name league)
+                                 (game-id game))
+                             player))
+              (sf '("<p>Your current status for this game is "
+                    "<strong>~(~A~)</strong>.</p>")
+                  (getf confirm-types confirm-type)))
+          (if (empty? all-confirmed)
+              "<p><strong>No players have confirmed to play as yet.</strong></p>"
+              (sf '("<strong>Confirmed to play (~A):</strong>"
+                    "<ul>~{<li>~A</li>~}</ul>")
+                  (length all-confirmed)
+                  (map 'list
+                       (lambda (gc)
+                         (sf "~A - <i>~A</i>"
+                             (player-name (game-confirm-player gc))
+                             (player-position (game-confirm-player gc))))
+                       all-confirmed)))
+          (if (non-empty? all-maybes)
+              (sf '("<strong>Might play (~A):</strong>"
+                    "<ul>~{<li>~A</li>~}</ul>")
+                  (length all-maybes)
+                  (map 'list
+                       (lambda (gc)
+                         (sf "~A - <i>~A</i>"
+                             (player-name (game-confirm-player gc))
+                             (player-position (game-confirm-player gc))))
+                       all-maybes))
+              "")
+          (if (non-empty? all-cant-play)
+              (sf '("<strong>Not playing (~A):</strong>"
+                    "<ul>~{<li>~A</li>~}</ul>")
+                  (length all-cant-play)
+                  (map 'list
+                       (lambda (gc)
+                         (sf "~A - <i>~A</i>"
+                             (player-name (game-confirm-player gc))
+                             (player-position (game-confirm-player gc))))
+                       all-cant-play))
+              "")
+          (if (non-empty? all-no-response)
+              (sf '("<strong>No response (~A):</strong>"
+                    "<ul>~{<li>~A</li>~}</ul>")
+                  (length all-no-response)
+                  (map 'list
+                       (lambda (gc)
+                         (sf "~A - <i>~A</i>"
+                             (player-name (game-confirm-player gc))
+                             (player-position (game-confirm-player gc))))
+                       all-no-response))
+              ""))))
      league)))
 ;;; Email ------------------------------------------------------------------- END
 
@@ -1160,7 +1232,7 @@
               (send-email-to-players
                (sf "New game in ~A" (league-name league))
                (lambda (player)
-                 (sf '("<p>A <a href='~(~A~)'>new game</a> was added in the "
+                 (sf '("<p>A new <a href='~(~A~)'>game</a> was added in the "
                        "<strong title='~A'>~A</strong> on ~A.</p>")
                      (build-url (sf "~A/games/~A"
                                     (league-name league)
@@ -1642,7 +1714,7 @@
            (send-email-to-players
             (sf "Game time changed in ~A" (league-name league))
             (lambda (player-to-email)
-              (sf '("<p>An <a href='~(~A~)'>upcoming game's</a> time changed in "
+              (sf '("<p>An upcoming <a href='~(~A~)'>game's</a> time changed in "
                     "the <strong title'~A'>~A</strong> from ~A to ~A.</p>")
                   (build-url (sf "~A/games/~A"
                                  (league-name league)
@@ -1676,7 +1748,7 @@
             (sf "Game confirmation change in ~A" (league-name league))
             (lambda (player-to-email)
               (sf '("<p><a href='~(~A~)'>~A</a> updated their confirmation "
-                    "status for the <a href='~(~A~)'>upcoming game</a> in the "
+                    "status for the upcoming <a href='~(~A~)'>game</a> in the "
                     "<strong title='~A'>~A</strong> on ~A.</p>"
                     "<p>Status: <b>~(~A~)</b></p>"
                     "~A")
@@ -1697,7 +1769,7 @@
                         (find confirm-type confirm-types :test #'string-equal))
                   (if (empty? reason)
                       ""
-                      (sf '("<p>Reason:</p>"
+                      (sf '("<p>Notes:</p>"
                             "<blockquote>~A</blockquote>")
                           reason))))
             league
