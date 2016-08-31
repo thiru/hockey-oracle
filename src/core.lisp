@@ -224,6 +224,7 @@
 ;;; Games
 (defstruct game
   "Describes a hockey game.
+   * NOTES: any special notices/alerts on the game
    * TIME: date/time of the game
    * PROGRESS: is the state of the game, and defined in GAME-PROGRESS-STATES
    * CONFIRMS: list of GAME-CONFIRM structs
@@ -232,6 +233,7 @@
   (id 0)
   (created-at "")
   (created-by "")
+  (notes "")
   (league nil)
   (time nil)
   (progress nil)
@@ -532,6 +534,7 @@
   "Create a GAME struct based on the given redis key."
   (let ((id (parse-id game-key)))
     (make-game :id id
+               :notes (red-hget game-key "notes")
                :created-at (red-hget game-key "created-at")
                :created-by (get-player :id (red-hget game-key "created-by"))
                :league

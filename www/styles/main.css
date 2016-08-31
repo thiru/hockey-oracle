@@ -533,6 +533,15 @@ main
     float: right;
 }
 
+#game-detail-page #game-notes
+{
+    font-size: 1.5em;
+}
+#game-detail-page #game-notes > *
+{
+    margin: 0;
+}
+
 /* Edit dialog formatting */
 #edit-dialog .label-col > *,
 #edit-dialog .label-col > *

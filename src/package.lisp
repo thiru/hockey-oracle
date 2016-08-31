@@ -40,6 +40,7 @@
    :game-id
    :game-created-at
    :game-created-by
+   :game-notes
    :game-time
    :game-progress
    :game-home-team

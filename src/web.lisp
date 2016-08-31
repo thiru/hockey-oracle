@@ -1300,7 +1300,7 @@
                                     (:i :class "fa fa-trash")))))
             ;; Quick CRUD button result
             (:div :id "quick-crud-res")
-            ;; Game Time Display
+            ;; Game Time Display (read only)
             (:h1 :id "time-status-ro"
                  (:span :id "game-time-ro"
                         (esc (pretty-time (game-time game))))
@@ -1310,7 +1310,7 @@
                       (:span :id "game-state-ro"
                              :class "uppercase"
                              (fmt " - ~A" (game-progress game))))))
-            ;; Game Time/Status (main heading)
+            ;; Game Time/Status/Emails (editable)
             (:div :id "game-info-edit"
                   :class "background-highlight"
                   :data-game game-id
@@ -1435,6 +1435,11 @@
                                 :onclick "page.saveConfirmInfo()"
                                 "Update")
                        (:div :class "clear-fix"))))))
+            (:section
+             :id "game-notes"
+             :class (if (empty? (game-notes game)) "hidden" "")
+             (:h2 "Game Notes")
+             (:p (esc (game-notes game))))
             ;; Players Confirmed To Play
             (:section
              :id "confirmed-players-section"
