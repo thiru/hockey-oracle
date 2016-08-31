@@ -499,12 +499,10 @@ main
         Game detail page
 *******************************/
 
-#game-detail-page #edit-btn,
-#game-detail-page #delete-btn,
-#game-detail-page #delete-res
+#game-detail-page #quick-crud-btns > *
 {
     float: right;
-    margin-left: 1em;
+    margin-left: 0.5em;
 }
 
 #game-detail-page #game-info-edit

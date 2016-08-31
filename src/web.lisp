@@ -1277,21 +1277,29 @@
                :player player
                :league league
                :page-id "game-detail-page")
-            ;; Edit/Delete buttons
+            ;; Edit/Delete/Email buttons
             (if (is-commissioner? player league)
                 (htm
-                 (:button :id "edit-btn"
-                          :class "button crud-btn"
-                          :onclick "page.editGame()"
-                          :title "Edit"
-                          (:i :class "fa fa-pencil"))
-                 (:button :id "delete-btn"
-                          :class "button crud-btn"
-                          :onclick "page.deleteGame()"
-                          :title "Delete"
-                          (:i :class "fa fa-trash"))))
-            ;; Delete result
-            (:div :id "delete-res")
+                 (:section :id "quick-crud-btns"
+                           (:button :id "edit-btn"
+                                    :class "button crud-btn"
+                                    :onclick "page.editGame()"
+                                    :title "Edit"
+                                    (:i :class "fa fa-pencil"))
+                           (:button :id "email-reminder-btn"
+                                    :class "button crud-btn"
+                                    :onclick "page.sendEmailReminder()"
+                                    :title
+                                    (sf '("Send email reminder to all active "
+                                          "players of this game now"))
+                                    (:i :class "fa fa-envelope"))
+                           (:button :id "delete-btn"
+                                    :class "button crud-btn"
+                                    :onclick "page.deleteGame()"
+                                    :title "Delete"
+                                    (:i :class "fa fa-trash")))))
+            ;; Quick CRUD button result
+            (:div :id "quick-crud-res")
             ;; Game Time Display
             (:h1 :id "time-status-ro"
                  (:span :id "game-time-ro"
@@ -1366,15 +1374,7 @@
                              :style "display:none"
                              (:ul
                               (:li (fmt "~A"
-                                        (pretty-time (game-email-reminder game)))))
-                             (:button :id "email-reminder-btn"
-                                      :class "button wide-button crud-btn"
-                                      :onclick "page.sendEmailReminder()"
-                                      :title
-                                      (sf '("Send email reminder to all active "
-                                            "players of this game now"))
-                                      "Send email reminder now")
-                             (:div :id "email-res"))
+                                        (pretty-time (game-email-reminder game))))))
                        (:br)))
                   ;; Save button/result
                   (if (is-commissioner? player league)

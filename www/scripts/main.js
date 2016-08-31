@@ -546,7 +546,7 @@ page.initGameDetailPage = function() {
     page.editGame = function() {
         $("#game-info-edit").toggle();
         $("#save-res").empty();
-        $("#delete-res").empty();
+        $("#quick-crud-res").empty();
     };
 
     page.showEmailRemindersSection = function() {
@@ -561,23 +561,22 @@ page.initGameDetailPage = function() {
             return;
 
         $("#email-reminder-btn").prop("disabled", true);
-        showLoading("#email-res");
+        showLoading("#quick-crud-res");
 
         var gameId = parseInt(get("game-info-edit").dataset.game);
         var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
         $.post(url, { sendEmailReminder: true })
             .done(function (result) {
                 if (!result) {
-                    showResult($("#email-res"),
+                    showResult($("#quick-crud-res"),
                                Result.error("No response from server."));
-                    $("#email-reminder-btn").prop("disabled", false);
                 }
                 else {
                     result = new Result(result.level, result.message,
                                         result.data);
-                    showResult($("#email-res"), result);
-                    $("#email-reminder-btn").hide();
+                    showResult($("#quick-crud-res"), result);
                 }
+                $("#email-reminder-btn").prop("disabled", false);
             })
             .fail(function(data) {
                 var result = data.responseJSON;
@@ -587,7 +586,7 @@ page.initGameDetailPage = function() {
                 else
                     result = new Result(result.level, result.message,
                                         result.data);
-                showResult($("#email-res"), result);
+                showResult($("#quick-crud-res"), result);
                 $("#email-reminder-btn").prop("disabled", false);
             });
     };
@@ -597,22 +596,22 @@ page.initGameDetailPage = function() {
             return;
 
         $(".crud-btn").prop("disabled", true);
-        showLoading("#delete-res");
+        showLoading("#quick-crud-res");
 
         var gameId = parseInt(get("game-info-edit").dataset.game);
         var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
         $.post(url, { deleteGame: true })
             .done(function (result) {
                 if (!result) {
-                    showResult($("#delete-res"),
+                    showResult($("#quick-crud-res"),
                                Result.error("No response from server."));
                     $(".crud-btn").prop("disabled", false);
                 }
                 else {
                     result = new Result(result.level, result.message,
                                         result.data);
-                    showResult($("#delete-res"), result);
-                    $(".crud-btn").hide();
+                    showResult($("#quick-crud-res"), result);
+                    $("#quick-crud-btns").hide();
                 }
             })
             .fail(function(data) {
@@ -623,7 +622,7 @@ page.initGameDetailPage = function() {
                 else
                     result = new Result(result.level, result.message,
                                         result.data);
-                showResult($("#delete-res"), result);
+                showResult($("#quick-crud-res"), result);
                 $(".crud-btn").prop("disabled", false);
             });
     }
