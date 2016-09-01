@@ -169,16 +169,13 @@
 
 (defun new-league-from-db (league-key)
   "Create a LEAGUE struct from the given redis key."
-  (let* ((id (parse-id league-key))
-         (commish-key (sf "leagues:~A:commissioners" id)))
+  (let* ((id (parse-id league-key)))
     (make-league :id id
                  :name (red-hget league-key "name")
                  :full-name (red-hget league-key "full-name")
                  :created (red-hget league-key "created")
                  :active? (to-bool (red-hget league-key "active?"))
-                 :commissioner-ids (map 'list
-                                        #'parse-integer
-                                        (red-smembers commish-key))
+                 :commissioner-ids (read-code (red-hget league-key "commissioners"))
                  :game-reminder-day-offset
                  (parse-integer
                   (or (red-hget league-key "game-reminder-day-offset") "0"))
@@ -199,7 +196,8 @@
   (check-type league LEAGUE)
   (if league
       (redis:with-persistent-connection ()
-        (let* ((team-ids (red-smembers (sf "leagues:~A:teams" (-> league id))))
+        (let* ((team-ids (read-code (red-hget (sf "league:~A" (league-id league))
+                                              "teams")))
                (teams '()))
           (dolist (team-id team-ids)
             (push (new-team-from-db (sf "team:~A" team-id)) teams))
@@ -310,7 +308,7 @@
       (if (empty? league-ids)
           (return-from get-games))
       (dolist (league-id league-ids)
-        (dolist (game-id (red-smembers (sf "league:~A:games" league-id)))
+        (dolist (game-id (read-code (red-hget (sf "league:~A" league-id) "games")))
           (let* ((game-key (sf "game:~A" game-id))
                  (game (if (red-exists game-key) (new-game-from-db game-key))))
             (if game
@@ -385,8 +383,9 @@
                    (league-name league)))))
   (redis:with-persistent-connection ()
     (let* ((id-seed-key "games:id-seed")
-           (game-id (red-get id-seed-key))
+           (game-id (parse-integer (red-get id-seed-key)))
            (game-key (sf "game:~A" game-id))
+           (league-key (sf "league:~A" (league-id league)))
            (email-time (adjust-timestamp (parse-timestring time)
                          (offset :day
                                  (- (league-game-reminder-day-offset league)))
@@ -411,7 +410,9 @@
       (red-hset game-key "home-score" 0)
       (red-hset game-key "away-score" 0)
       (red-hset game-key "email-reminder" (to-string email-time))
-      (red-sadd (sf "league:~A:games" (league-id league)) game-id)
+      (red-hset league-key
+                "games"
+                (adjoin game-id (read-code (red-hget league-key "games"))))
       (red-incr id-seed-key)
       (red-zadd "emails:game-reminders"
                 (timestamp-to-universal email-time)
@@ -511,8 +512,12 @@
                    (league-name (game-league game))))))
   (redis:with-persistent-connection ()
     (let* ((league-id (league-id (game-league game)))
-           (game-key (sf "game:~A" (game-id game))))
-      (red-srem (sf "league:~A:games" league-id) (game-id game))
+           (game-key (sf "game:~A" (game-id game)))
+           (league-key (sf "league:~A" league-id)))
+      (red-hset league-key
+                "games"
+                (remove (game-id game)
+                        (read-code (red-hget league-key "games"))))
       (red-del game-key)
       (red-zrem "emails:game-reminders" (game-id game))
       (new-r :success "Deleted game!" game))))
