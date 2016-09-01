@@ -84,9 +84,8 @@
                                                      gc)))
                                 all-unconfirmed)))
          (mkstr
-          (sf '("<p>This is a reminder of an <strong>upcoming</strong> "
-                "<a href='~(~A~)'>game</a> in the "
-                "<a href='~(~A~)' title='~A'>~A</a> on ~A.</p>")
+          (sf '("<p>This is a reminder of an <a href='~(~A~)'>upcoming game</a> "
+                "in the <a href='~(~A~)' title='~A'>~A</a> on ~A.</p>")
               (build-url (sf "~A/games/~A"
                              (league-name league)
                              (game-id game))
@@ -106,8 +105,12 @@
               (sf '("<p>Your current status for this game is "
                     "<strong>~(~A~)</strong>.</p>")
                   (getf confirm-types confirm-type)))
+          (if (non-empty? (game-notes game))
+              (sf "<p><strong>~A</strong></p>"
+                  (escape-string (game-notes game)))
+              "")
           (if (empty? all-confirmed)
-              "<p><strong>No players have confirmed to play as yet.</strong></p>"
+              "<p><u>No players have confirmed to play as yet.</u></p>"
               (sf '("<strong>Confirmed to play (~A):</strong>"
                     "<ul>~{<li>~A</li>~}</ul>")
                   (length all-confirmed)
