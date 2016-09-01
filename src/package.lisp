@@ -55,6 +55,7 @@
    :get-games
    :get-upcoming-games
    :save-new-game
+   :cancel-game
    :delete-game
    :update-game-info
    :confirm-types

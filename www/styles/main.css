@@ -463,6 +463,11 @@ main
     font-size: 1.2em;
 }
 
+#schedule-page .cancelled
+{
+    text-decoration: line-through;
+}
+
 /*******************************
            Scores page
 *******************************/
@@ -470,6 +475,11 @@ main
 #scores-page .data-list
 {
     font-size: 1.2em;
+}
+
+#scores-page .cancelled
+{
+    text-decoration: line-through;
 }
 
 #scores-page .data-list .game-time

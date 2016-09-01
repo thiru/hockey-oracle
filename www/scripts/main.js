@@ -592,7 +592,7 @@ page.initGameDetailPage = function() {
     };
 
     page.deleteGame = function() {
-        if (!confirm("Are you sure you want to delete this game?"))
+        if (!confirm($("#delete-btn").data().deleteMsg))
             return;
 
         $(".crud-btn").prop("disabled", true);

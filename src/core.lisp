@@ -244,7 +244,7 @@
   (email-reminder "")
   (confirms '()))
 
-(defparameter game-progress-states '(:new :underway :final))
+(defparameter game-progress-states '(:new :underway :final :cancelled))
 
 (defstruct game-confirm
   "Describes the confirmation state of a player for a game.
@@ -316,11 +316,25 @@
             (if game
                 (cond (exclude-started
                        (if (or (empty? (game-progress game))
-                               (string-equal "new" (game-progress game)))
+                               (string-equal "new" (game-progress game))
+                               (and
+                                ;; If the game was cancelled only include it if
+                                ;; it's in the future
+                                (string-equal "cancelled" (game-progress game))
+                                (timestamp>=
+                                 (parse-timestring (game-time game))
+                                 (now))))
                            (push game games)))
                       (exclude-unstarted
                        (if (or (string-equal "underway" (game-progress game))
-                               (string-equal "final" (game-progress game)))
+                               (string-equal "final" (game-progress game))
+                               ;; If the game was cancelled only include it if
+                               ;; it's in the past
+                               (and
+                                (string-equal "cancelled" (game-progress game))
+                                (timestamp<
+                                 (parse-timestring (game-time game))
+                                 (now))))
                            (push game games)))
                       (t (push game games)))))))
       (sort games #'string< :key #'game-time))))
@@ -423,7 +437,7 @@
   (if (not (is-commissioner? user (game-league game)))
       (return-from update-game-info
         (new-r :error
-               (sf "You do not have permission to update games in ~A."
+               (sf "You do not have permission to modify games in ~A."
                    (league-name (game-league game))))))
   (redis:with-persistent-connection ()
     (let* ((league (game-league game))
@@ -456,6 +470,29 @@
       (setf updated-game (get-game (game-id game)))
       (new-r :success "Updated game!" updated-game))))
 
+(defun cancel-game (game user)
+  "Cancel GAME.
+   Returns an R."
+  (if (null game)
+      (return-from cancel-game
+        (new-r :error "No game specified." game)))
+  (check-type game GAME)
+  (if (null user)
+      (return-from cancel-game
+        (new-r :error "No user/player specified." game)))
+  (check-type user PLAYER)
+  (if (not (is-commissioner? user (game-league game)))
+      (return-from cancel-game
+        (new-r :error
+               (sf "You do not have permission to modify games in ~A."
+                   (league-name (game-league game))))))
+  (redis:with-persistent-connection ()
+    (let* ((league-id (league-id (game-league game)))
+           (game-key (sf "game:~A" (game-id game))))
+      (red-hset game-key "progress" :cancelled)
+      (red-zrem "emails:game-reminders" (game-id game))
+      (new-r :success "Cancelled game!" game))))
+
 (defun delete-game (game user)
   "Delete GAME.
    Returns an R."
@@ -470,7 +507,7 @@
   (if (not (is-commissioner? user (game-league game)))
       (return-from delete-game
         (new-r :error
-               (sf "You do not have permission to update games in ~A."
+               (sf "You do not have permission to modify games in ~A."
                    (league-name (game-league game))))))
   (redis:with-persistent-connection ()
     (let* ((league-id (league-id (game-league game)))
@@ -496,7 +533,11 @@
   (if (string-equal "final" (game-progress game))
       (return-from save-game-confirm
         (new-r :error
-               (sf "Can't update confirmation status for completed game."))))
+               (sf "Can't update confirmation status for completed games."))))
+  (if (string-equal "cancelled" (game-progress game))
+      (return-from save-game-confirm
+        (new-r :error
+               (sf "Can't update confirmation status for cancelled games."))))
   (if (not (null reason))
       (setf reason (subseq reason
                            0
@@ -852,7 +893,8 @@
                                             :ssl :tls
                                             :authentication `(,username ,pwd)))))))
 
-(defun send-email-to-players (subject get-message league &key immediate-notify-only?)
+(defun send-email-to-players (subject get-message league
+                              &key immediate-notify-only?)
   "Sends an HTML email to certain players belonging to LEAGUE.
    GET-MESSAGE is a func that takes a PLAYER and returns the body of the email.
    If IMMEDIATE-NOTIFY-ONLY? is T, only players who requested immediate email

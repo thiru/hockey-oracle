@@ -1161,13 +1161,21 @@
                 (dolist (game games)
                   (htm
                    (:li :class "game-item"
-                    (:a :class "game-time"
-                        :href (sf "/~(~A~)/games/~(~A~)"
-                                  (league-name league)
-                                  (game-id game))
-                        (esc (pretty-time (game-time game))))
-                    (:span :class "game-rel-time")
-                    (:span :class "clear-fix"))))))))))
+                        :title (if (string-equal "cancelled"
+                                                 (game-progress game))
+                                   "Game cancelled")
+                        (:span :class
+                               (if (string-equal "cancelled"
+                                                 (game-progress game))
+                                   "cancelled"
+                                   nil)
+                               (:a :class "game-time"
+                                   :href (sf "/~(~A~)/games/~(~A~)"
+                                             (league-name league)
+                                             (game-id game))
+                                   (esc (pretty-time (game-time game))))
+                               (:span :class "game-rel-time")
+                               (:span :class "clear-fix")))))))))))
 ;;; Schedule Page ----------------------------------------------------------- END
 
 ;;; Scores Page
@@ -1188,7 +1196,13 @@
                 (dolist (game games)
                   (htm
                    (:li
-                    (:div :class "game-time"
+                    :title
+                    (if (string-equal "cancelled" (game-progress game))
+                        "Game cancelled")
+                    (:div :class
+                          (if (string-equal "cancelled" (game-progress game))
+                              "game-time cancelled"
+                              "game-time")
                           (:a
                            :href (sf "/~(~A~)/games/~(~A~)"
                                      (league-name league)
@@ -1262,6 +1276,7 @@
          (confirm-save-res (new-r :info "Confirmation not updated.."))
          (show-confirm-inputs
            (and game
+                (not (string-equal "cancelled" (game-progress game)))
                 (not (string-equal "final" (game-progress game))))))
     (if (null game)
         (www-not-found-page :player player :league league)
@@ -1284,11 +1299,14 @@
             (if (is-commissioner? player league)
                 (htm
                  (:section :id "quick-crud-btns"
-                           (:button :id "edit-btn"
-                                    :class "button crud-btn"
-                                    :onclick "page.editGame()"
-                                    :title "Edit"
-                                    (:i :class "fa fa-pencil"))
+                           (if (not (string-equal "cancelled"
+                                                  (game-progress game)))
+                               (htm
+                                (:button :id "edit-btn"
+                                         :class "button crud-btn"
+                                         :onclick "page.editGame()"
+                                         :title "Edit"
+                                         (:i :class "fa fa-pencil"))))
                            (:button :id "email-reminder-btn"
                                     :class "button crud-btn"
                                     :onclick "page.sendEmailReminder()"
@@ -1298,6 +1316,11 @@
                                     (:i :class "fa fa-envelope"))
                            (:button :id "delete-btn"
                                     :class "button crud-btn"
+                                    :data-delete-msg
+                                    (if (string-equal "cancelled"
+                                                      (game-progress game))
+                                        "Are you sure you want to delete this game?"
+                                        "Are you sure you want to cancel this game?")
                                     :onclick "page.deleteGame()"
                                     :title "Delete"
                                     (:i :class "fa fa-trash")))))
@@ -1691,9 +1714,12 @@
       (return-from api-game-update
         (json-result (new-r :error "Game not found."))))
     (cond
-      ;; Delete game
+      ;; Delete/cancel game
       (delete-game?
-       (setf save-res (delete-game game player))
+       (setf save-res
+             (if (string-equal "cancelled" (game-progress game))
+                 (delete-game game player)
+                 (cancel-game game player)))
        (if (and (succeeded? save-res)
                 (string-equal "new" (game-progress game))
                 ;; New game time within next 7 days
@@ -1705,16 +1731,22 @@
             (sf "Game cancelled in ~A" (league-name league))
             (lambda (player-to-email)
               (sf '("<p>An upcoming game in the <a href='~A' title='~A'>~A</a> "
-                    "on ~A was cancelled.</p>")
+                    "on ~A was cancelled.</p>"
+                    "<p><strong>Game Notes:</strong></p>"
+                    "<p>~A</p>")
                   (build-url (sf "~A/games/schedule" (league-name league))
                              player-to-email)
                   (league-full-name league)
                   (league-name league)
-                  (pretty-time (game-time game))))
+                  (pretty-time (game-time game))
+                  (escape-string (game-notes game))))
             league))
        (json-result save-res))
       ;; Update game info (e.g. time, progress, notes, etc.)
       (game-time
+       (if (string-equal "cancelled" (game-progress game))
+           (return-from api-game-update
+             (json-result (new-r :warning "Can't edit cancelled games."))))
        (setf save-res (update-game-info game player game-time game-progress game-notes))
        (if (and (succeeded? save-res)
                 (not (string-equal game-time (game-time game)))
@@ -1740,17 +1772,20 @@
             league))
        (json-result save-res))
       (send-email-reminder?
-       (if (string-equal "final" (game-progress game))
+       (if (or (string-equal "final" (game-progress game))
+               (string-equal "cancelled" (game-progress game)))
            (return-from api-game-update
              (json-result
               (new-r :warning
-                     "Can't send email reminders for games marked final."))))
+                     (sf '("Can't send email reminders for cancelled or final "
+                           "games."))))))
        (email-game-reminder game)
        (json-result (new-r :success "Emails sent!")))
       ;; Update player's confirmation status
       (confirm-type
        (setf save-res (save-game-confirm game player confirm-type reason))
        (if (and (succeeded? save-res)
+                (not (string-equal "cancelled" (game-progress game)))
                 (not (string-equal "final" (game-progress game)))
                 ;; Game time within next 3 days
                 (timestamp<=
