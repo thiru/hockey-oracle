@@ -1361,6 +1361,11 @@
                                                    (fmt "~A" gps))))))
                         (:div :class "clear-fix"))
                   (:br)
+                  (:h2 "Game Notes")
+                  (:textarea :id "game-notes-input"
+                             :placeholder "Special notices, alerts, etc."
+                             (esc (game-notes game)))
+                  (:br)
                   ;; Email Reminders
                   (if (is-commissioner? player league)
                       (htm
@@ -1421,9 +1426,8 @@
                                  :onchange "page.reasonTextChanged(this)"
                                  :onkeyup "page.reasonTextChanged(this)"
                                  :placeholder
-                                 (sf '("Additional notes on status. E.g. "
-                                       "reason for not playing or "
-                                       "indecisiveness."))
+                                 (sf '("Notes on your status (e.g. reason for "
+                                       "not playing)"))
                                  (esc (game-confirm-reason player-gc)))
                  (:div :id "save-confirm-group"
                        (:div :id "reason-input-info"
@@ -1439,7 +1443,7 @@
              :id "game-notes"
              :class (if (empty? (game-notes game)) "hidden" "")
              (:h2 "Game Notes")
-             (:p (esc (game-notes game))))
+             (:p :id "game-notes-ro" (esc (game-notes game))))
             ;; Players Confirmed To Play
             (:section
              :id "confirmed-players-section"
@@ -1675,6 +1679,7 @@
                                               "sendEmailReminder")))
          (game-time (post-parameter "gameTime"))
          (game-progress (post-parameter "gameProgress"))
+         (game-notes (post-parameter "gameNotes"))
          (confirm-type (post-parameter "confirmType"))
          (reason (post-parameter "reason"))
          (save-res (new-r :info "Nothing updated.")))
@@ -1705,9 +1710,9 @@
                   (pretty-time (game-time game))))
             league))
        (json-result save-res))
-      ;; Update game info (e.g. time, progress)
+      ;; Update game info (e.g. time, progress, notes, etc.)
       (game-time
-       (setf save-res (update-game-info game player game-time game-progress))
+       (setf save-res (update-game-info game player game-time game-progress game-notes))
        (if (and (succeeded? save-res)
                 (not (string-equal game-time (game-time game)))
                 (string-equal "new" (game-progress game))

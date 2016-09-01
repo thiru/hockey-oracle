@@ -628,21 +628,25 @@ page.initGameDetailPage = function() {
     }
 
     page.saveGame = function() {
-        var gameTime = page.parseDateTime("game-date-rw", "game-time-rw");
-        if (!gameTime) {
+        var gameInfo = {
+            gameTime: page.parseDateTime("game-date-rw", "game-time-rw"),
+        };
+
+        if (!gameInfo.gameTime) {
             showResult($("#save-res"), Result.error("Game date/time invalid."))
             return;
         }
-        gameTime = gameTime.format();
 
-        var gameProgress = $("#game-status-ddl :selected").val().trim();
+        gameInfo.gameTime = gameInfo.gameTime.format();
+        gameInfo.gameProgress = $("#game-status-ddl :selected").val().trim();
+        gameInfo.gameNotes = $("#game-notes-input").val();
 
         $("#edit-actions .button").prop("disabled", true);
         showLoading("#save-res");
 
         var gameId = parseInt(get("game-info-edit").dataset.game);
         var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
-        $.post(url, { gameTime: gameTime, gameProgress: gameProgress})
+        $.post(url, gameInfo)
             .done(function (result) {
                 if (!result) {
                     showResult($("#save-res"),
@@ -652,6 +656,12 @@ page.initGameDetailPage = function() {
                     result = new Result(result.level, result.message,
                                         result.data);
                     showResult($("#save-res"), result);
+                    if (isBlank(gameInfo.gameNotes))
+                        $("#game-notes").addClass("hidden");
+                    else
+                        $("#game-notes").removeClass("hidden");
+                    $("#game-notes-ro").text(escapeHtml(gameInfo.gameNotes));
+
                 }
                 $("#edit-actions .button").prop("disabled", false);
             })

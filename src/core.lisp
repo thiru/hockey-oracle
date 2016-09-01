@@ -408,8 +408,8 @@
              new-game))))
 
 ;; TODO: transactify
-(defun update-game-info (game user time progress)
-  "Update the game time and progress.
+(defun update-game-info (game user time progress notes)
+  "Update GAME by USER with the other parameters.
    Returns an R, with the updated game if successful."
   (if (null game)
       (return-from update-game-info
@@ -445,6 +445,7 @@
            (updated-game nil))
       (red-hset game-key "updated-at" (now))
       (red-hset game-key "updated-by" (player-id user))
+      (red-hset game-key "notes" notes)
       (red-hset game-key "time" time)
       (red-hset game-key "progress" progress)
       (red-hset game-key "email-reminder" (to-string email-time))

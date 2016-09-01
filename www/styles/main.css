@@ -541,6 +541,11 @@ main
 {
     margin: 0;
 }
+#game-detail-page #game-notes-input
+{
+    display: block;
+    width: 100%;
+}
 
 /* Edit dialog formatting */
 #edit-dialog .label-col > *,
