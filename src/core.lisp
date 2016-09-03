@@ -940,6 +940,7 @@
                               &key immediate-notify-only?)
   "Sends an HTML email to certain players belonging to LEAGUE.
    GET-MESSAGE is a func that takes a PLAYER and returns the body of the email.
+   If the body of the message is empty the email will not be sent.
    If IMMEDIATE-NOTIFY-ONLY? is T, only players who requested immediate email
    notification will be included."
   (if (empty? subject)
@@ -957,13 +958,17 @@
                          (league-name league)))))
   (let* ((players (get-emailable-players
                    league
-                   :immediate-notify-only? immediate-notify-only?)))
+                   :immediate-notify-only? immediate-notify-only?))
+         (emails-sent 0))
     (if (empty? players)
         (return-from send-email-to-players
           (new-r :info
                  (sf "No players have email addresses in the league, '~A'."
                      (league-name league)))))
     (dolist (player players)
-      (send-email subject (funcall get-message player) (player-email player)))
-    (new-r :success (sf "Sent email to ~A recipients." (length players)))))
+      (let* ((email-body (funcall get-message player)))
+        (when (non-empty? email-body)
+          (incf emails-sent)
+          (send-email subject email-body (player-email player)))))
+    (new-r :success (sf "Sent email to ~A players." emails-sent))))
 ;;; Email ------------------------------------------------------------------- END

@@ -83,76 +83,78 @@
                                                     (game-confirm-confirm-type
                                                      gc)))
                                 all-unconfirmed)))
-         (mkstr
-          (sf '("<p>This is a reminder of an <a href='~(~A~)'>upcoming game</a> "
-                "in the <a href='~(~A~)' title='~A'>~A</a> on ~A.</p>")
-              (build-url (sf "~A/games/~A"
-                             (league-name league)
-                             (game-id game))
-                         player)
-              (build-url (league-name league) player)
-              (league-full-name league)
-              (league-name league)
-              (pretty-time (game-time game)))
-          (if (or (null player-confirm)
-                  (equal :no-response confirm-type))
-              (sf '("<p>Please update your <a href='~(~A~)'>game status"
-                    "</a>.</p>")
-                  (build-url (sf "~A/games/~A?confirm"
+         ;; Don't send email reminder to players that indicated they can't play
+         (if (not (equal :cant-play confirm-type))
+             (mkstr
+              (sf '("<p>This is a reminder of an <a href='~(~A~)'>upcoming game"
+                    "</a> in the <a href='~(~A~)' title='~A'>~A</a> on ~A.</p>")
+                  (build-url (sf "~A/games/~A"
                                  (league-name league)
                                  (game-id game))
-                             player))
-              (sf '("<p>Your status for this game is "
-                    "<strong>~(~A~)</strong>.</p>")
-                  (getf confirm-types confirm-type)))
-          (if (non-empty? (game-notes game))
-              (sf "<p><strong>~A</strong></p>"
-                  (escape-string (game-notes game)))
-              "")
-          (if (empty? all-confirmed)
-              "<p><u>No players have confirmed to play as yet.</u></p>"
-              (sf '("<strong>Confirmed to play (~A):</strong>"
-                    "<ul>~{<li>~A</li>~}</ul>")
-                  (length all-confirmed)
-                  (map 'list
-                       (lambda (gc)
-                         (sf "~A - <i>~A</i>"
-                             (player-name (game-confirm-player gc))
-                             (player-position (game-confirm-player gc))))
-                       all-confirmed)))
-          (if (non-empty? all-maybes)
-              (sf '("<strong>Might play (~A):</strong>"
-                    "<ul>~{<li>~A</li>~}</ul>")
-                  (length all-maybes)
-                  (map 'list
-                       (lambda (gc)
-                         (sf "~A - <i>~A</i>"
-                             (player-name (game-confirm-player gc))
-                             (player-position (game-confirm-player gc))))
-                       all-maybes))
-              "")
-          (if (non-empty? all-cant-play)
-              (sf '("<strong>Not playing (~A):</strong>"
-                    "<ul>~{<li>~A</li>~}</ul>")
-                  (length all-cant-play)
-                  (map 'list
-                       (lambda (gc)
-                         (sf "~A - <i>~A</i>"
-                             (player-name (game-confirm-player gc))
-                             (player-position (game-confirm-player gc))))
-                       all-cant-play))
-              "")
-          (if (non-empty? all-no-response)
-              (sf '("<strong>No response (~A):</strong>"
-                    "<ul>~{<li>~A</li>~}</ul>")
-                  (length all-no-response)
-                  (map 'list
-                       (lambda (gc)
-                         (sf "~A - <i>~A</i>"
-                             (player-name (game-confirm-player gc))
-                             (player-position (game-confirm-player gc))))
-                       all-no-response))
-              ""))))
+                             player)
+                  (build-url (league-name league) player)
+                  (league-full-name league)
+                  (league-name league)
+                  (pretty-time (game-time game)))
+              (if (or (null player-confirm)
+                      (equal :no-response confirm-type))
+                  (sf '("<p>Please update your <a href='~(~A~)'>game status"
+                        "</a>.</p>")
+                      (build-url (sf "~A/games/~A?confirm"
+                                     (league-name league)
+                                     (game-id game))
+                                 player))
+                  (sf '("<p>Your status for this game is "
+                        "<strong>~(~A~)</strong>.</p>")
+                      (getf confirm-types confirm-type)))
+              (if (non-empty? (game-notes game))
+                  (sf "<p><strong>~A</strong></p>"
+                      (escape-string (game-notes game)))
+                  "")
+              (if (empty? all-confirmed)
+                  "<p><u>No players have confirmed to play as yet.</u></p>"
+                  (sf '("<strong>Confirmed to play (~A):</strong>"
+                        "<ul>~{<li>~A</li>~}</ul>")
+                      (length all-confirmed)
+                      (map 'list
+                           (lambda (gc)
+                             (sf "~A - <i>~A</i>"
+                                 (player-name (game-confirm-player gc))
+                                 (player-position (game-confirm-player gc))))
+                           all-confirmed)))
+              (if (non-empty? all-maybes)
+                  (sf '("<strong>Might play (~A):</strong>"
+                        "<ul>~{<li>~A</li>~}</ul>")
+                      (length all-maybes)
+                      (map 'list
+                           (lambda (gc)
+                             (sf "~A - <i>~A</i>"
+                                 (player-name (game-confirm-player gc))
+                                 (player-position (game-confirm-player gc))))
+                           all-maybes))
+                  "")
+              (if (non-empty? all-cant-play)
+                  (sf '("<strong>Not playing (~A):</strong>"
+                        "<ul>~{<li>~A</li>~}</ul>")
+                      (length all-cant-play)
+                      (map 'list
+                           (lambda (gc)
+                             (sf "~A - <i>~A</i>"
+                                 (player-name (game-confirm-player gc))
+                                 (player-position (game-confirm-player gc))))
+                           all-cant-play))
+                  "")
+              (if (non-empty? all-no-response)
+                  (sf '("<strong>No response (~A):</strong>"
+                        "<ul>~{<li>~A</li>~}</ul>")
+                      (length all-no-response)
+                      (map 'list
+                           (lambda (gc)
+                             (sf "~A - <i>~A</i>"
+                                 (player-name (game-confirm-player gc))
+                                 (player-position (game-confirm-player gc))))
+                           all-no-response))
+                  "")))))
      league)))
 ;;; Email ------------------------------------------------------------------- END
 
