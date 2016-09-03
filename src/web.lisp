@@ -98,7 +98,7 @@
                   (equal :no-response confirm-type))
               (sf '("<p>Please update your <a href='~(~A~)'>game status"
                     "</a>.</p>")
-                  (build-url (sf "~A/games/~A"
+                  (build-url (sf "~A/games/~A?confirm"
                                  (league-name league)
                                  (game-id game))
                              player))
@@ -167,7 +167,10 @@
       (server-info-host server-info)
       path
       (if (and player (empty? (player-perm-auth player)))
-          (sf "?me=~A-~A" (player-id player) (player-temp-auth player))
+          (sf "~Ame=~A-~A"
+              (if (search "?" path) "&" "?")
+              (player-id player)
+              (player-temp-auth player))
           "")))
 
 ;;; TODO: Following is not being used
@@ -1311,7 +1314,7 @@
         (progn
           ;; Update player's confirmation status and reload game object, unless
           ;; game is in final state
-          (when (and confirm-qp
+          (when (and (non-empty? confirm-qp)
                      (not (string-equal "final" (game-progress game))))
             (setf confirm-save-res
                   (save-game-confirm game player confirm-qp))
@@ -1518,11 +1521,13 @@
                   (:li :class "player-item"
                        (:span :class "player-name" "")
                        (:span :class "confirm-type" "&nbsp;")
-                       (:span :class "confirm-btn-toggle"
-                              (:button :class "button"
-                                       :onclick "page.unconfirmPlayer(this)"
-                                       :title "Move to \"Not playing\" section"
-                                       (:i :class "fa fa-chevron-circle-down")))
+                       (if (null confirm-qp)
+                           (htm
+                            (:span :class "confirm-btn-toggle"
+                                   (:button :class "button"
+                                            :onclick "page.unconfirmPlayer(this)"
+                                            :title "Move to \"Not playing\" section"
+                                            (:i :class "fa fa-chevron-circle-down")))))
                        (:select :class "player-position"
                                 :onchange "page.positionChanged(this)"
                                 (dolist (pos players-positions)
@@ -1557,13 +1562,15 @@
                           (:span :class "player-name"
                                  (esc (player-name (-> pc player))))
                           (:span :class "confirm-type" "&nbsp;")
-                          (:span :class "confirm-btn-toggle"
-                                 (:button :class "button"
-                                          :onclick "page.unconfirmPlayer(this)"
-                                          :title
-                                          "Move to \"Not playing\" section"
-                                          (:i :class
-                                              "fa fa-chevron-circle-down")))
+                          (if (null confirm-qp)
+                              (htm
+                               (:span :class "confirm-btn-toggle"
+                                      (:button :class "button"
+                                               :onclick "page.unconfirmPlayer(this)"
+                                               :title
+                                               "Move to \"Not playing\" section"
+                                               (:i :class
+                                                   "fa fa-chevron-circle-down")))))
                           (:select :class "player-position"
                                    :onchange "page.positionChanged(this)"
                                    (dolist (pos players-positions)
@@ -1596,11 +1603,13 @@
                   (:li :class "player-item"
                        (:span :class "player-name" "")
                        (:span :class "confirm-type" "&nbsp;")
-                       (:span :class "confirm-btn-toggle"
-                              (:button :class "button"
-                                       :onclick "page.confirmPlayer(this)"
-                                       :title "Move to \"Confirmed\" section"
-                                       (:i :class "fa fa-chevron-circle-up")))
+                       (if (null confirm-qp)
+                           (htm
+                            (:span :class "confirm-btn-toggle"
+                                   (:button :class "button"
+                                            :onclick "page.confirmPlayer(this)"
+                                            :title "Move to \"Confirmed\" section"
+                                            (:i :class "fa fa-chevron-circle-up")))))
                        (:span :class "player-position" "&nbsp;")
                        (:span :class "confirm-info"
                               (:span :class "confirm-reason" "")
@@ -1632,11 +1641,13 @@
                                  (esc (sf "(~A)"
                                           (getf confirm-types
                                                 (game-confirm-confirm-type pc)))))
-                          (:span :class "confirm-btn-toggle"
-                                 (:button :class "button"
-                                          :onclick "page.confirmPlayer(this)"
-                                          :title "Move to \"Confirmed\" section"
-                                          (:i :class "fa fa-chevron-circle-up")))
+                          (if (null confirm-qp)
+                              (htm
+                               (:span :class "confirm-btn-toggle"
+                                      (:button :class "button"
+                                               :onclick "page.confirmPlayer(this)"
+                                               :title "Move to \"Confirmed\" section"
+                                               (:i :class "fa fa-chevron-circle-up")))))
                           (:span :class "player-position"
                                  (esc (player-position (-> pc player))))
                           (:span :class "confirm-reason"
