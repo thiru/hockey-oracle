@@ -117,7 +117,9 @@
   (commissioner-ids '())
   (game-reminder-day-offset 0)
   (game-reminder-time "")
-  (send-automated-emails? t))
+  (send-automated-emails? t)
+  (active-player-ids '())
+  (inactive-player-ids '()))
 
 (defun get-all-leagues ()
   "Gets a list of all LEAGUE's sorted by name (A -> Z)."
@@ -175,13 +177,18 @@
                  :full-name (red-hget league-key "full-name")
                  :created (red-hget league-key "created")
                  :active? (to-bool (red-hget league-key "active?"))
-                 :commissioner-ids (read-code (red-hget league-key "commissioners"))
+                 :commissioner-ids (read-code (red-hget league-key
+                                                        "commissioners"))
                  :game-reminder-day-offset
                  (parse-integer
                   (or (red-hget league-key "game-reminder-day-offset") "0"))
                  :game-reminder-time (red-hget league-key "game-reminder-time")
                  :send-automated-emails?
-                 (to-bool (red-hget league-key "send-automated-emails?")))))
+                 (to-bool (red-hget league-key "send-automated-emails?"))
+                 :active-player-ids
+                 (read-code (red-hget league-key "active-players"))
+                 :inactive-player-ids
+                 (read-code (red-hget league-key "inactive-players")))))
 ;;; Leagues ----------------------------------------------------------------- END
 
 ;;; Teams
@@ -283,11 +290,12 @@
    being able to player for the given game, as a list of GAME-CONFIRM structs."
   (let* ((unconfirmed (remove-if (lambda (x) (string-equal :playing
                                                            (-> x confirm-type)))
-                                 (-> game confirms))))
-    (dolist (p (get-players :league (game-league game)))
-      (unless (find (player-id p) (-> game confirms)
+                                 (-> game confirms)))
+         (active-p-ids (league-active-player-ids (game-league game))))
+    (dolist (p-id active-p-ids)
+      (unless (find p-id (-> game confirms)
                     :key (lambda (x) (player-id (game-confirm-player x))))
-        (push (make-game-confirm :player p
+        (push (make-game-confirm :player (get-player :id p-id)
                                  :confirm-type :no-response)
               unconfirmed)))
     (sort unconfirmed
@@ -628,7 +636,9 @@
    * PERM-AUTH: a random longer-lived authentication token
    * SALT: unique salt used in AUTH
    * POSITION: default position
-   * ACTIVE?: whether active/able to play"
+   * ACTIVE?: whether player is active/available able to play in any league.
+              If true, this overrides the active status within a particular
+              league."
   (id 0)
   (name "")
   (admin? nil)
@@ -639,7 +649,7 @@
   (temp-auth "")
   (salt "")
   (position "")
-  (active? t))
+  (active? nil))
 
 (defparameter players-positions '("C" "D" "G" "LW" "RW"))
 (defparameter player-name-max-length 100)
@@ -647,8 +657,7 @@
 
 (defun get-players (&key league)
   "Gets a list of all players matching the specified criteria."
-  (if league
-      (check-type league LEAGUE))
+  (if league (check-type league LEAGUE))
   ;; TODO: Use pipelines to send multiple commands at once
   (redis:with-persistent-connection ()
     (let* ((leagues (if league
@@ -656,10 +665,8 @@
                         (get-all-leagues)))
            (players '()))
       (dolist (league leagues)
-        (let* ((player-ids (map 'list
-                                #'parse-integer
-                                (red-smembers (sf "leagues:~A:players"
-                                                  (league-id league))))))
+        (let* ((player-ids (append (league-active-player-ids league)
+                                   (league-inactive-player-ids league))))
           (dolist (player-id player-ids)
             (if (null (find player-id players :key #'player-id))
                 (push (new-player-from-db player-id) players)))))
@@ -713,10 +720,38 @@
    notification will be returned."
   (remove-if (complement
               (lambda (p)
-                (and (or (not immediate-notify-only?)
+                (and (player-active-in? p league)
+                     (or (not immediate-notify-only?)
                          (player-notify-immediately? p))
-                     (not (empty? (player-email p))))))
+                     (non-empty? (player-email p)))))
              (get-players :league league)))
+
+(defun player-active-in? (player league)
+  "Check whether PLAYER is active in LEAGUE."
+  (check-type player PLAYER)
+  (check-type league LEAGUE)
+  (and (player-active? player)
+       (if (find (player-id player) (league-active-player-ids league)) t)))
+
+;; Transactify
+(defun update-player-active (player league active?)
+  "Update whether PLAYER is active in LEAGUE."
+  (check-type player PLAYER)
+  (check-type league LEAGUE)
+  (redis:with-persistent-connection ()
+    (let* ((league-key (sf "league:~A" (league-id league)))
+           (p-id (player-id player))
+           (actives (read-code (red-hget league-key "active-players")))
+           (inactives (read-code (red-hget league-key "inactive-players"))))
+      (if active?
+          (progn
+            (setf actives (adjoin p-id actives))
+            (setf inactives (remove p-id inactives)))
+          (progn
+            (setf actives (remove p-id actives))
+            (setf inactives (adjoin p-id inactives))))
+      (red-hset league-key "active-players" actives)
+      (red-hset league-key "inactive-players" inactives))))
 
 (defun is-commissioner? (player league)
   "Check whether PLAYER is a commissioner of LEAGUE."
@@ -858,7 +893,7 @@
                      :temp-auth (red-hget player-key "temp-auth")
                      :salt (red-hget player-key "salt")
                      :position (red-hget player-key "position")
-                     :active? (red-sismember "players:active" id)))))
+                     :active? (to-bool (red-hget player-key "active?"))))))
 ;;; Players ----------------------------------------------------------------- END
 
 ;;; Web Server

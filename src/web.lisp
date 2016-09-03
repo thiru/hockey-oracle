@@ -937,6 +937,20 @@
                               (:span :class "comma" ","))))))
                   (:p
                    (:label
+                    :title (sf '("Uncheck to deactive yourself from this league."
+                                 "When inactive you will not be part of the "
+                                 "regular lineup, and you will not receive "
+                                 "email reminders of upcoming games."))
+                    (:input :id "player-active-edit"
+                            :checked (player-active-in? target-player league)
+                            :data-orig-val
+                            (if (player-active-in? target-player league)
+                                "true"
+                                "false")
+                            :type "checkbox")
+                    (:span "Active")))
+                  (:p
+                   (:label
                     :title (sf '("Notify me immediately when the state of the "
                                  "upcoming game changes. E.g. when a player "
                                  "changes their status."))
@@ -974,43 +988,57 @@
 (defun api-user-save (&key player league)
   (declare (ignorable league))
   (setf (content-type*) "application/json")
-  (let* ((curr-player-id (player-id player))
+  (let* ((league (get-league :name (post-parameter "leagueName")))
+         (curr-player-id (player-id player))
          (id (loose-parse-int (post-parameter "id")))
+         (target-player (get-player :id id))
          (name (post-parameter "name"))
          (email (post-parameter "email"))
+         (active? (string-equal "true" (post-parameter "active")))
          (notify-immediately?
            (string-equal "true" (post-parameter "notifyImmediately")))
          (pos (post-parameter "position"))
          (curr-pwd (post-parameter "currentPwd"))
          (new-pwd (post-parameter "newPwd"))
          (save-res nil))
+    ;; Verify target player exists
+    (when (null target-player)
+      (setf (return-code*) +http-not-found+)
+      (return-from api-user-save
+        (json-result (new-r :error
+                            "This player no longer exists."))))
     ;; Verify target player is same as current player or is admin
     (when (not (or (= id (player-id player)) (player-admin? player)))
       (setf (return-code*) +http-forbidden+)
       (return-from api-user-save
         (json-result (new-r :error
                             "You do not have permission to make this change."))))
-    (setf (player-id player) id)
-    (setf (player-name player) name)
-    (setf (player-email player) email)
-    (setf (player-notify-immediately? player) notify-immediately?)
-    (setf (player-position player) pos)
-    (setf save-res (update-player player))
+    ;; Update simple player info
+    (setf (player-name target-player) name)
+    (setf (player-email target-player) email)
+    (setf (player-notify-immediately? target-player) notify-immediately?)
+    (setf (player-position target-player) pos)
+    ;; Save simple player info
+    (setf save-res (update-player target-player))
     ;; Abort if basic player update failed
     (when (failed? save-res)
       (setf (return-code*) +http-internal-server-error+)
       (return-from api-user-save (json-result save-res)))
+    ;; If user has changed their active status for this league..
+    (log-message* :ERROR "=== ACTIVE = ~A; PAI = ~A ===" active? (player-active-in? target-player league))
+    (when (not (eq active? (player-active-in? target-player league)))
+      (log-message* :WARNING "====== INSIDE ======")
+      (update-player-active target-player league active?))
     ;; If user is attempting to change their password..
     (when (non-empty? new-pwd)
-      (setf player (get-player :id (player-id player)))
       ;; Abort if current password provided by user is incorrect
-      (when (and (non-empty? (player-perm-auth player))
-                 (null (get-player :id (player-id player) :pwd curr-pwd)))
+      (when (and (non-empty? (player-perm-auth target-player))
+                 (null (get-player :id (player-id target-player) :pwd curr-pwd)))
         (setf (return-code*) +http-bad-request+)
         (return-from api-user-save
           (json-result (new-r :error "Current password is incorrect."))))
       ;; Save new password
-      (setf save-res (change-player-pwd player new-pwd))
+      (setf save-res (change-player-pwd target-player new-pwd))
       (when (failed? save-res) ; Save new password failed
         (setf (return-code*) +http-internal-server-error+)
         (return-from api-user-save (json-result save-res)))
@@ -1465,6 +1493,7 @@
                                 :onclick "page.saveConfirmInfo()"
                                 "Update")
                        (:div :class "clear-fix"))))))
+            ;; Game Notes
             (:section
              :id "game-notes"
              :class (if (empty? (game-notes game)) "hidden" "")
@@ -1856,6 +1885,10 @@
                                (clean-uri-segment (player-name p))
                                (player-id p))
                      (esc (player-name p)))
+                 (if (not (player-active-in? p league))
+                     (htm
+                      (:i :title "Currently unavailable to play"
+                          "(inactive)")))
                  (:span :class "action-buttons"
                         (:button :class "button"
                                  :onclick "page.editPlayer(this, \"#all-players\")"
@@ -1936,12 +1969,15 @@
            :player player
            :league league
            :page-id "player-detail-page")
+        ;; Player Picture
         (:section :id "left-col" :class "col"
                   (:p
                    (:img :id "user-img"
                          :class "full-width"
                          :src "/images/user.png")))
+        ;; Editable Section
         (:section :id "right-col" :class "col"
+                  ;; Edit Button
                   (if (or (player-admin? player)
                           (= target-player-id (player-id player)))
                       (htm
@@ -1952,12 +1988,20 @@
                                       (player-name target-player))
                                      (player-id target-player))
                            "Edit")))
-                  (:h1 (fmt "~A" (escape-string (player-name target-player))))
+                  ;; Name/active status
+                  (:h1
+                   (:span (esc (player-name target-player)))
+                   (if (not (player-active-in? target-player league))
+                       (htm
+                        (:i :title "Currently unavailable to play"
+                            "(inactive)"))))
+                  ;; Admin?
                   (if (player-admin? target-player)
                       (htm
                        (:p :id "admin"
                            (:i :class "fa fa-star")
                            (:span "Administrator"))))
+                  ;; Commissioned Leagues
                   (if commissions
                       (htm
                        (:p :id "commissioner"

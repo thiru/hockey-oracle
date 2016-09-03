@@ -26,6 +26,8 @@
    :league-game-reminder-time
    :league-send-automated-emails?
    :league-commissioner-ids
+   :league-active-player-ids
+   :league-inactive-player-ids
    :get-all-leagues
    :get-league
    :update-league
@@ -88,6 +90,8 @@
    :players-positions
    :get-players
    :get-player
+   :player-active-in?
+   :update-player-active
    :is-commissioner?
    :update-player
    :change-player-pwd
