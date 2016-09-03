@@ -1324,7 +1324,7 @@
               (setf game (r-data confirm-save-res))
               (setf player-gc (game-confirm-for game player))))
           (standard-page
-              (:title (fmt "Game on ~A" (pretty-time (game-time game)))
+              (:title (sf "Game on ~A" (pretty-time (game-time game)))
                :player player
                :league league
                :page-id "game-detail-page")
