@@ -102,7 +102,7 @@
                                  (league-name league)
                                  (game-id game))
                              player))
-              (sf '("<p>Your current status for this game is "
+              (sf '("<p>Your status for this game is "
                     "<strong>~(~A~)</strong>.</p>")
                   (getf confirm-types confirm-type)))
           (if (non-empty? (game-notes game))
@@ -1451,7 +1451,7 @@
               (htm
                (:section
                 :id "confirm-inputs"
-                (:b "Your current status for this game is:&nbsp;")
+                (:b "Your status for this game is:&nbsp;")
                 (:select :id "game-confirm-opts"
                          :onchange "page.confirmTypeChanged(this)"
                          (doplist (ct-id ct-name confirm-types)
