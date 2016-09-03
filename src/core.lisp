@@ -54,8 +54,9 @@
         (parse-integer (last1 key-segs))
         (parse-integer (nth idx key-segs)))))
 
-(defun read-code (string)
-  "Read in STRING as source code, without complaining about empty/nil strings."
+(defun read-object (string)
+  "Read in STRING as the printed representation of an object, without
+   complaining about empty/nil strings."
   (if (empty? string)
       nil
       (read-from-string string)))
@@ -177,8 +178,8 @@
                  :full-name (red-hget league-key "full-name")
                  :created (red-hget league-key "created")
                  :active? (to-bool (red-hget league-key "active?"))
-                 :commissioner-ids (read-code (red-hget league-key
-                                                        "commissioners"))
+                 :commissioner-ids (read-object (red-hget league-key
+                                                          "commissioners"))
                  :game-reminder-day-offset
                  (parse-integer
                   (or (red-hget league-key "game-reminder-day-offset") "0"))
@@ -186,9 +187,9 @@
                  :send-automated-emails?
                  (to-bool (red-hget league-key "send-automated-emails?"))
                  :active-player-ids
-                 (read-code (red-hget league-key "active-players"))
+                 (read-object (red-hget league-key "active-players"))
                  :inactive-player-ids
-                 (read-code (red-hget league-key "inactive-players")))))
+                 (read-object (red-hget league-key "inactive-players")))))
 ;;; Leagues ----------------------------------------------------------------- END
 
 ;;; Teams
@@ -203,8 +204,9 @@
   (check-type league LEAGUE)
   (if league
       (redis:with-persistent-connection ()
-        (let* ((team-ids (read-code (red-hget (sf "league:~A" (league-id league))
-                                              "teams")))
+        (let* ((team-ids (read-object (red-hget (sf "league:~A"
+                                                    (league-id league))
+                                                "teams")))
                (teams '()))
           (dolist (team-id team-ids)
             (push (new-team-from-db (sf "team:~A" team-id)) teams))
@@ -316,7 +318,8 @@
       (if (empty? league-ids)
           (return-from get-games))
       (dolist (league-id league-ids)
-        (dolist (game-id (read-code (red-hget (sf "league:~A" league-id) "games")))
+        (dolist (game-id (read-object (red-hget (sf "league:~A" league-id)
+                                                "games")))
           (let* ((game-key (sf "game:~A" game-id))
                  (game (if (red-exists game-key) (new-game-from-db game-key))))
             (if game
@@ -420,7 +423,7 @@
       (red-hset game-key "email-reminder" (to-string email-time))
       (red-hset league-key
                 "games"
-                (adjoin game-id (read-code (red-hget league-key "games"))))
+                (adjoin game-id (read-object (red-hget league-key "games"))))
       (red-incr id-seed-key)
       (red-zadd "emails:game-reminders"
                 (timestamp-to-universal email-time)
@@ -525,7 +528,7 @@
       (red-hset league-key
                 "games"
                 (remove (game-id game)
-                        (read-code (red-hget league-key "games"))))
+                        (read-object (red-hget league-key "games"))))
       (red-del game-key)
       (red-zrem "emails:game-reminders" (game-id game))
       (new-r :success "Deleted game!" game))))
@@ -606,7 +609,7 @@
                :away-score (parse-integer (red-hget game-key "away-score"))
                :email-reminder (red-hget game-key "email-reminder")
                :confirms (new-game-confirm
-                          (read-code (red-hget game-key "confirms"))))))
+                          (read-object (red-hget game-key "confirms"))))))
 
 (defun new-game-confirm (plist)
   "The key of PLIST is expected to be a player id and the value a list of the
@@ -741,8 +744,8 @@
   (redis:with-persistent-connection ()
     (let* ((league-key (sf "league:~A" (league-id league)))
            (p-id (player-id player))
-           (actives (read-code (red-hget league-key "active-players")))
-           (inactives (read-code (red-hget league-key "inactive-players"))))
+           (actives (read-object (red-hget league-key "active-players")))
+           (inactives (read-object (red-hget league-key "inactive-players"))))
       (if active?
           (progn
             (setf actives (adjoin p-id actives))
