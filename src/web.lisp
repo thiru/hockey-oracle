@@ -1347,8 +1347,10 @@
                                     :data-delete-msg
                                     (if (string-equal "cancelled"
                                                       (game-progress game))
-                                        "Are you sure you want to delete this game?"
-                                        "Are you sure you want to cancel this game?")
+                                        (sf '("Are you sure you want to "
+                                              "permanently delete this game?"))
+                                        (sf '("Are you sure you want to cancel "
+                                              "this game?")))
                                     :onclick "page.deleteGame()"
                                     :title "Delete"
                                     (:i :class "fa fa-trash")))))
