@@ -1698,15 +1698,7 @@
                             (:select :id "player-pos-edit"
                                      (dolist (pos players-positions)
                                        (htm
-                                        (:option :value pos (esc pos)))))))
-                          (:tr :title "Currently available to play"
-                               (:td
-                                (:label :for "player-active-edit"
-                                        "Active: "))
-                               (:td
-                                (:input :id "player-active-edit"
-                                        :checked t
-                                        :type "checkbox"))))
+                                        (:option :value pos (esc pos))))))))
                          (:div :class "actions"
                                (:button
                                 :class "button save-btn"
