@@ -1013,10 +1013,10 @@ page.initGameDetailPage = function() {
     };
 
     page.addPlayer = function() {
-        $("#edit-dialog .save-btn").data().id = 0;
+        $("#edit-player-dialog .save-btn").data().id = 0;
         $("#player-name-edit").val("Extra");
         $("#player-pos-edit option").removeAttr("selected");
-        page.openDialog("#edit-dialog");
+        page.openDialog("#edit-player-dialog");
         $("#player-name-edit").focus().select();
     };
 
@@ -1027,9 +1027,9 @@ page.initGameDetailPage = function() {
         $("#player-name-edit").val(player.name);
         $("#player-pos-edit").val(player.position);
 
-        $("#edit-dialog .save-btn").data().id = player.id;
+        $("#edit-player-dialog .save-btn").data().id = player.id;
 
-        page.openDialog("#edit-dialog");
+        page.openDialog("#edit-player-dialog");
         $("#player-name-edit").focus().select();
     };
 
@@ -1044,7 +1044,7 @@ page.initGameDetailPage = function() {
                                 ".template-player-item .player-item";
 
         // Determine player ID
-        player.id = $("#edit-dialog .save-btn").data().id;
+        player.id = $("#edit-player-dialog .save-btn").data().id;
         if (player.id < 0) {
             alert("Invalid player id. Expected non-negative but was: " +
                   player.id + " .");
@@ -1101,7 +1101,7 @@ page.initGameDetailPage = function() {
                 positionEle.text(player.position);
         }
 
-        page.closeDialog("#edit-dialog");
+        page.closeDialog("#edit-player-dialog");
         page.updateConfirmedSection();
     };
 };

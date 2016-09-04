@@ -1519,7 +1519,7 @@
                   :class "grey-heading"
                   :style (if (confirmed-players game) "display:none")
                          "No players confirmed to play")
-             (:ul :class "template-player-item"
+             (:ul :class "template-player-item template-items"
                   (:li :class "player-item"
                        (:span :class "player-name" "")
                        (:span :class "confirm-type" "&nbsp;")
@@ -1601,7 +1601,7 @@
                   "Not playing or undecided"
                   (:span :id "unconfirmed-count"
                          (fmt "(~A)" (length (unconfirmed-players game)))))
-             (:ul :class "template-player-item"
+             (:ul :class "template-player-item template-items"
                   (:li :class "player-item"
                        (:span :class "player-name" "")
                        (:span :class "confirm-type" "&nbsp;")
@@ -1661,7 +1661,7 @@
                           (:span :class "clear-fix"))))))
             ;; Random Teams
             (:section :id "random-teams"
-                      (:ul :class "template-player-item"
+                      (:ul :class "template-player-item template-items"
                            (:li :class "player-item"
                                 (:span :class "player-name")
                                 (:span :class "player-position")
@@ -1680,44 +1680,46 @@
                             (:h2 :class "team-heading" "Panthers")
                             (:ul :class "team-players data-list")))
             ;; Edit Player Dialog
-            (:div :id "edit-dialog" :class "dialog"
+            (:div :id "edit-player-dialog" :class "dialog"
                   (:div :class "dialog-content"
                         (:header "Editing Player")
-                        (:section :class "content"
-                                  (:table
-                                   (:tr :class "input-row"
-                                        (:td :class "label-col"
-                                             (:label :for "player-name-edit"
-                                                     "Name: "))
-                                        (:td :class "input-col"
-                                             (:input :id "player-name-edit"
-                                                     :type "text")))
-                                   (:tr
-                                    (:td
-                                     (:label :for "player-pos-edit" "Position: "))
-                                    (:td
-                                     (:select :id "player-pos-edit"
-                                              (dolist (pos players-positions)
-                                                (htm
-                                                 (:option :value pos (esc pos)))))))
-                                   (:tr
-                                    (:td
-                                     (:label :for "player-active-edit"
-                                             "Is Active: "))
-                                    (:td
-                                     (:input :id "player-active-edit"
-                                             :type "checkbox"))))
-                                  (:div :class "actions"
-                                        (:button
-                                         :class "button save-btn"
-                                         :data-player-id "0"
-                                         :onclick "page.savePlayer()"
-                                         "Save")
-                                        (:button
-                                         :class "button cancel-btn"
-                                         :onclick
-                                         "page.closeDialog(\"#edit-dialog\")"
-                                         "Cancel")))))
+                        (:div
+                         (:table
+                          (:tr :class "input-row"
+                               (:td :class "label-col"
+                                    (:label :for "player-name-edit"
+                                            "Name: "))
+                               (:td :class "input-col"
+                                    (:input :id "player-name-edit"
+                                            :style "width: 100%"
+                                            :type "text")))
+                          (:tr
+                           (:td
+                            (:label :for "player-pos-edit" "Position: "))
+                           (:td
+                            (:select :id "player-pos-edit"
+                                     (dolist (pos players-positions)
+                                       (htm
+                                        (:option :value pos (esc pos)))))))
+                          (:tr :title "Currently available to play"
+                               (:td
+                                (:label :for "player-active-edit"
+                                        "Active: "))
+                               (:td
+                                (:input :id "player-active-edit"
+                                        :checked t
+                                        :type "checkbox"))))
+                         (:div :class "actions"
+                               (:button
+                                :class "button save-btn"
+                                :data-player-id "0"
+                                :onclick "page.savePlayer()"
+                                "Save")
+                               (:button
+                                :class "button cancel-btn"
+                                :onclick
+                                "page.closeDialog(\"#edit-player-dialog\")"
+                                "Cancel")))))
             (:br)
             (:button :id "make-teams"
                      :class "button wide-button"
@@ -1910,44 +1912,44 @@
                                  (:i :class "fa fa-pencil-square-o")))
                  (:span :class "player-position" (esc (player-position p)))
                  (:span :class "clear-fix")))))
-    (:div :id "edit-dialog" :class "dialog"
+    (:div :id "edit-player-dialog" :class "dialog"
           (:div :class "dialog-content"
                 (:header "Editing Player")
-                (:section :class "content"
-                          (:table
-                           (:tr :class "input-row"
-                                (:td :class "label-col"
-                                     (:label :for "player-name-edit" "Name: "))
-                                (:td :class "input-col"
-                                     (:input :id "player-name-edit"
-                                             :type "text")))
-                           (:tr
-                            (:td
-                             (:label :for "player-pos-edit" "Position: "))
-                            (:td
-                             (:select :id "player-pos-edit"
-                                      (dolist (pos players-positions)
-                                        (htm
-                                         (:option :selected t
-                                                  :value pos (esc pos)))))))
-                           (:tr
-                            (:td
-                             (:label :for "player-active-edit" "Is Active: "))
-                            (:td
-                             (:input :id "player-active-edit"
-                                     :checked t
-                                     :type "checkbox"))))
-                          (:div :class "actions"
-                                (:button
-                                 :class "button save-btn"
-                                 :data-player-id "0"
-                                 :onclick "page.savePlayer(\"#all-players\", \".template-player-item .player-item\")"
-                                 "Save")
-                                (:button
-                                 :class "button cancel-btn"
-                                 :onclick
-                                 "page.closeDialog(\"#edit-dialog\")"
-                                 "Cancel")))))
+                (:div
+                 (:table
+                  (:tr :class "input-row"
+                       (:td :class "label-col"
+                            (:label :for "player-name-edit" "Name: "))
+                       (:td :class "input-col"
+                            (:input :id "player-name-edit"
+                                    :type "text")))
+                  (:tr
+                   (:td
+                    (:label :for "player-pos-edit" "Position: "))
+                   (:td
+                    (:select :id "player-pos-edit"
+                             (dolist (pos players-positions)
+                               (htm
+                                (:option :selected t
+                                         :value pos (esc pos)))))))
+                  (:tr
+                   (:td
+                    (:label :for "player-active-edit" "Is Active: "))
+                   (:td
+                    (:input :id "player-active-edit"
+                            :checked t
+                            :type "checkbox"))))
+                 (:div :class "actions"
+                       (:button
+                        :class "button save-btn"
+                        :data-player-id "0"
+                        :onclick "page.savePlayer(\"#all-players\", \".template-player-item .player-item\")"
+                        "Save")
+                       (:button
+                        :class "button cancel-btn"
+                        :onclick
+                        "page.closeDialog(\"#edit-player-dialog\")"
+                        "Cancel")))))
     (:br)
     (:button :id "add-player"
              :class "button wide-button"

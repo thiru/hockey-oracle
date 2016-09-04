@@ -360,7 +360,11 @@ main
 {
     align-items: center;
     display: none;
+    height: 100%;
     justify-content: center;
+    left: 0;
+    position: fixed;
+    top: 0;
     width: 100%;
     z-index: 200;
 }
@@ -380,11 +384,8 @@ main
   border-radius: 5px 5px 0 0;
   color: white;
   font-weight: bold;
+  margin: 0 0 1em 0;
   padding: 0.5em 1em 0.5em 1em;
-}
-.dialog .content
-{
-  padding: 1em;
 }
 
 /*******************************
@@ -452,6 +453,10 @@ main
 #schedule-page #new-game-dialog
 {
     padding: 1em;
+}
+#schedule-page #new-game-dialog .dialog-content
+{
+    max-width: 400px;
 }
 #schedule-page #new-game-dialog .actions
 {
@@ -555,35 +560,6 @@ main
 {
     display: block;
     width: 100%;
-}
-
-/* Edit dialog formatting */
-#edit-dialog .label-col > *,
-#edit-dialog .label-col > *
-{
-  padding-right: 2em;
-}
-#edit-dialog .input-col > *
-{
-  width: 100%;
-}
-#edit-dialog td
-{
-  padding-bottom: 0.5em;
-}
-#edit-dialog input[type="checkbox"]
-{
-  margin: 0;
-}
-#edit-dialog .actions
-{
-  margin-top: 1em;
-  text-align: right;
-}
-
-#game-detail-page .template-player-item
-{
-    display: none;
 }
 
 /* Define players listing column widths */
@@ -694,6 +670,34 @@ main
     display: block;
     float: right;
     margin: 0 1em 0.5em 0.5em;
+}
+
+/* The edit player dialog is shared between this page and the game page */
+#edit-player-dialog .dialog-content
+{
+    max-width: 400px;
+}
+#edit-player-dialog .label-col > *,
+#edit-player-dialog .label-col > *
+{
+  padding-right: 2em;
+}
+#edit-player-dialog .input-col > *
+{
+  width: 100%;
+}
+#edit-player-dialog td
+{
+  padding-bottom: 0.5em;
+}
+#edit-player-dialog input[type="checkbox"]
+{
+  margin: 0;
+}
+#edit-player-dialog .actions
+{
+  margin-top: 1em;
+  text-align: right;
 }
 
 /*******************************
