@@ -1030,9 +1030,7 @@
       (setf (return-code*) +http-internal-server-error+)
       (return-from api-user-save (json-result save-res)))
     ;; If user has changed their active status for this league..
-    (log-message* :ERROR "=== ACTIVE = ~A; PAI = ~A ===" active? (player-active-in? target-player league))
-    (when (not (eq active? (player-active-in? target-player league)))
-      (log-message* :WARNING "====== INSIDE ======")
+    (if (not (eq active? (player-active-in? target-player league)))
       (update-player-active target-player league active?))
     ;; If user is attempting to change their password..
     (when (non-empty? new-pwd)
