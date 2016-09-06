@@ -736,26 +736,6 @@
   (and (player-active? player)
        (if (find (player-id player) (league-active-player-ids league)) t)))
 
-;; Transactify
-(defun update-player-active (player league active?)
-  "Update whether PLAYER is active in LEAGUE."
-  (check-type player PLAYER)
-  (check-type league LEAGUE)
-  (redis:with-persistent-connection ()
-    (let* ((league-key (sf "league:~A" (league-id league)))
-           (p-id (player-id player))
-           (actives (read-object (red-hget league-key "active-players")))
-           (inactives (read-object (red-hget league-key "inactive-players"))))
-      (if active?
-          (progn
-            (setf actives (adjoin p-id actives))
-            (setf inactives (remove p-id inactives)))
-          (progn
-            (setf actives (remove p-id actives))
-            (setf inactives (adjoin p-id inactives))))
-      (red-hset league-key "active-players" actives)
-      (red-hset league-key "inactive-players" inactives))))
-
 (defun is-commissioner? (player league)
   "Check whether PLAYER is a commissioner of LEAGUE."
   (or (and player (player-admin? player))
@@ -826,15 +806,16 @@
     (new-r :success "Password updated!" (get-player :id (player-id player)))))
 
 ;; TODO: transactify
-(defun update-player (player)
-  "Update player details such as name, email, etc.
-   Returns an R."
-  (check-type player PLAYER)
+(defun save-player-simple (player)
+  "Save simple player details such as name, email, etc.
+   If this is a new player (id is 0), the id field is updated.
+   Returns an R, with the saved player if successful."
   (if (empty? player)
-      (return-from update-player
-        (new-r :error "No player provided." (player-id player))))
+      (return-from save-player-simple
+        (new-r :error "No player provided." player)))
+  (check-type player PLAYER)
   (if (> (length (player-name player)) player-name-max-length)
-      (return-from update-player
+      (return-from save-player-simple
         (new-r :error
                (sf '("Name is too long (~A characters). "
                      "The maximum length is ~A characters.")
@@ -842,7 +823,7 @@
                    player-name-max-length)
                player)))
   (if (> (length (player-email player)) player-email-max-length)
-      (return-from update-player
+      (return-from save-player-simple
         (new-r :error
                (sf '("Email address is too long (~A characters). "
                      "The maximum length is ~A characters.")
@@ -852,7 +833,7 @@
   (if (null (find (player-position player)
                   players-positions
                   :test #'string-equal))
-      (return-from update-player
+      (return-from save-player-simple
         (new-r :error
                (sf "Invalid player position '~A'. Position must be one of: ~A."
                    (player-position player) players-positions)
@@ -863,18 +844,45 @@
                        (/= (player-id player) (player-id p))
                        (string-equal (player-email player) (player-email p))))
                     (get-players)))
-      (return-from update-player
-        (new-r :error
-               (sf "Sorry, this email address is taken by another player."))))
-  (let ((player-key (sf "player:~A" (player-id player))))
-    (redis:with-persistent-connection ()
-      (when (red-exists player-key)
+      (return-from save-player-simple
+        (new-r :error (sf "This email address is already in use."))))
+  (redis:with-persistent-connection ()
+    (let* ((p-id (if (zerop (player-id player))
+                     (parse-integer (red-hget "id-seeds" "players"))
+                     (player-id player)))
+           (player-key (sf "player:~A" p-id)))
+      (when (or (zerop (player-id player))
+                (red-exists player-key))
+        (when (zerop (player-id player))
+          (red-hincrby "id-seeds" "players" 1)
+          (red-hset player-key "active?" 1)
+          (setf (player-id player) p-id))
         (red-hset player-key "name" (player-name player))
         (red-hset player-key "email" (player-email player))
         (red-hset player-key "notify-immediately?"
                   (if (player-notify-immediately? player) 1 0))
         (red-hset player-key "position" (player-position player)))))
-  (new-r :success "Update successful!" player))
+  (new-r :success "Save successful!" player))
+
+;; Transactify
+(defun save-player-active (player league active?)
+  "Update whether PLAYER is active in LEAGUE."
+  (check-type player PLAYER)
+  (check-type league LEAGUE)
+  (redis:with-persistent-connection ()
+    (let* ((league-key (sf "league:~A" (league-id league)))
+           (p-id (player-id player))
+           (actives (read-object (red-hget league-key "active-players")))
+           (inactives (read-object (red-hget league-key "inactive-players"))))
+      (if active?
+          (progn
+            (setf actives (sort (adjoin p-id actives) #'<))
+            (setf inactives (sort (remove p-id inactives) #'<)))
+          (progn
+            (setf actives (sort (remove p-id actives) #'<))
+            (setf inactives (sort (adjoin p-id inactives) #'<))))
+      (red-hset league-key "active-players" actives)
+      (red-hset league-key "inactive-players" inactives))))
 
 (defun new-player-from-db (id)
   "Create a PLAYER struct for the specified player id."

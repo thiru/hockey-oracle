@@ -660,19 +660,6 @@ main
     transform: translateY(-50%);
 }
 
-/*******************************
-        Player list page
-*******************************/
-
-#player-list-page .player-position,
-#player-list-page .action-buttons
-{
-    display: block;
-    float: right;
-    margin: 0 1em 0.5em 0.5em;
-}
-
-/* The edit player dialog is shared between this page and the game page */
 #edit-player-dialog .dialog-content
 {
     max-width: 400px;
@@ -698,6 +685,17 @@ main
 {
   margin-top: 1em;
   text-align: right;
+}
+
+/*******************************
+        Player list page
+*******************************/
+
+#player-list-page .player-position
+{
+    display: block;
+    float: right;
+    margin: 0 1em 0.5em 0.5em;
 }
 
 /*******************************

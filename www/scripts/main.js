@@ -1020,19 +1020,6 @@ page.initGameDetailPage = function() {
         $("#player-name-edit").focus().select();
     };
 
-    page.editPlayer = function(ele, playerListJQSel) {
-        var playerRow = $(ele).parents(playerListJQSel + " .player-item");
-        var player = playerRow.data();
-
-        $("#player-name-edit").val(player.name);
-        $("#player-pos-edit").val(player.position);
-
-        $("#edit-player-dialog .save-btn").data().id = player.id;
-
-        page.openDialog("#edit-player-dialog");
-        $("#player-name-edit").focus().select();
-    };
-
     page.savePlayer = function(playerListJQSel, templateItemJQSel) {
         var player = {};
 

@@ -299,6 +299,9 @@
             (create-regex-dispatcher "^/[\\w-]+/users/me/?$"
                                      (lambda ()
                                        (base-league-page 'www-user-detail-page)))
+            (create-regex-dispatcher "^/[\\w-]+/users/new/?$"
+                                     (lambda ()
+                                       (base-league-page 'www-user-detail-page)))
             (create-regex-dispatcher "^/[\\w-]+/users/[\\w-]+/[0-9]+/?$"
                                      (lambda ()
                                        (base-league-page 'www-user-detail-page)))
@@ -834,25 +837,28 @@
 ;;; User Detail Page
 (defun www-user-detail-page (&key player league)
   (let* ((path-segs (path-segments *request*))
+         (new-player? (string-equal "new" (last1 path-segs)))
          (target-player-id (loose-parse-int (last1 path-segs)))
-         (target-player (if (plusp target-player-id)
-                            (get-player :id target-player-id))))
+         (target-player nil))
+    (cond ((plusp target-player-id)
+           (setf target-player (get-player :id target-player-id)))
+           (new-player?
+            (setf target-player (make-player)))
+           (t (setf target-player player)))
     ;; Abort if player id specified in URL but not found
-    (when (and (plusp target-player-id) (null target-player))
-      (return-from www-user-detail-page
-        (www-not-found-page :player player :league league)))
+    (if (and (plusp target-player-id) (null target-player))
+        (return-from www-user-detail-page
+          (www-not-found-page :player player :league league)))
     ;; Abort if implicit player not provided
     (if (null player)
         (return-from www-user-detail-page
           (www-not-found-page :player player :league league)))
-    ;; Abort if attempting to view a different player is not an admin
+    ;; Abort if attempting to view a different player and is not a commish
     (if (and target-player
              (/= target-player-id (player-id player))
-             (not (player-admin? player)))
+             (not (is-commissioner? player league)))
         (return-from www-user-detail-page
           (www-not-authorised-page :player player :league league)))
-    (if (null target-player)
-        (setf target-player player))
     (let ((leagues (get-all-leagues))
           (commissions '()))
       (dolist (l leagues)
@@ -876,8 +882,10 @@
                         (:a :class "button"
                             :href "/logout"
                             :style "float:right" "Log out")
-                        (:div :class "clear-fix"))
-                       ))
+                        (:div :class "clear-fix"))))
+                  (if new-player?
+                      (htm
+                       (:h2 "New Player")))
                   (:p
                    (:input :id "player-name-edit"
                            :class "full-width"
@@ -900,7 +908,9 @@
                              (:a :id "change-pwd-btn"
                                  :href "javascript:void(0)"
                                  :onclick "page.changePwd()"
-                                 "Change Password"))
+                                 (if new-player?
+                                     (htm "Set Password")
+                                     (htm "Change Password"))))
                             (:div :id "pwd-group"
                                   :style "display:none"
                                   (if (non-empty? (player-perm-auth target-player))
@@ -985,7 +995,9 @@
                             :class "button wide-button"
                             :onclick "page.saveUser()"
                             :style "display:none"
-                            "Save"))
+                            (if new-player?
+                                (htm "Save New Player")
+                                (htm "Update Player"))))
                   (:p :id "save-result"))))))
 ;;; User Detail Page -------------------------------------------------------- END
 
@@ -994,9 +1006,10 @@
   (declare (ignorable league))
   (setf (content-type*) "application/json")
   (let* ((league (get-league :name (post-parameter "leagueName")))
-         (curr-player-id (player-id player))
-         (id (loose-parse-int (post-parameter "id")))
-         (target-player (get-player :id id))
+         (target-p-id (loose-parse-int (post-parameter "id")))
+         (target-player (if (zerop target-p-id)
+                            (make-player)
+                            (get-player :id target-p-id)))
          (name (post-parameter "name"))
          (email (post-parameter "email"))
          (active? (string-equal "true" (post-parameter "active")))
@@ -1011,9 +1024,10 @@
       (setf (return-code*) +http-not-found+)
       (return-from api-user-save
         (json-result (new-r :error
-                            "This player no longer exists."))))
-    ;; Verify target player is same as current player or is admin
-    (when (not (or (= id (player-id player)) (player-admin? player)))
+                            "Unable to find this player."))))
+    ;; Verify target player is same as current player or is commish
+    (when (not (or (= target-p-id (player-id player))
+                   (is-commissioner? player league)))
       (setf (return-code*) +http-forbidden+)
       (return-from api-user-save
         (json-result (new-r :error
@@ -1024,14 +1038,17 @@
     (setf (player-notify-immediately? target-player) notify-immediately?)
     (setf (player-position target-player) pos)
     ;; Save simple player info
-    (setf save-res (update-player target-player))
-    ;; Abort if basic player update failed
+    (setf save-res (save-player-simple target-player))
+    (setf target-player (r-data save-res))
+    ;; Abort if simple player save failed
     (when (failed? save-res)
       (setf (return-code*) +http-internal-server-error+)
+      (log-message* :error (r-message save-res))
       (return-from api-user-save (json-result save-res)))
-    ;; If user has changed their active status for this league..
-    (if (not (eq active? (player-active-in? target-player league)))
-      (update-player-active target-player league active?))
+    ;; If new user, or user has changed their active status for this league..
+    (if (or (zerop target-p-id)
+            (not (eq active? (player-active-in? target-player league))))
+      (save-player-active target-player league active?))
     ;; If user is attempting to change their password..
     (when (non-empty? new-pwd)
       ;; Abort if current password provided by user is incorrect
@@ -1047,9 +1064,9 @@
         (return-from api-user-save (json-result save-res)))
       ;; If the current user is changing their own password update their
       ;; authorisation cookie
-      (if (= curr-player-id (player-id player))
+      (if (= target-p-id (player-id player))
           (set-auth-cookie (r-data save-res) :perm? t)))
-    (json-result (new-r :success "Update successful!"))))
+    (json-result (new-r :success "Save successful!"))))
 ;;; User Save API ----------------------------------------------------------- END
 
 ;;; User Logout Page
@@ -1877,6 +1894,10 @@
        :player player
        :league league
        :page-id "player-list-page")
+    (:a :class "button"
+        :href (sf "/~(~A~)/users/new" (league-name league))
+        :title "Add a new permanent player to this league"
+        (:span :class "button-text" "New Player"))
     (:h2 :class "blue-heading"
          "Players")
     (:ul :id "all-players" :class "data-list"
@@ -1896,66 +1917,8 @@
                      (htm
                       (:i :title "Currently unavailable to play"
                           "(inactive)")))
-                 (:span :class "action-buttons"
-                        (:button :class "button"
-                                 :onclick "page.editPlayer(this, \"#all-players\")"
-                                 (:i :class "fa fa-pencil-square-o")))
                  (:span :class "player-position" (esc (player-position p)))
-                 (:span :class "clear-fix")))))
-    (:div :id "edit-player-dialog" :class "dialog"
-          (:div :class "dialog-content"
-                (:header "Editing Player")
-                (:div
-                 (:table
-                  (:tr :class "input-row"
-                       (:td :class "label-col"
-                            (:label :for "player-name-edit" "Name: "))
-                       (:td :class "input-col"
-                            (:input :id "player-name-edit"
-                                    :type "text")))
-                  (:tr
-                   (:td
-                    (:label :for "player-pos-edit" "Position: "))
-                   (:td
-                    (:select :id "player-pos-edit"
-                             (dolist (pos players-positions)
-                               (htm
-                                (:option :selected t
-                                         :value pos (esc pos)))))))
-                  (:tr
-                   (:td
-                    (:label :for "player-active-edit" "Is Active: "))
-                   (:td
-                    (:input :id "player-active-edit"
-                            :checked t
-                            :type "checkbox"))))
-                 (:div :class "actions"
-                       (:button
-                        :class "button save-btn"
-                        :data-player-id "0"
-                        :onclick "page.savePlayer(\"#all-players\", \".template-player-item .player-item\")"
-                        "Save")
-                       (:button
-                        :class "button cancel-btn"
-                        :onclick
-                        "page.closeDialog(\"#edit-player-dialog\")"
-                        "Cancel")))))
-    (:br)
-    (:button :id "add-player"
-             :class "button wide-button"
-             :onclick "page.addPlayer()"
-             (:i :class "fa fa-user-plus")
-             (:span :class "button-text" "Add Player"))
-    (:div :class "template-items"
-          (:ul :class "template-player-item"
-               (:li :class "player-item"
-                    (:span :class "player-name" "")
-                    (:span :class "action-buttons"
-                           (:button :class "button"
-                                    :onclick "page.editPlayer(this, \"#all-players\")"
-                                    (:i :class "fa fa-pencil-square-o")))
-                    (:span :class "player-position" "&nbsp;")
-                    (:span :class "clear-fix"))))))
+                 (:span :class "clear-fix")))))))
 ;;; Player List Page -------------------------------------------------------- END
 
 ;;; Player Detail Page

@@ -91,9 +91,9 @@
    :get-players
    :get-player
    :player-active-in?
-   :update-player-active
    :is-commissioner?
-   :update-player
+   :save-player-simple
+   :save-player-active
    :change-player-pwd
    :reset-pwd-get-token
    :reset-pwd-set-token
