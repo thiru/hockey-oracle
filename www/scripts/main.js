@@ -303,7 +303,10 @@ page.initUserDetailPage = function() {
         }
 
         // Get active status
-        player.active = get("player-active-edit").checked;
+        if (get("player-active-edit"))
+            player.active = get("player-active-edit").checked;
+        else
+            player.active = false;
 
         // Get immediate email notifications option
         player.notifyImmediately = get("player-immediate-notify-edit").checked;

@@ -1011,7 +1011,9 @@
 (defun api-user-save (&key player league)
   (declare (ignorable league))
   (setf (content-type*) "application/json")
-  (let* ((league (get-league :name (post-parameter "leagueName")))
+  (let* (;; If there is no league create an empty one for simpler usage below
+         (league (or (get-league :name (post-parameter "leagueName"))
+                     (make-league)))
          (target-p-id (loose-parse-int (post-parameter "id")))
          (target-player (if (zerop target-p-id)
                             (make-player)
@@ -1031,8 +1033,9 @@
       (return-from api-user-save
         (json-result (new-r :error
                             "Unable to find this player."))))
-    ;; Verify target player is same as current player or is commish
+    ;; Verify target player is same as current player or is admin/commish
     (when (not (or (= target-p-id (player-id player))
+                   (player-admin? (player-id player))
                    (is-commissioner? player league)))
       (setf (return-code*) +http-forbidden+)
       (return-from api-user-save
@@ -1051,9 +1054,11 @@
       (setf (return-code*) +http-internal-server-error+)
       (log-message* :error (r-message save-res))
       (return-from api-user-save (json-result save-res)))
-    ;; If new user, or user has changed their active status for this league..
-    (if (or (zerop target-p-id)
-            (not (eq active? (player-active-in? target-player league))))
+    ;; If league is valid and this is either a new user or an existing one
+    ;; that has changed their active status..
+    (if (and (plusp (league-id league))
+             (or (zerop target-p-id)
+                 (not (eq active? (player-active-in? target-player league)))))
       (save-player-active target-player league active?))
     ;; If user is attempting to change their password..
     (when (non-empty? new-pwd)
