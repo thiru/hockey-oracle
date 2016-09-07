@@ -1954,7 +1954,7 @@
         ;; Editable Section
         (:section :id "right-col" :class "col"
                   ;; Edit Button
-                  (if (or (player-admin? player)
+                  (if (or (is-commissioner? player league)
                           (= target-player-id (player-id player)))
                       (htm
                        (:a :class "button wide-button"
