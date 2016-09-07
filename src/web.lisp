@@ -837,14 +837,17 @@
 ;;; User Detail Page
 (defun www-user-detail-page (&key player league)
   (let* ((path-segs (path-segments *request*))
+         (me-qp? (string-equal "me" (last1 path-segs)))
          (new-player? (string-equal "new" (last1 path-segs)))
          (target-player-id (loose-parse-int (last1 path-segs)))
          (target-player nil))
     (cond ((plusp target-player-id)
            (setf target-player (get-player :id target-player-id)))
-           (new-player?
-            (setf target-player (make-player)))
-           (t (setf target-player player)))
+          (me-qp?
+           (setf target-player player))
+          (new-player?
+           (setf target-player (make-player)))
+          (t (setf target-player player)))
     ;; Abort if player id specified in URL but not found
     (if (and (plusp target-player-id) (null target-player))
         (return-from www-user-detail-page
@@ -855,7 +858,7 @@
           (www-not-found-page :player player :league league)))
     ;; Abort if attempting to view a different player and is not a commish
     (if (and target-player
-             (/= target-player-id (player-id player))
+             (/= (player-id target-player) (player-id player))
              (not (is-commissioner? player league)))
         (return-from www-user-detail-page
           (www-not-authorised-page :player player :league league)))
@@ -950,20 +953,23 @@
                               (:a :href (sf "/~(~A~)" (league-name l))
                                   (esc (league-name l)))
                               (:span :class "comma" ","))))))
-                  (:p
-                   (:label
-                    :title (sf '("Uncheck to deactive yourself from this league."
-                                 "When inactive you will not be part of the "
-                                 "regular lineup, and you will not receive "
-                                 "email reminders of upcoming games."))
-                    (:input :id "player-active-edit"
-                            :checked (player-active-in? target-player league)
-                            :data-orig-val
-                            (if (player-active-in? target-player league)
-                                "true"
-                                "false")
-                            :type "checkbox")
-                    (:span "Active")))
+                  (if league
+                      (htm
+                       (:p
+                        (:label
+                         :title (sf '("Uncheck to deactive yourself from this "
+                                      "league. When inactive you will not be "
+                                      "part of the regular lineup, and you will "
+                                      "not receive email reminders of upcoming "
+                                      "games."))
+                         (:input :id "player-active-edit"
+                                 :checked (player-active-in? target-player league)
+                                 :data-orig-val
+                                 (if (player-active-in? target-player league)
+                                     "true"
+                                     "false")
+                                 :type "checkbox")
+                         (:span "Active")))))
                   (:p
                    (:label
                     :title (sf '("Notify me immediately when the state of the "
