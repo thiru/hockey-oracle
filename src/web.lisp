@@ -939,13 +939,13 @@
                   (if (player-admin? target-player)
                       (htm
                        (:p :id "admin"
-                           :title "You have site-wide adminstrator privileges"
+                           :title "Site-wide adminstrator privileges"
                            (:i :class "fa fa-star")
                            (:span "Administrator"))))
                   (if commissions
                       (htm
                        (:p :id "commissioner"
-                           :title "You are a commissioner of these leagues"
+                           :title "Commissioner of these leagues"
                            (:i :class "fa fa-star")
                            (:span "Commissioner: ")
                            (dolist (l commissions)
@@ -957,10 +957,10 @@
                       (htm
                        (:p
                         (:label
-                         :title (sf '("Uncheck to deactive yourself from this "
-                                      "league. When inactive you will not be "
-                                      "part of the regular lineup, and you will "
-                                      "not receive email reminders of upcoming "
+                         :title (sf '("Uncheck to deactive from this league. "
+                                      "When inactive player will not be part "
+                                      "of the regular lineup, and will not "
+                                      "receive email reminders of upcoming "
                                       "games."))
                          (:input :id "player-active-edit"
                                  :checked (player-active-in? target-player league)
