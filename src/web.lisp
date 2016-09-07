@@ -841,27 +841,36 @@
          (new-player? (string-equal "new" (last1 path-segs)))
          (target-player-id (loose-parse-int (last1 path-segs)))
          (target-player nil))
-    (cond ((plusp target-player-id)
-           (setf target-player (get-player :id target-player-id)))
-          (me-qp?
+    (cond (me-qp?
            (setf target-player player))
           (new-player?
            (setf target-player (make-player)))
-          (t (setf target-player player)))
-    ;; Abort if player id specified in URL but not found
-    (if (and (plusp target-player-id) (null target-player))
+          ((plusp target-player-id)
+           (setf target-player (get-player :id target-player-id))))
+    ;; Abort if target player not found for whatever reason
+    (if (null target-player)
         (return-from www-user-detail-page
           (www-not-found-page :player player :league league)))
-    ;; Abort if implicit player not provided
+    ;; Abort if current player not provided
     (if (null player)
         (return-from www-user-detail-page
           (www-not-found-page :player player :league league)))
+    ;; Abort if non-admin is attempting to edit admin
+    (if (and (player-admin? target-player)
+             (not (player-admin? player)))
+        (return-from www-user-detail-page
+          (www-not-authorised-page
+           :player player
+           :league league
+           :message "Only admins are allowed to modify other admins.")))
     ;; Abort if attempting to view a different player and is not a commish
-    (if (and target-player
-             (/= (player-id target-player) (player-id player))
+    (if (and (/= (player-id target-player) (player-id player))
              (not (is-commissioner? player league)))
         (return-from www-user-detail-page
-          (www-not-authorised-page :player player :league league)))
+          (www-not-authorised-page
+           :player player
+           :league league
+           :message "Only commissioners are allowed to modify users.")))
     (let ((leagues (get-all-leagues))
           (commissions '()))
       (dolist (l leagues)
@@ -1035,8 +1044,15 @@
                             "Unable to find this player."))))
     ;; Verify target player is same as current player or is admin/commish
     (when (not (or (= target-p-id (player-id player))
-                   (player-admin? (player-id player))
+                   (player-admin? player)
                    (is-commissioner? player league)))
+      (setf (return-code*) +http-forbidden+)
+      (return-from api-user-save
+        (json-result (new-r :error
+                            "You do not have permission to make this change."))))
+    ;; Verify non-admin is not trying to edit admin
+    (when (and (player-admin? target-player)
+               (not (player-admin? player)))
       (setf (return-code*) +http-forbidden+)
       (return-from api-user-save
         (json-result (new-r :error
@@ -1959,8 +1975,10 @@
         ;; Editable Section
         (:section :id "right-col" :class "col"
                   ;; Edit Button
-                  (if (or (is-commissioner? player league)
-                          (= target-player-id (player-id player)))
+                  (if (or (= target-player-id (player-id player))
+                          (player-admin? player)
+                          (and (is-commissioner? player league)
+                               (not (player-admin? target-player))))
                       (htm
                        (:a :class "button wide-button"
                            :href (sf "/~(~A~)/users/~(~A~)/~A"
