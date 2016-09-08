@@ -810,6 +810,8 @@ page.initGameDetailPage = function() {
             alert(teamsRes.message);
             return;
         }
+
+        $("#confirm-inputs").hide();
         $("#confirmed-players-section").hide();
         $("#unconfirmed-players-section").hide();
         $("#add-player").hide();
@@ -1014,6 +1016,7 @@ page.initGameDetailPage = function() {
     page.pickPlayers = function() {
         $("#random-teams").hide();
         $("#pick-players").hide();
+        $("#confirm-inputs").show();
         $("#confirmed-players-section").show();
         $("#unconfirmed-players-section").show();
         $("#add-player").show();
