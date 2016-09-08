@@ -478,11 +478,6 @@
                (htm
                 (:nav
                  (:ul :class "nav-items"
-                      (:li
-                       (:button :id "main-menu"
-                                :class "clear-button"
-                                :onclick "page.toggleMainMenu()"
-                                (:i :class "fa fa-bars")))
                       (if ,league
                           (htm
                            (:li
@@ -511,8 +506,12 @@
                                            nil)
                                 :href (sf "/~(~A~)/players"
                                           (league-name ,league))
-                                "Players")))))
-                 (:br)
+                                "Players"))))
+                      (:li
+                       (:button :id "main-menu"
+                                :class "clear-button"
+                                :onclick "page.toggleMainMenu()"
+                                (:i :class "fa fa-bars"))))
                  (:div :id "ham-menu-group"
                        :class "hidden"
                        (:ul :class "simple-list"

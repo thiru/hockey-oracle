@@ -144,7 +144,7 @@ img
 }
 .data-list li:nth-child(even)
 {
-  background: #F5F5F5;
+  background: #F5F5F5; /* var LIGHT-GREY */
 }
 .data-list li:hover
 {
@@ -170,9 +170,17 @@ img
 {
   padding-bottom: 0.3em;
 }
+.simple-list li:nth-child(odd)
+{
+  background: #F5F5F5; /* var LIGHT-GREY */
+}
 .simple-list li:last-child
 {
   padding-bottom: 0;
+}
+.simple-list li:hover
+{
+  background: #D3FCFF;
 }
 
 .clear-button
@@ -180,10 +188,11 @@ img
     background: transparent;
     border: none;
     cursor: pointer;
+    padding: 0;
 }
 .clear-button:hover
 {
-    background: #F5F5F5;
+    background: #F5F5F5; /* var LIGHT-GREY */
 }
 
 .button
@@ -308,22 +317,30 @@ main
 
 nav
 {
-  overflow: hidden; /* Prevent elements from collapsing their height when they only contain
-                       floated elements: */
-  max-width: 1200px; /* VAR MAX-PAGE-WIDTH */
-  margin: 0 auto 1em auto;
-  padding: 0.5em 25px 0.5em 25px; /* VAR CONTENT-WIDTH */
+    max-width: 1200px; /* VAR MAX-PAGE-WIDTH */
+    margin: 0 auto 1em auto;
+    overflow: hidden; /* Prevent elements from collapsing their height when
+                         they only contain floated elements: */
+    padding: 0.3em 25px 0 25px; /* VAR CONTENT-WIDTH */
 }
 nav .nav-items
 {
-  margin: 0;
-  padding: 0;
+    border-bottom: solid 1px #001645;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
 }
 nav .nav-items li
 {
   display: inline-block;
   float: left;
-  padding-right: 1em;
+  padding-right: 0.5em;
+}
+nav .nav-items li:last-child
+{
+  display: inline-block;
+  float: right;
+  padding: 0 0 0 0.5em;
 }
 
 @media screen and (max-width: 480px) {
@@ -335,8 +352,19 @@ nav .nav-items li
 
 #ham-menu-group
 {
-    background-color: #EEE;
-    padding: 0.5rem;
+    border: solid 0.2em #F5F5F5; /* var LIGHT-GREY */
+}
+#ham-menu-group li
+{
+    padding: 0.3em;
+}
+#ham-menu-group li > *
+{
+    display: block;
+}
+#ham-menu-group a:hover
+{
+  text-decoration: none;
 }
 
 main
