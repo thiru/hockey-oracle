@@ -972,7 +972,9 @@ page.initGameDetailPage = function() {
             .first().clone();
 
         moveToEle.data(player);
-        moveToEle.find(".player-name").text(player.name);
+        moveToEle.find(".player-name")
+            .text(player.name)
+            .attr("href", player.uri);
         moveToEle.find(".player-position").val(player.position);
         moveToEle.find(".confirm-reason").text(player.reason);
         moveToEle.find(".confirm-time").text(player.responseTime);
@@ -994,7 +996,9 @@ page.initGameDetailPage = function() {
             .first().clone();
 
         moveToEle.data(player);
-        moveToEle.find(".player-name").text(player.name);
+        moveToEle.find(".player-name")
+            .text(player.name)
+            .attr("href", player.uri);
         moveToEle.find(".player-position").text(player.position);
         moveToEle.find(".confirm-type").text(player.confirmType);
         moveToEle.find(".confirm-reason").text(player.reason);

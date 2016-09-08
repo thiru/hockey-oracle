@@ -1562,7 +1562,7 @@
                          "No players confirmed to play")
              (:ul :class "template-player-item template-items"
                   (:li :class "player-item"
-                       (:span :class "player-name" "")
+                       (:a :class "player-name" "")
                        (:span :class "confirm-type" "&nbsp;")
                        (if (null confirm-qp)
                            (htm
@@ -1593,6 +1593,12 @@
                      (:li :class "player-item"
                           :data-id (player-id (-> pc player))
                           :data-name (player-name (-> pc player))
+                          :data-uri
+                          (sf "/~(~A~)/players/~(~A~)/~A"
+                              (league-name league)
+                              (clean-uri-segment
+                               (player-name (-> pc player)))
+                              (player-id (-> pc player)))
                           :data-position (player-position (-> pc player))
                           :data-confirm-type (esc (sf "(~A)"
                                                       (getf
@@ -1602,8 +1608,13 @@
                           :data-reason (esc (game-confirm-reason pc))
                           :data-response-time (pretty-time
                                                (game-confirm-time pc))
-                          (:span :class "player-name"
-                                 (esc (player-name (-> pc player))))
+                          (:a :class "player-name"
+                              :href (sf "/~(~A~)/players/~(~A~)/~A"
+                                        (league-name league)
+                                        (clean-uri-segment
+                                         (player-name (-> pc player)))
+                                        (player-id (-> pc player)))
+                              (esc (player-name (-> pc player))))
                           (:span :class "confirm-type" "&nbsp;")
                           (if (null confirm-qp)
                               (htm
@@ -1644,7 +1655,7 @@
                          (fmt "(~A)" (length (unconfirmed-players game)))))
              (:ul :class "template-player-item template-items"
                   (:li :class "player-item"
-                       (:span :class "player-name" "")
+                       (:a :class "player-name" "")
                        (:span :class "confirm-type" "&nbsp;")
                        (if (null confirm-qp)
                            (htm
@@ -1669,6 +1680,12 @@
                      (:li :class "player-item"
                           :data-id (player-id (-> pc player))
                           :data-name (player-name (-> pc player))
+                          :data-uri
+                          (sf "/~(~A~)/players/~(~A~)/~A"
+                              (league-name league)
+                              (clean-uri-segment
+                               (player-name (-> pc player)))
+                              (player-id (-> pc player)))
                           :data-position (player-position (-> pc player))
                           :data-confirm-type (esc (sf "(~A)"
                                                       (getf
@@ -1678,8 +1695,13 @@
                           :data-reason (esc (game-confirm-reason pc))
                           :data-response-time (pretty-time
                                                (game-confirm-time pc))
-                          (:span :class "player-name"
-                                 (esc (player-name (-> pc player))))
+                          (:a :class "player-name"
+                              :href (sf "/~(~A~)/players/~(~A~)/~A"
+                                        (league-name league)
+                                        (clean-uri-segment
+                                         (player-name (-> pc player)))
+                                        (player-id (-> pc player)))
+                              (esc (player-name (-> pc player))))
                           (:span :class "confirm-type"
                                  (esc (sf "(~A)"
                                           (getf confirm-types
@@ -1704,7 +1726,7 @@
             (:section :id "random-teams"
                       (:ul :class "template-player-item template-items"
                            (:li :class "player-item"
-                                (:span :class "player-name")
+                                (:a :class "player-name")
                                 (:span :class "player-position")
                                 (:span :class "clear-fix")))
                       ; TODO: Remove hard-coded team logos
