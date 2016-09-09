@@ -1328,27 +1328,8 @@
   (let* ((game-time (post-parameter "date")))
     (if (empty? game-time)
         (json-result (new-r :error "Game date not provided."))
-        (let ((save-res (save-new-game league game-time player))
-              (data '()))
-          (if (and (succeeded? save-res)
-                   ;; New game time within next 7 days
-                   (timestamp<=
-                    (now)
-                    (parse-timestring game-time)
-                    (adjust-timestamp (now) (offset :day 7))))
-              (send-email-to-players
-               (sf "New game in ~A" (league-name league))
-               (lambda (player)
-                 (sf '("<p>A new <a href='~(~A~)'>game</a> was added in the "
-                       "<strong title='~A'>~A</strong> on ~A.</p>")
-                     (build-url (sf "~A/games/~A"
-                                    (league-name league)
-                                    (game-id (r-data save-res)))
-                                player)
-                     (league-full-name league)
-                     (league-name league)
-                     (pretty-time game-time)))
-               league))
+        (let* ((save-res (save-new-game league game-time player))
+               (data '()))
           (push (pretty-time (game-time (r-data save-res))) data)
           (push (game-id (r-data save-res)) data)
           (json-result save-res data)))))
