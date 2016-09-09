@@ -428,7 +428,11 @@
              (:meta :name "viewport"
                     :content "width=device-width, initial-scale=1")
              (:meta :name "theme-color" :content "#0F83BC")
-             (:title (fmt "~A - Hockey Oracle" ,title))
+             (:title (if ,league
+                         (fmt "~A - ~A - Hockey Oracle"
+                              ,title
+                              (league-name league))
+                         (fmt "~A - Hockey Oracle" ,title)))
              (:link :rel "manifest" :href "/manifest.json")
              (:link :rel "shortcut icon"
                     :href "/images/favicon.ico")
@@ -885,7 +889,11 @@
                   (league-commissioner-ids l))
             (push l commissions)))
       (standard-page
-          (:title "User"
+          (:title (sf "* ~A" (cond (me-qp?
+                                    "Me")
+                                   (new-player?
+                                    "New Player")
+                                   (t (player-name target-player))))
            :player player
            :league league
            :page-id "user-detail-page")
@@ -1987,7 +1995,7 @@
         (if (find (player-id target-player) (league-commissioner-ids l))
             (push l commissions)))
       (standard-page
-          (:title "Player"
+          (:title (player-name target-player)
            :player player
            :league league
            :page-id "player-detail-page")
