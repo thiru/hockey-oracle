@@ -1213,6 +1213,7 @@
                                     :onkeyup "page.gameTimeKeyUp(event)"
                                     :placeholder "HH:MM AM/PM"
                                     :type "text"))
+                           (:p :id "save-result")
                            (:p :class "actions"
                                (:button :id "save-game-btn"
                                         :class "button"
@@ -1220,8 +1221,7 @@
                                         "Save")
                                (:button :class "button"
                                         :onclick "page.closeGameEditor()"
-                                        "Close"))
-                           (:p :id "save-result")))
+                                        "Close"))))
            ;; New Game Button
            (:section :id "edit-controls"
                      (:button :class "button"
