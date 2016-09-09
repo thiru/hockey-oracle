@@ -403,13 +403,16 @@
 ;;; Base Page --------------------------------------------------------------- END
 
 ;;; Template Page
-(defmacro standard-page ((&key title page-id league player) &body body)
+(defmacro standard-page ((&key title page-id page-data league player) &body body)
   "Creates a standard page layout.
    @param title
      Specifies the title of a page.
    @param page-id
      Specifies an id for the root element of the page. This is primarily
      intended to be used for CSS rules.
+   @param page-data
+     Specifies an additional object (in p-list form) to be injected into the
+     page as `page.data = JSON-OBJECT'.
    @param body
      Contains the page body."
   `(with-html-output-to-string
@@ -442,7 +445,12 @@
              (:script :src "/deps/momentjs/moment.min.js")
              (:script :src "/deps/rxjs/rx.all.min.js")
              (:script :src "/scripts/utils.js")
-             (:script :src "/scripts/main.js"))
+             (:script :src "/scripts/main.js")
+             (if ,page-data
+                 (htm
+                  (:script (fmt "page.data = ~A;"
+                                (json:encode-json-plist-to-string
+                                 ,page-data))))))
             (:body
              (:div :id "overlay" "&nbsp;")
              (:div :id "top-shade")
@@ -1346,6 +1354,7 @@
                                  (make-game-confirm
                                   :player player
                                   :confirm-type :no-response))))
+         (confirm-mode? (if (get-parameter "confirm") t))
          (confirm-qp (get-parameter "confirm"))
          (confirm-save-res (new-r :info "Confirmation not updated.."))
          (show-confirm-inputs
@@ -1368,7 +1377,8 @@
               (:title (sf "Game on ~A" (pretty-time (game-time game)))
                :player player
                :league league
-               :page-id "game-detail-page")
+               :page-id "game-detail-page"
+               :page-data `(is-confirm-mode ,confirm-mode?))
             ;; Edit/Delete/Email buttons
             (if (is-commissioner? player league)
                 (htm
@@ -1564,13 +1574,11 @@
                   (:li :class "player-item"
                        (:a :class "player-name" "")
                        (:span :class "confirm-type" "&nbsp;")
-                       (if (null confirm-qp)
-                           (htm
-                            (:span :class "confirm-btn-toggle"
-                                   (:button :class "button"
-                                            :onclick "page.unconfirmPlayer(this)"
-                                            :title "Move to \"Not playing\" section"
-                                            (:i :class "fa fa-chevron-circle-down")))))
+                       (:span :class "confirm-btn-toggle"
+                              (:button :class "button"
+                                       :onclick "page.unconfirmPlayer(this)"
+                                       :title "Move to \"Not playing\" section"
+                                       (:i :class "fa fa-chevron-circle-down")))
                        (:select :class "player-position"
                                 :onchange "page.positionChanged(this)"
                                 (dolist (pos players-positions)
@@ -1616,15 +1624,14 @@
                                         (player-id (-> pc player)))
                               (esc (player-name (-> pc player))))
                           (:span :class "confirm-type" "&nbsp;")
-                          (if (null confirm-qp)
-                              (htm
-                               (:span :class "confirm-btn-toggle"
-                                      (:button :class "button"
-                                               :onclick "page.unconfirmPlayer(this)"
-                                               :title
-                                               "Move to \"Not playing\" section"
-                                               (:i :class
-                                                   "fa fa-chevron-circle-down")))))
+                          (:span :class "confirm-btn-toggle"
+                                 :style (if confirm-mode? "display:none")
+                                 (:button :class "button"
+                                          :onclick "page.unconfirmPlayer(this)"
+                                          :title
+                                          "Move to \"Not playing\" section"
+                                          (:i :class
+                                              "fa fa-chevron-circle-down")))
                           (:select :class "player-position"
                                    :onchange "page.positionChanged(this)"
                                    (dolist (pos players-positions)
@@ -1657,13 +1664,11 @@
                   (:li :class "player-item"
                        (:a :class "player-name" "")
                        (:span :class "confirm-type" "&nbsp;")
-                       (if (null confirm-qp)
-                           (htm
-                            (:span :class "confirm-btn-toggle"
-                                   (:button :class "button"
-                                            :onclick "page.confirmPlayer(this)"
-                                            :title "Move to \"Confirmed\" section"
-                                            (:i :class "fa fa-chevron-circle-up")))))
+                       (:span :class "confirm-btn-toggle"
+                              (:button :class "button"
+                                       :onclick "page.confirmPlayer(this)"
+                                       :title "Move to \"Confirmed\" section"
+                                       (:i :class "fa fa-chevron-circle-up")))
                        (:span :class "player-position" "&nbsp;")
                        (:span :class "confirm-info"
                               (:span :class "confirm-reason" "")
@@ -1706,13 +1711,12 @@
                                  (esc (sf "(~A)"
                                           (getf confirm-types
                                                 (game-confirm-confirm-type pc)))))
-                          (if (null confirm-qp)
-                              (htm
-                               (:span :class "confirm-btn-toggle"
-                                      (:button :class "button"
-                                               :onclick "page.confirmPlayer(this)"
-                                               :title "Move to \"Confirmed\" section"
-                                               (:i :class "fa fa-chevron-circle-up")))))
+                          (:span :class "confirm-btn-toggle"
+                                 :style (if confirm-mode? "display:none")
+                                 (:button :class "button"
+                                          :onclick "page.confirmPlayer(this)"
+                                          :title "Move to \"Confirmed\" section"
+                                          (:i :class "fa fa-chevron-circle-up")))
                           (:span :class "player-position"
                                  (esc (player-position (-> pc player))))
                           (:span :class "confirm-reason"

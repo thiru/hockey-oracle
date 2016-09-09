@@ -799,6 +799,9 @@ page.initGameDetailPage = function() {
     };
 
     page.makeTeams = function() {
+        if (page.data.isConfirmMode)
+            $(".confirm-btn-toggle").show();
+
         var activePlayersRes = getActivePlayers();
         if (activePlayersRes.failed()) {
             alert(activePlayersRes.message);
@@ -843,12 +846,14 @@ page.initGameDetailPage = function() {
                 return Result.warning("The number of teams should be a " +
                                       "positive integer but was " + numTeams);
             if (!activePlayers || !activePlayers.length ||
-                activePlayers.length < 1)
-                return Result.warning("No active players specified");
+                activePlayers.length < 2)
+                return Result.warning("At least two players must be selected.");
             if (numTeams > activePlayers.length)
-                return Result.warning("More teams are required (" +
-                                      numTeams + ") than the number of active " +
-                                      "players (" + activePlayers.length + ")");
+                return Result.warning("Please select more players for the " +
+                                      "game. Currently there are only " +
+                                      activePlayers.length + " players " +
+                                      "selected to be divided into " + numTeams +
+                                      " teams.")
 
             // Create empty teams
             var teams = [];
@@ -1031,6 +1036,9 @@ page.initGameDetailPage = function() {
     };
 
     page.savePlayer = function(playerListJQSel, templateItemJQSel) {
+        if (page.data.isConfirmMode)
+            $(".confirm-btn-toggle").show();
+
         var player = {};
 
         // Defaulting to game detail page specifics
