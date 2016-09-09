@@ -393,8 +393,7 @@
                (sf "You do not have permission to create new games in ~A."
                    (league-name league)))))
   (redis:with-persistent-connection ()
-    (let* ((id-seed-key "games:id-seed")
-           (game-id (parse-integer (red-get id-seed-key)))
+    (let* ((game-id (parse-integer (red-hget "id-seeds" "games")))
            (game-key (sf "game:~A" game-id))
            (league-key (sf "league:~A" (league-id league)))
            (email-time (adjust-timestamp (parse-timestring time)
@@ -424,7 +423,7 @@
       (red-hset league-key
                 "games"
                 (adjoin game-id (read-object (red-hget league-key "games"))))
-      (red-incr id-seed-key)
+      (red-hincrby "id-seeds" "games" 1)
       (red-zadd "emails:game-reminders"
                 (timestamp-to-universal email-time)
                 game-id)
