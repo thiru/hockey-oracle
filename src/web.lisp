@@ -1943,27 +1943,37 @@
         :href (sf "/~(~A~)/users/new" (league-name league))
         :title "Add a new permanent player to this league"
         (:span :class "button-text" "New Player"))
-    (:h2 :class "blue-heading"
-         "Players")
-    (:ul :id "all-players" :class "data-list"
-         (dolist (p (get-players :league league))
-           (htm
-            (:li :class "player-item"
-                 :data-id (player-id p)
-                 :data-name (player-name p)
-                 :data-position (player-position p)
-                 (:a :class "player-name"
-                     :href (sf "/~(~A~)/players/~(~A~)/~A"
-                               (league-name league)
-                               (clean-uri-segment (player-name p))
-                               (player-id p))
-                     (esc (player-name p)))
-                 (if (not (player-active-in? p league))
-                     (htm
-                      (:i :title "Currently unavailable to play"
-                          "(inactive)")))
-                 (:span :class "player-position" (esc (player-position p)))
-                 (:span :class "clear-fix")))))))
+    (let* ((players (get-players :league league))
+           (active-count (length (league-active-player-ids league))))
+      (htm
+       (:h2 :class "blue-heading"
+            :title (if (/= active-count (length players))
+                       (sf "~A player(s) inactive"
+                            (- (length players) active-count)))
+            (:span "Players")
+            (:span
+             (if (/= active-count (length players))
+                 (fmt "(~A / ~A)" active-count (length players))
+                 (fmt "(~A)" active-count))))
+       (:ul :id "all-players" :class "data-list"
+            (dolist (p players)
+              (htm
+               (:li :class "player-item"
+                    :data-id (player-id p)
+                    :data-name (player-name p)
+                    :data-position (player-position p)
+                    (:a :class "player-name"
+                        :href (sf "/~(~A~)/players/~(~A~)/~A"
+                                  (league-name league)
+                                  (clean-uri-segment (player-name p))
+                                  (player-id p))
+                        (esc (player-name p)))
+                    (if (not (player-active-in? p league))
+                        (htm
+                         (:i :title "Currently unavailable to play"
+                             "(inactive)")))
+                    (:span :class "player-position" (esc (player-position p)))
+                    (:span :class "clear-fix")))))))))
 ;;; Player List Page -------------------------------------------------------- END
 
 ;;; Player Detail Page
