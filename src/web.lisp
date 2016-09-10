@@ -1237,7 +1237,9 @@
                               "New Game"))))
       ;; New Games Section
       (:section :id "new-games-section" :style "display:none"
-                (:h2 :class "blue-heading" "New Games")
+                (:h2 :class "blue-heading"
+                     (:span "New Games")
+                     (:span :id "new-games-count" :data-count 0))
                 (:ul :id "new-games-list" :class "data-list"))
       (if (empty? games)
           ;; No Games Notice
@@ -1245,7 +1247,8 @@
            (:h2 :id "no-games" "No games scheduled."))
           (htm
            ;; List of Games
-           (:h2 :id "schedule" :class "blue-heading" "Schedule")
+           (:h2 :id "schedule" :class "blue-heading"
+                (fmt "Schedule (~A)" (length games)))
            (:ul :id "schedule-list"
                 :class "data-list"
                 (dolist (game games)

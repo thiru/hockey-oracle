@@ -518,6 +518,9 @@ page.initSchedulePage = function() {
                                   .attr("href")
                                   .replace("<GAME-ID>", result.data[0]));
                         $("#new-games-list").append(item);
+                        var newGamesCountData = $("#new-games-count").data();
+                        newGamesCountData.count++;
+                        $("#new-games-count").text("(" + newGamesCountData.count + ")");
                         $("#new-games-section").show();
                         $("#no-games").hide();
                     }
