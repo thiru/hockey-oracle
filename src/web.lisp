@@ -1237,9 +1237,9 @@
                               "New Game"))))
       ;; New Games Section
       (:section :id "new-games-section" :style "display:none"
-                (:h2 :class "blue-heading"
-                     (:span "New Games")
-                     (:span :id "new-games-count" :data-count 0))
+                (:header :class "blue-heading"
+                         (:h2 "New Games")
+                         (:span :id "new-games-count" :data-count 0))
                 (:ul :id "new-games-list" :class "data-list"))
       (if (empty? games)
           ;; No Games Notice
@@ -1247,8 +1247,9 @@
            (:h2 :id "no-games" "No games scheduled."))
           (htm
            ;; List of Games
-           (:h2 :id "schedule" :class "blue-heading"
-                (fmt "Schedule (~A)" (length games)))
+           (:header :id "schedule" :class "blue-heading"
+                    (:h2 "Schedule")
+                    (:span (fmt "(~A)" (length games))))
            (:ul :id "schedule-list"
                 :class "data-list"
                 (dolist (game games)
@@ -1284,8 +1285,9 @@
           (htm (:h2 :id "no-games" "No scores available yet."))
           (htm
            ;; List of Games
-           (:h2 :id "scores" :class "blue-heading"
-                (fmt "Scores (~A)" (length games)))
+           (:header :id "scores" :class "blue-heading"
+                    (:h2 "Scores")
+                    (:span (fmt "(~A)" (length games))))
            (:ul :class "data-list"
                 (dolist (game games)
                   (htm
@@ -1946,15 +1948,15 @@
     (let* ((players (get-players :league league))
            (active-count (length (league-active-player-ids league))))
       (htm
-       (:h2 :class "blue-heading"
-            :title (if (/= active-count (length players))
-                       (sf "~A player(s) inactive"
-                            (- (length players) active-count)))
-            (:span "Players")
-            (:span
-             (if (/= active-count (length players))
-                 (fmt "(~A / ~A)" active-count (length players))
-                 (fmt "(~A)" active-count))))
+       (:header :class "blue-heading"
+                :title (if (/= active-count (length players))
+                           (sf "~A player(s) inactive"
+                               (- (length players) active-count)))
+                (:h2 "Players")
+                (:span
+                 (if (/= active-count (length players))
+                     (fmt "(~A/~A)" active-count (length players))
+                     (fmt "(~A)" active-count))))
        (:ul :id "all-players" :class "data-list"
             (dolist (p players)
               (htm

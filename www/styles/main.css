@@ -30,6 +30,11 @@ h2, h3, h4, h5, h6
   margin-bottom: 0.5rem;
 }
 
+header.blue-heading > *
+{
+    display: inline;
+}
+
 a
 {
   color: #001645; /* VAR DARK-BLUE-HEADING */
