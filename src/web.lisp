@@ -1284,7 +1284,8 @@
           (htm (:h2 :id "no-games" "No scores available yet."))
           (htm
            ;; List of Games
-           (:h2 :id "scores" :class "blue-heading" "Scores")
+           (:h2 :id "scores" :class "blue-heading"
+                (fmt "Scores (~A)" (length games)))
            (:ul :class "data-list"
                 (dolist (game games)
                   (htm
