@@ -791,19 +791,29 @@ page.initGameDetailPage = function() {
         page.movePlayerTo(playerEle, confirmType);
     };
 
-    page.makeTeams = function() {
-        if (page.data.isConfirmMode)
+    page.showPlayerToggles = function() {
+        var makeTeamsBtnData = $("#make-teams").data();
+
+        if (!makeTeamsBtnData.isPressed) {
+            makeTeamsBtnData.isPressed = true;
             $(".playing-toggle-col").show();
+        }
+    };
+
+    page.makeTeams = function() {
+        page.showPlayerToggles();
+
+        $("#make-teams-msg").hide();
 
         var activePlayersRes = getActivePlayers();
         if (activePlayersRes.failed()) {
-            alert(activePlayersRes.message);
+            showResult($("#make-teams-msg"), activePlayersRes);
             return;
         }
 
         var teamsRes = generateTeams(2, activePlayersRes.data);
         if (teamsRes.failed()) {
-            alert(teamsRes.message);
+            showResult($("#make-teams-msg"), teamsRes);
             return;
         }
 
@@ -825,7 +835,7 @@ page.initGameDetailPage = function() {
                 });
 
             if (!players.length)
-                return Result.warning("No players selected");
+                return Result.warning("No players selected.");
 
             return Result.success("", players);
         }
@@ -1028,8 +1038,7 @@ page.initGameDetailPage = function() {
     };
 
     page.savePlayer = function(playerListJQSel, templateItemJQSel) {
-        if (page.data.isConfirmMode)
-            $(".playing-toggle-col").show();
+        page.showPlayerToggles();
 
         var player = {};
 

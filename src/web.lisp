@@ -100,7 +100,7 @@
                       (equal :no-response confirm-type))
                   (sf '("<p>Please update your <a href='~(~A~)'>game status"
                         "</a>.</p>")
-                      (build-url (sf "~A/games/~A?confirm"
+                      (build-url (sf "~A/games/~A"
                                      (league-name league)
                                      (game-id game))
                                  player))
@@ -1349,7 +1349,6 @@
                                  (make-game-confirm
                                   :player player
                                   :confirm-type :no-response))))
-         (confirm-mode? (if (get-parameter "confirm") t))
          (confirm-qp (get-parameter "confirm"))
          (confirm-save-res (new-r :info "Confirmation not updated.."))
          (show-confirm-inputs
@@ -1388,8 +1387,7 @@
               (:title (sf "Game on ~A" (pretty-time (game-time game)))
                :player player
                :league league
-               :page-id "game-detail-page"
-               :page-data `(is-confirm-mode ,confirm-mode?))
+               :page-id "game-detail-page")
             ;; Edit/Delete/Email buttons
             (if (is-commissioner? player league)
                 (htm
@@ -1659,7 +1657,7 @@
                                                  (player-id (-> pc player)))
                                        (esc (player-name (-> pc player))))
                                    (:span :class "playing-toggle-col"
-                                          :style (if confirm-mode? "display:none")
+                                          :style "display:none"
                                           (:button
                                            :class "button playing-toggle"
                                            :onclick
@@ -1748,6 +1746,7 @@
                                 "page.closeDialog(\"#edit-player-dialog\")"
                                 "Cancel")))))
             (:br)
+            (:div :id "make-teams-msg" :style "display:none")
             (:button :id "make-teams"
                      :class "button wide-button"
                      :onclick "page.makeTeams()"

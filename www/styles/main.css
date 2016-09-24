@@ -259,7 +259,7 @@ img
 
 .background-highlight
 {
-    background-color: #FFF2CC; /* VAR LIGHT-YELLOW */
+    background-color: gold;
 }
 
 /* Get rid of ugly system-outline */
@@ -561,7 +561,7 @@ main
 
 #game-detail-page #confirm-inputs
 {
-    background-color: #FFF2CC; /* VAR LIGHT-YELLOW */
+    background-color: gold;
     border-radius: 0.3em;
     margin: 1.5em 0;
     padding: 1em;
@@ -678,6 +678,13 @@ main
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
+}
+
+#game-detail-page #make-teams-msg
+{
+    background-color: gold;
+    margin: 1em;
+    padding: 0.5em;
 }
 
 #edit-player-dialog .dialog-content

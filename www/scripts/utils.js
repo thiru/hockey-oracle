@@ -152,7 +152,7 @@ function showLoading(jqSel, msg) {
 }
 
 function showResult(ele, result) {
-    ele.html(result.message).attr("class", result.levelName());
+    ele.show().html(result.message).attr("class", result.levelName());
 }
 
 function showIconResult(ele, result) {
