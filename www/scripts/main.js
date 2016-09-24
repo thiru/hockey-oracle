@@ -558,6 +558,7 @@ page.initGameDetailPage = function() {
 
     page.editGame = function() {
         $("#game-info-edit").toggle();
+        $("#confirm-inputs").toggle();
         $("#save-res").empty();
         $("#quick-crud-res").empty();
     };
