@@ -782,28 +782,18 @@ page.initGameDetailPage = function() {
             playerEle.data().responseTime = "just updated";
             playerEle.data().reason = reason;
 
-            playerEle.find(".confirm-type").html("(" + confirmType + ")");
             playerEle.find(".confirm-time").html("just updated");
             playerEle.find(".confirm-reason").html(escapeHtml(reason));
         }
 
-        // Move to confirmed/unconfirmed section if necessary
-        var parentSection = null;
-        if (confirmType.toUpperCase() == "PLAYING") {
-            parentSection = playerEle.parents("#unconfirmed-players-section");
-            if (parentSection && parentSection.length)
-                page.confirmPlayer(playerEle);
-        }
-        else {
-            parentSection = playerEle.parents("#confirmed-players-section");
-            if (parentSection && parentSection.length)
-                page.unconfirmPlayer(playerEle);
-        }
+        // Update player to appropriate section
+        var parentSection = playerEle.parents(".grouped-players-section");
+        page.movePlayerTo(playerEle, confirmType);
     };
 
     page.makeTeams = function() {
         if (page.data.isConfirmMode)
-            $(".confirm-btn-toggle").show();
+            $(".playing-toggle-col").show();
 
         var activePlayersRes = getActivePlayers();
         if (activePlayersRes.failed()) {
@@ -818,8 +808,7 @@ page.initGameDetailPage = function() {
         }
 
         $("#confirm-inputs").hide();
-        $("#confirmed-players-section").hide();
-        $("#unconfirmed-players-section").hide();
+        $("#grouped-players-sections").hide();
         $("#add-player").hide();
         populateTeams(teamsRes.data);
         $("#random-teams").show();
@@ -828,7 +817,7 @@ page.initGameDetailPage = function() {
         function getActivePlayers() {
             var players = [];
 
-            $("#confirmed-players .player-item")
+            $("#playing-players-section .player-item")
                 .each(function() {
                     var player = $(this).data();
                     if (player && player.name)
@@ -924,31 +913,26 @@ page.initGameDetailPage = function() {
         playerEle.data().position = $(ele).val();
     };
 
-    page.updateConfirmedSection = function() {
-        var confirmedPlayers = $("#confirmed-players .player-item");
-        if (confirmedPlayers.length) {
-            $("#confirmed-heading-many").show();
-            $("#confirmed-heading-zero").hide();
-            $("#confirmed-players").show();
-            $("#confirmed-count").text("(" + confirmedPlayers.length + ")");
-        }
-        else {
-            $("#confirmed-heading-many").hide();
-            $("#confirmed-heading-zero").show();
-            $("#confirmed-players").hide();
-        }
-    };
+    page.updateGroupedPlayersSections = function() {
+        $(".grouped-players-section").each(function() {
+            var playerEles = $(this).find(".player-item");
+            if (playerEles.length) {
+                $(this).show();
+                $(this).find(".player-count")
+                    .text("(" + playerEles.length + ")");
+            }
+            else {
+                $(this).hide();
+                $(this).find(".player-count").text("");
+            }
 
-    page.updateUnconfirmedSection = function() {
-        var unconfirmedPlayers = $("#unconfirmed-players .player-item");
-        if (unconfirmedPlayers.length) {
-            $("#unconfirmed-players-section").show();
-            $("#unconfirmed-count").text("(" + unconfirmedPlayers.length + ")");
-        }
-        else {
-            $("#unconfirmed-players-section").hide();
-            $("#unconfirmed-count").text("");
-        }
+            if ($(this).attr("id") == "playing-players-section") {
+                if (playerEles.length)
+                    $("#no-confirmed-players-heading").hide();
+                else
+                    $("#no-confirmed-players-heading").show();
+            }
+        });
     };
 
     page.moveToPlayerList = function(listEle, moveToEle) {
@@ -972,14 +956,12 @@ page.initGameDetailPage = function() {
         }
     }
 
-    page.confirmPlayer = function(ele) {
+    page.movePlayerTo = function(ele, confirmType) {
         var currPlayerEle = $(ele).hasClass("player-item")
             ? ele
             : $(ele).parents(".player-item");
         var player = currPlayerEle.data();
-        var moveToEle =
-            $("#confirmed-players-section .template-player-item .player-item")
-            .first().clone();
+        var moveToEle = $(".template-player-item .player-item").first().clone();
 
         moveToEle.data(player);
         moveToEle.find(".player-name")
@@ -989,44 +971,51 @@ page.initGameDetailPage = function() {
         moveToEle.find(".confirm-reason").text(player.reason);
         moveToEle.find(".confirm-time").text(player.responseTime);
 
-        page.moveToPlayerList($("#confirmed-players"), moveToEle);
+        var playingToggle;
+
+        confirmType = confirmType
+            .replace(" ", "-")
+            .replace(/[^a-zA-Z0-9-]/gi, "")
+            .toUpperCase();
+
+        if (confirmType == "PLAYING") {
+            playingToggle = $("#playing-toggle-templates .confirmed").clone();
+            page.moveToPlayerList($("#playing-players-section .player-confirms"),
+                                  moveToEle);
+        }
+        else if (confirmType == "MAYBE") {
+            playingToggle = $("#playing-toggle-templates .unconfirmed").clone();
+            page.moveToPlayerList($("#maybe-players-section .player-confirms"),
+                                  moveToEle);
+        }
+        else if (confirmType == "CANT-PLAY") {
+            playingToggle = $("#playing-toggle-templates .unconfirmed").clone();
+            page.moveToPlayerList($("#cant-play-players-section .player-confirms"),
+                                  moveToEle);
+        }
+        else if (confirmType == "NO-RESPONSE") {
+            playingToggle = $("#playing-toggle-templates .unconfirmed").clone();
+            page.moveToPlayerList($("#cant-play-players-section .player-confirms"),
+                                  moveToEle);
+        }
+        else {
+            throw new Error("Unrecognised 'confirmType': \"" + confirmType + "\".");
+        }
+
+        moveToEle.find(".playing-toggle-col")
+            .empty()
+            .append(playingToggle);
+
         currPlayerEle.remove();
 
-        page.updateConfirmedSection();
-        page.updateUnconfirmedSection();
-    };
-
-    page.unconfirmPlayer = function(ele) {
-        var currPlayerEle = $(ele).hasClass("player-item")
-            ? ele
-            : $(ele).parents(".player-item");
-        var player = currPlayerEle.data();
-        var moveToEle =
-            $("#unconfirmed-players-section .template-player-item .player-item")
-            .first().clone();
-
-        moveToEle.data(player);
-        moveToEle.find(".player-name")
-            .text(player.name)
-            .attr("href", player.uri);
-        moveToEle.find(".player-position").text(player.position);
-        moveToEle.find(".confirm-type").text(player.confirmType);
-        moveToEle.find(".confirm-reason").text(player.reason);
-        moveToEle.find(".confirm-time").text(player.responseTime);
-
-        page.moveToPlayerList($("#unconfirmed-players"), moveToEle);
-        currPlayerEle.remove();
-
-        page.updateConfirmedSection();
-        page.updateUnconfirmedSection();
+        page.updateGroupedPlayersSections();
     };
 
     page.pickPlayers = function() {
         $("#random-teams").hide();
         $("#pick-players").hide();
         $("#confirm-inputs").show();
-        $("#confirmed-players-section").show();
-        $("#unconfirmed-players-section").show();
+        $("#grouped-players-sections").show();
         $("#add-player").show();
     };
 
@@ -1040,16 +1029,15 @@ page.initGameDetailPage = function() {
 
     page.savePlayer = function(playerListJQSel, templateItemJQSel) {
         if (page.data.isConfirmMode)
-            $(".confirm-btn-toggle").show();
+            $(".playing-toggle-col").show();
 
         var player = {};
 
         // Defaulting to game detail page specifics
         if (isBlank(playerListJQSel))
-            playerListJQSel = "#confirmed-players";
+            playerListJQSel = "#playing-players-section .player-confirms";
         if (isBlank(templateItemJQSel))
-            templateItemJQSel = "#confirmed-players-section " +
-                                ".template-player-item .player-item";
+            templateItemJQSel = ".template-player-item .player-item";
 
         // Determine player ID
         player.id = $("#edit-player-dialog .save-btn").data().id;
@@ -1110,7 +1098,7 @@ page.initGameDetailPage = function() {
         }
 
         page.closeDialog("#edit-player-dialog");
-        page.updateConfirmedSection();
+        page.updateGroupedPlayersSections();
     };
 };
 // Game Detail Page --------------------------------------------------------- END

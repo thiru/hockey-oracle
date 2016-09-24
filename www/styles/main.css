@@ -597,50 +597,36 @@ main
 }
 
 /* Define players listing column widths */
-#game-detail-page #confirmed-players .player-name,
-#game-detail-page #unconfirmed-players .player-name
+#game-detail-page .player-confirms .player-name
 {
     display: inline-block;
     font-size: 1.2em;
     font-weight: bold;
 }
-#game-detail-page #confirmed-players .confirm-type,
-#game-detail-page #unconfirmed-players .confirm-type
-{
-    display: inline-block;
-    color: #777;
-    margin-left: 0.5em;
-    text-transform: uppercase;
-}
-#game-detail-page #confirmed-players .player-position,
-#game-detail-page #unconfirmed-players .player-position
+#game-detail-page .player-confirms .player-position
 {
     display: block;
     float: right;
     margin: 0 1em 0.5em 0.5em;
 }
-#game-detail-page #confirmed-players .confirm-btn-toggle,
-#game-detail-page #unconfirmed-players .confirm-btn-toggle
+#game-detail-page .player-confirms .playing-toggle-col
 {
     display: block;
     float: right;
     margin: 0 0 0.5em 0.5em;
 }
-#game-detail-page #confirmed-players .confirm-btn-toggle .button,
-#game-detail-page #unconfirmed-players .confirm-btn-toggle .button
+#game-detail-page .player-confirms .playing-toggle-col .button
 {
     font-size: 1em;
 }
-#game-detail-page #confirmed-players .confirm-reason,
-#game-detail-page #unconfirmed-players .confirm-reason
+#game-detail-page .player-confirms .confirm-reason
 {
     color: #777;
     display: block;
     font-size: 0.8em;
     margin: 0.2em 0 0 0;
 }
-#game-detail-page #confirmed-players .confirm-time,
-#game-detail-page #unconfirmed-players .confirm-time
+#game-detail-page .player-confirms .confirm-time
 {
     color: #777;
     display: block;

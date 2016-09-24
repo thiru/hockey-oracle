@@ -266,10 +266,10 @@
   (reason ""))
 
 (defparameter game-confirm-reason-max-length 500)
-(defparameter confirm-types '(:no-response "No response"
+(defparameter confirm-types '(:playing "Playing"
                               :maybe "Maybe"
                               :cant-play "Can't play"
-                              :playing "Playing"))
+                              :no-response "No response"))
 
 (defun game-confirm-for (game player)
   "Get GAME-CONFIRM (if any) for PLAYER for the game GAME."
