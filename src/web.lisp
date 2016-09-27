@@ -1831,7 +1831,7 @@
            (send-email-to-players
             (sf "Game time changed in ~A" (league-name league))
             (lambda (player-to-email)
-              (sf '("<p>An upcoming <a href='~(~A~)'>game's</a> time changed in "
+              (sf '("<p>An <a href='~(~A~)'>upcoming game's</a> time changed in "
                     "the <strong title'~A'>~A</strong> from ~A to ~A.</p>")
                   (build-url (sf "~A/games/~A"
                                  (league-name league)
@@ -1866,7 +1866,7 @@
                      (player-id player))
                   nil ; Don't send email to player making the change
                   (sf '("<p><a href='~(~A~)'>~A</a> updated their confirmation "
-                        "status for the upcoming <a href='~(~A~)'>game</a> in "
+                        "status for the <a href='~(~A~)'>upcoming game</a> in "
                         "the <strong title='~A'>~A</strong> on ~A.</p>"
                         "<p>Status: <b>~(~A~)</b></p>"
                         "~A")
