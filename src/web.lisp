@@ -1862,31 +1862,34 @@
            (send-email-to-players
             (sf "Game confirmation change in ~A" (league-name league))
             (lambda (player-to-email)
-              (sf '("<p><a href='~(~A~)'>~A</a> updated their confirmation "
-                    "status for the upcoming <a href='~(~A~)'>game</a> in the "
-                    "<strong title='~A'>~A</strong> on ~A.</p>"
-                    "<p>Status: <b>~(~A~)</b></p>"
-                    "~A")
-                  (build-url (sf "~A/players/~A/~A"
-                                 (league-name league)
-                                 (player-name player)
-                                 (player-id player))
-                             player-to-email)
-                  (player-name player)
-                  (build-url (sf "~A/games/~A"
-                                 (league-name league)
-                                 (game-id game))
-                             player-to-email)
-                  (league-full-name league)
-                  (league-name league)
-                  (pretty-time (game-time game))
-                  (getf confirm-types
-                        (find confirm-type confirm-types :test #'string-equal))
-                  (if (empty? reason)
-                      ""
-                      (sf '("<p>Notes:</p>"
-                            "<blockquote>~A</blockquote>")
-                          reason))))
+              (if (= (player-id player-to-email)
+                     (player-id player))
+                  nil ; Don't send email to player making the change
+                  (sf '("<p><a href='~(~A~)'>~A</a> updated their confirmation "
+                        "status for the upcoming <a href='~(~A~)'>game</a> in "
+                        "the <strong title='~A'>~A</strong> on ~A.</p>"
+                        "<p>Status: <b>~(~A~)</b></p>"
+                        "~A")
+                      (build-url (sf "~A/players/~A/~A"
+                                     (league-name league)
+                                     (player-name player)
+                                     (player-id player))
+                                 player-to-email)
+                      (player-name player)
+                      (build-url (sf "~A/games/~A"
+                                     (league-name league)
+                                     (game-id game))
+                                 player-to-email)
+                      (league-full-name league)
+                      (league-name league)
+                      (pretty-time (game-time game))
+                      (getf confirm-types
+                            (find confirm-type confirm-types :test #'string-equal))
+                      (if (empty? reason)
+                          ""
+                          (sf '("<p>Notes:</p>"
+                                "<blockquote>~A</blockquote>")
+                              reason)))))
             league
             :immediate-notify-only? t))
        (json:encode-json-plist-to-string
