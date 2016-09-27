@@ -575,7 +575,7 @@ page.initGameDetailPage = function() {
             return;
 
         $("#email-reminder-btn").prop("disabled", true);
-        showLoading("#quick-crud-res");
+        showLoading("#quick-crud-res", "Emailing...");
 
         var gameId = parseInt(get("game-info-edit").dataset.game);
         var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
