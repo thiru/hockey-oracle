@@ -1858,12 +1858,7 @@
        (setf save-res (save-game-confirm game player confirm-type reason))
        (if (and (succeeded? save-res)
                 (not (string-equal "cancelled" (game-progress game)))
-                (not (string-equal "final" (game-progress game)))
-                ;; Game time within next 3 days
-                (timestamp<=
-                 (now)
-                 (parse-timestring (game-time game))
-                 (adjust-timestamp (now) (offset :day 3))))
+                (not (string-equal "final" (game-progress game))))
            (send-email-to-players
             (sf "Game confirmation change in ~A" (league-name league))
             (lambda (player-to-email)
