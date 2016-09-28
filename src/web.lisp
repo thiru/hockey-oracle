@@ -1556,8 +1556,10 @@
                                   (- game-confirm-reason-max-length
                                       (length (game-confirm-reason
                                                player-gc)))))
-                       (:button :class "button crud-btn"
+                       (:button :id "save-confirm-info-btn"
+                                :class "button crud-btn"
                                 :onclick "page.saveConfirmInfo()"
+                                :disabled t
                                 "Update")
                        (:div :class "clear-fix"))))))
             ;; Game Notes

@@ -544,6 +544,7 @@ page.initSchedulePage = function() {
 
 // Game Detail Page
 page.initGameDetailPage = function() {
+    page.origReasonTxt = $("#reason-input").val();
 
     // Replace absolute times of individual player confirmations with relative
     $(".confirm-time").each(function() {
@@ -711,14 +712,20 @@ page.initGameDetailPage = function() {
             $("#confirm-type-status").hide();
             return;
         }
-        else {
-            $("#reason-input-group").show();
-        }
+
+        $("#reason-input-group").show();
 
         page.saveConfirmInfo();
     };
 
     page.reasonTextChanged = function(ele) {
+        var reasonTxt = $("#reason-input").val();
+        var saveBtn = $("#save-confirm-info-btn");
+        if (page.origReasonTxt != reasonTxt)
+            saveBtn.prop("disabled", false);
+        else
+            saveBtn.prop("disabled", true);
+
         var reasonLength = ($(ele).val() || "").length;
         var maxLength = $(ele).attr("maxlength");
         $("#reason-input-info").text((maxLength - reasonLength) + " chars left");
@@ -757,9 +764,16 @@ page.initGameDetailPage = function() {
                 else {
                     result = new Result(result.level, result.message,
                                         result.data);
+
                     showIconResult($("#confirm-type-status"), result);
                     showResult($("#reason-input-info"), result, originalInfo);
+
                     $("#reason-input").val(result.data);
+                    if (result.succeeded()) {
+                        $("#save-confirm-info-btn").prop("disabled", true);
+                        page.origReasonTxt = $("#reason-input").val();
+                    }
+
                     page.updatePlayerConfirmOnPage(confirmTypeTxt, result.data);
                 }
             })
