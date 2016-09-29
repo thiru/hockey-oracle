@@ -1578,6 +1578,7 @@
                  (:li :class "player-item"
                       (:a :class "player-name" "")
                       (:span :class "playing-toggle-col"
+                             :style "display:none"
                              (:button :class "button playing-toggle"
                                       :onclick
                                       "page.movePlayerTo(this, \"CANT-PLAY\")"
