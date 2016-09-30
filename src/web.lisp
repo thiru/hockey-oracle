@@ -1397,13 +1397,6 @@
                                     :onclick "page.editGame()"
                                     :title "Edit"
                                     (:i :class "fa fa-pencil"))
-                           (:button :id "email-reminder-btn"
-                                    :class "button crud-btn"
-                                    :onclick "page.sendEmailReminder()"
-                                    :title
-                                    (sf '("Send email reminder to all active "
-                                          "players of this game now"))
-                                    (:i :class "fa fa-envelope"))
                            (:button :id "delete-btn"
                                     :class "button crud-btn"
                                     :data-delete-msg
@@ -1415,7 +1408,14 @@
                                               "this game?")))
                                     :onclick "page.deleteGame()"
                                     :title "Delete"
-                                    (:i :class "fa fa-trash")))))
+                                    (:i :class "fa fa-trash"))
+                           (:button :id "email-reminder-btn"
+                                    :class "button crud-btn"
+                                    :onclick "page.sendEmailReminder()"
+                                    :title
+                                    (sf '("Send email reminder to all active "
+                                          "players of this game now"))
+                                    (:i :class "fa fa-envelope")))))
             ;; Quick CRUD button result
             (:div :id "quick-crud-res")
             ;; Game Time Display (read only)
