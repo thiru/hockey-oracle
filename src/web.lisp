@@ -88,7 +88,7 @@
              (mkstr
               (sf '("<p>This is a reminder of an <a href='~(~A~)'>upcoming game"
                     "</a> in the <a href='~(~A~)' title='~A'>~A</a> on ~A.</p>")
-                  (build-url (sf "~A/games/~A"
+                  (build-url (sf "~A/games/~A#confirm-inputs"
                                  (league-name league)
                                  (game-id game))
                              player)
@@ -100,7 +100,7 @@
                       (equal :no-response confirm-type))
                   (sf '("<p>Please update your <a href='~(~A~)'>game status"
                         "</a>.</p>")
-                      (build-url (sf "~A/games/~A"
+                      (build-url (sf "~A/games/~A#confirm-inputs"
                                      (league-name league)
                                      (game-id game))
                                  player))
@@ -165,15 +165,24 @@
    permanent password."
   (if player
       (check-type player PLAYER))
-  (sf "~A/~(~A~)~(~A~)"
-      (server-info-host server-info)
-      path
-      (if (and player (empty? (player-perm-auth player)))
-          (sf "~Ame=~A-~A"
-              (if (search "?" path) "&" "?")
-              (player-id player)
-              (player-temp-auth player))
-          "")))
+  ;; We split the path on the hash character in order to place it back at the
+  ;; end. This is necessary because we may need to insert the temp auth query
+  ;; parameter
+  (let* ((pathSegs (split-sequence #\# path))
+         (pathSansHashSeg (first pathSegs))
+         (hashSeg (second pathSegs)))
+    (sf "~A/~(~A~)~(~A~)~A"
+        (server-info-host server-info)
+        pathSansHashSeg
+        (if (and player (empty? (player-perm-auth player)))
+            (sf "~Ame=~A-~A"
+                (if (search "?" pathSansHashSeg) "&" "?")
+                (player-id player)
+                (player-temp-auth player))
+            "")
+        (if (non-empty? hashSeg)
+            (concatenate 'string "#" hashSeg)
+            ""))))
 
 ;;; TODO: Following is not being used
 (defmacro html-snippet (root-tag)
