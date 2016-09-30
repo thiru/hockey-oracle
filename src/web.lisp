@@ -1392,14 +1392,11 @@
             (if (is-commissioner? player league)
                 (htm
                  (:section :id "quick-crud-btns"
-                           (if (not (string-equal "cancelled"
-                                                  (game-progress game)))
-                               (htm
-                                (:button :id "edit-btn"
-                                         :class "button crud-btn"
-                                         :onclick "page.editGame()"
-                                         :title "Edit"
-                                         (:i :class "fa fa-pencil"))))
+                           (:button :id "edit-btn"
+                                    :class "button crud-btn"
+                                    :onclick "page.editGame()"
+                                    :title "Edit"
+                                    (:i :class "fa fa-pencil"))
                            (:button :id "email-reminder-btn"
                                     :class "button crud-btn"
                                     :onclick "page.sendEmailReminder()"
@@ -1819,9 +1816,6 @@
        (json-result save-res))
       ;; Update game info (e.g. time, progress, notes, etc.)
       (game-time
-       (if (string-equal "cancelled" (game-progress game))
-           (return-from api-game-update
-             (json-result (new-r :warning "Can't edit cancelled games."))))
        (setf save-res (update-game-info game player game-time game-progress game-notes))
        (if (and (succeeded? save-res)
                 (not (string-equal game-time (game-time game)))
