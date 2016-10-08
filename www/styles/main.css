@@ -714,6 +714,39 @@ main
   text-align: right;
 }
 
+/* Chat */
+#game-detail-page #chat
+{
+    margin: 1em 0 0 0;
+}
+#game-detail-page #chat header
+{
+    margin: 0 0 1em 0;
+}
+#game-detail-page #chat-editor
+{
+    display: block;
+    height: 10em;
+    width: 100%;
+}
+#game-detail-page #chat-msg-char-count
+{
+    font-size: 0.8em;
+    margin: 0 0 1em 0;
+}
+#game-detail-page .msg-updated
+{
+    display: inline-block;
+    color: #777;
+    font-size: 0.6em;
+    font-style: italic;
+    margin: 0 0 0 0.5em;
+}
+#game-detail-page .msg-content
+{
+    margin: 1em 0 0 0;
+}
+
 /*******************************
         Player list page
 *******************************/

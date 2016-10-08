@@ -546,14 +546,14 @@ page.initSchedulePage = function() {
 page.initGameDetailPage = function() {
     page.origReasonTxt = $("#reason-input").val();
 
-    // Replace absolute times of individual player confirmations with relative
-    $(".confirm-time").each(function() {
+    // Replace absolute times with relative
+    $(".confirm-time, .msg-updated").each(function() {
         var absConfirmTime = $(this).text().trim();
         if (!isBlank(absConfirmTime)) {
             $(this).attr("title", absConfirmTime);
             var relConfirmTime =
                 moment(absConfirmTime, page.dateAndTimeFmt).fromNow();
-            $(this).text("(" + relConfirmTime + ")");
+            $(this).text(relConfirmTime);
         }
     });
 
@@ -1123,6 +1123,104 @@ page.initGameDetailPage = function() {
 
         page.closeDialog("#edit-player-dialog");
         page.updateGroupedPlayersSections();
+    };
+
+    page.addChatMsg = function() {
+        $("#chat-editor").show();
+        $("#chat-msg-char-count").show();
+        $("#add-msg-btn").hide();
+        $("#save-chat-msg-btn").show();
+        $("#cancel-msg-btn").show();
+        $("#save-chat-result").attr("class", "").html("").hide();
+    };
+
+    page.saveChatMsg = function() {
+        var chatMsg = ($("#chat-editor").val() || "");
+
+        var chatMsgLength = (chatMsg || "").length;
+        var maxLength = $("#chat-editor").attr("maxlength");
+
+        if (chatMsgLength >= maxLength) {
+            showResult($("#save-chat-result"),
+                       Result.warning("Please keep your message under " +
+                                      maxLength + " characters."));
+            return;
+        }
+
+        $("#save-chat-msg-btn").prop("disabled", true);
+        $("#save-chat-result")
+            .show()
+            .html("<i class='fa fa-spinner fa-pulse'></i> Saving...");
+
+        var gameId = parseInt(get("game-info-edit").dataset.game);
+        var url = "/" + page.leagueName.toLowerCase() + "/api/games/chat/new";
+
+        $.post(url, { gameId: gameId, msg: chatMsg})
+            .done(function (result) {
+                if (!result) {
+                    result = Result.error("No response from server.");
+                    $("#save-chat-msg-btn").prop("disabled", false);
+                }
+                else {
+                    result = new Result(result.level, result.message,
+                                        result.data);
+
+                    if (result.succeeded()) {
+                        $("#save-chat-msg-btn").prop("disabled", true);
+                        page.myLastChatMsg = $("#chat-editor").val();
+                        page.cancelChatMsg();
+                        page.insertSavedChatMsg(chatMsg);
+                    }
+                    else {
+                        $("#save-chat-msg-btn").prop("disabled", false);
+                    }
+                }
+
+                showResult($("#save-chat-result"), result);
+            })
+            .fail(function(data) {
+                var result = Result.error("Unexpected error. " + data.statusText +
+                                          " (" + data.status + ").");
+                showResult($("#save-chat-result"), result);
+                $("#save-chat-msg-btn").prop("disabled", false);
+            });
+    };
+
+    page.cancelChatMsg = function() {
+        $("#chat-editor").val("").hide();
+        page.onChatMsgChanged();
+        $("#chat-msg-char-count").hide();
+        $("#add-msg-btn").show();
+        $("#save-chat-msg-btn").hide();
+        $("#cancel-msg-btn").hide();
+        $("#save-chat-result").attr("class", "").html("").hide();
+    };
+
+    page.onChatMsgChanged = function() {
+        var chatMsg = ($("#chat-editor").val() || "");
+
+        // TODO: store myLastChatMsg
+        if ((page.myLastChatMsg || "") != chatMsg)
+            $("#save-chat-msg-btn").prop("disabled", false);
+        else
+            $("#save-chat-msg-btn").prop("disabled", true);
+
+        var chatMsgLength = (chatMsg || "").length;
+        var maxLength = $("#chat-editor").attr("maxlength");
+        $("#chat-msg-char-count")
+            .text((maxLength - chatMsgLength) + " chars left");
+    };
+
+    page.insertSavedChatMsg = function(msg) {
+        var msgRow = $("#chat-msg-template").clone();
+        msgRow.find(".msg-content")
+            .html(escapeHtml(msg).replace(/\n/g, "<br />"));
+        msgRow.find(".msg-updated")
+            .text("just now");
+        $("#chat-msg-list").append(msgRow);
+        var chatMsgCountData = $("#chat-msg-count").data();
+        chatMsgCountData.count++;
+        $("#chat-msg-count").text("(" + chatMsgCountData.count + ")");
     };
 };
 // Game Detail Page --------------------------------------------------------- END

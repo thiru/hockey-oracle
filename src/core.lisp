@@ -61,6 +61,11 @@
       nil
       (read-from-string string)))
 
+(defun save-object (obj)
+  "Save object in a string format such that it can be read back in."
+  (let* ((*print-readably* t))
+    (write-to-string obj :pretty nil :readably t)))
+
 (defun to-bool (redis-val)
   "Converts the given redis value to a bool."
   (if (empty? redis-val)
@@ -236,7 +241,8 @@
    * PROGRESS: is the state of the game, and defined in GAME-PROGRESS-STATES
    * CONFIRMS: list of GAME-CONFIRM structs
    * EMAIL-REMINDER: the time to send an email reminder to players about this
-     game"
+     game
+   * CHAT-ID: the id of the chat for this game (if any)"
   (id 0)
   (created-at "")
   (created-by "")
@@ -249,7 +255,8 @@
   (home-score 0)
   (away-score 0)
   (email-reminder "")
-  (confirms '()))
+  (confirms '())
+  (chat-id 0))
 
 (defparameter game-progress-states '(:new :underway :final :cancelled))
 
@@ -608,7 +615,8 @@
                :away-score (parse-integer (red-hget game-key "away-score"))
                :email-reminder (red-hget game-key "email-reminder")
                :confirms (new-game-confirm
-                          (read-object (red-hget game-key "confirms"))))))
+                          (read-object (red-hget game-key "confirms")))
+               :chat-id (loose-parse-int (red-hget game-key "chat-id")))))
 
 (defun new-game-confirm (plist)
   "The key of PLIST is expected to be a player id and the value a list of the
@@ -624,6 +632,97 @@
                    game-confirms))
     game-confirms))
 ;;; Games ------------------------------------------------------------------- END
+
+;;; Chats
+(defstruct message
+  "Describes a message in a CHAT."
+  (player-id 0)
+  (created-at "")
+  (updated-at "")
+  (msg ""))
+
+(defparameter message-max-length 1000)
+
+(defun get-chat (game)
+  "Get the CHAT for GAME."
+  (check-type game GAME)
+  (redis:with-persistent-connection ()
+    (let* ((chat-key (sf "chat:~A" (game-chat-id game))))
+      (if (redis:red-exists chat-key)
+          (new-chat-from-db (game-chat-id game))))))
+
+(defun save-message-new (player league game msg)
+  "Save a chat message for the specified GAME in LEAGUE by PLAYER.
+   Returns an R, containing the new MESSAGE if successful."
+  (if (empty? league)
+      (return-from save-message-new
+        (new-r :error "No league specified.")))
+  (check-type league LEAGUE)
+  (if (empty? player)
+      (return-from save-message-new
+        (new-r :error "No player specified.")))
+  (check-type player PLAYER)
+  (if (and (not (is-commissioner? player league))
+           (not (player-member-of? player league)))
+      (return-from save-message-new
+        (new-r :error (sf "Player, '~A' is not a member of '~A'."
+                          (player-name player)
+                          (league-name league)))))
+  (if (empty? game)
+      (return-from save-message-new
+        (new-r :error "No game specified.")))
+  (if (not (= (league-id league) (league-id (game-league game))))
+      (return-from save-message-new
+        (new-r :error (sf "Game (id ~A) does not belong in '~A'."
+                          (game-id game) (league-name league)))))
+  (if (empty? msg)
+      (return-from save-message-new
+        (new-r :error "Can't save empty message.")))
+  (if (> (length msg) message-max-length)
+      (return-from save-message-new
+        (new-r :error (sf "Message exceeds maximum length of ~A chars."
+                          message-max-length))))
+  ;; TODO: lock while getting/setting chat-id for game
+  (redis:with-persistent-connection ()
+    (let* ((game-key (sf "game:~A" (game-id game)))
+           (chat-id (loose-parse-int (red-hget game-key "chat-id")))
+           (current-time (now))
+           (chat-key "")
+           (new-message nil))
+      ;; Define chat id if not yet set for the respective game
+      (if (zerop chat-id)
+          (progn
+            (red-hincrby "id-seeds" "chats" 1)
+            (setf chat-id (red-hget "id-seeds" "chats"))
+            (red-hset game-key "chat-id" chat-id)))
+      (setf chat-key (sf "chat:~A" chat-id))
+      (setf new-message
+            (save-object
+             (list (player-id player)
+                   (to-string current-time)
+                   (to-string current-time)
+                   msg)))
+      (red-rpush chat-key new-message)
+      (new-r :success
+             (sf "Saved new chat message!")
+             new-message))))
+
+(defun new-chat-from-db (chat-id)
+  "Create a list of MESSAGE structs for the given chat id."
+  (let ((chat-key (sf "chat:~A" chat-id))
+        (message-strs '())
+        (messages '()))
+    (setf message-strs (red-lrange chat-key 0 -1))
+    ;; TODO: refactor into a generic macro to create any structure
+    (dolist (message-str message-strs)
+      (let* ((prop-list (read-object message-str)))
+        (push (make-message :player-id (nth 0 prop-list)
+                            :created-at (nth 1 prop-list)
+                            :updated-at (nth 2 prop-list)
+                            :msg (nth 3 prop-list))
+              messages)))
+    (nreverse messages)))
+;;; Chats ------------------------------------------------------------------- END
 
 ;;; Players
 (defstruct player
@@ -727,6 +826,15 @@
                          (player-notify-immediately? p))
                      (non-empty? (player-email p)))))
              (get-players :league league)))
+
+(defun player-member-of? (player league)
+  "Check whether PLAYER is a member LEAGUE."
+  (if (or (empty? player) (empty? league))
+      (return-from player-member-of? nil))
+  (check-type player PLAYER)
+  (check-type league LEAGUE)
+  (or (if (find (player-id player) (league-active-player-ids league)) t)
+      (if (find (player-id player) (league-inactive-player-ids league)) t)))
 
 (defun player-active-in? (player league)
   "Check whether PLAYER is active in LEAGUE."

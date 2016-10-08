@@ -273,7 +273,9 @@
                                                   (merge-pathnames
                                                    "styles/"
                                                    static-files-dir))
+            ;; Home page
             (create-regex-dispatcher "^/$" 'www-home-page)
+            ;; About page
             (create-regex-dispatcher "^/about/?$"
                                      (lambda ()
                                        (base-league-page 'www-about-page
@@ -281,26 +283,32 @@
             (create-regex-dispatcher "^/[\\w-]+/about/?$"
                                      (lambda ()
                                        (base-league-page 'www-about-page)))
+            ;; Log out page
             (create-regex-dispatcher "^/logout/?$"
                                      (lambda ()
                                        (base-league-page 'www-user-logout-page
                                                          :require-league? nil)))
+            ;; Log in API
             (create-regex-dispatcher "^/api/login/?$"
                                      (lambda ()
                                        (base-league-page 'api-login
                                                          :require-league? nil)))
+            ;; Forgot password API
             (create-regex-dispatcher "^/api/forgot-password/?$"
                                      (lambda ()
                                        (base-league-page 'api-forgot-pwd
                                                          :require-league? nil)))
+            ;; Reset password page
             (create-regex-dispatcher "^/reset-password/?$"
                                      (lambda ()
                                        (base-league-page 'www-reset-pwd
                                                          :require-league? nil)))
+            ;; Reset password API
             (create-regex-dispatcher "^/api/reset-password/?$"
                                      (lambda ()
                                        (base-league-page 'api-reset-pwd
                                                          :require-league? nil)))
+            ;; Current user detail page
             (create-regex-dispatcher "^/users/me/?$"
                                      (lambda ()
                                        (base-league-page 'www-user-detail-page
@@ -308,57 +316,77 @@
             (create-regex-dispatcher "^/[\\w-]+/users/me/?$"
                                      (lambda ()
                                        (base-league-page 'www-user-detail-page)))
+            ;; New user page
             (create-regex-dispatcher "^/[\\w-]+/users/new/?$"
                                      (lambda ()
                                        (base-league-page 'www-user-detail-page)))
+            ;; User page
             (create-regex-dispatcher "^/[\\w-]+/users/[\\w-]+/[0-9]+/?$"
                                      (lambda ()
                                        (base-league-page 'www-user-detail-page)))
+            ;; User API
             (create-regex-dispatcher "^/api/users/[0-9]+/?$"
                                      (lambda ()
                                        (base-league-page 'api-user-save
                                                          :require-league? nil)))
+            ;; League list page
             (create-regex-dispatcher "^/leagues/?$"
                                      (lambda ()
                                        (base-league-page 'www-league-list-page
                                                          :require-league? nil)))
+            ;; Schedule page
             (create-regex-dispatcher "^/[\\w-]+/games/schedule/?$"
                                      (lambda ()
                                        (base-league-page 'www-schedule-page)))
+            ;; Scores page
             (create-regex-dispatcher "^/[\\w-]+/games/scores/?$"
                                      (lambda ()
                                        (base-league-page 'www-scores-page)))
+            ;; Game detail page
             (create-regex-dispatcher "^/[\\w-]+/games/[0-9-]+/?$"
                                      (lambda ()
                                        (base-league-page 'www-game-detail-page)))
+            ;; New Game API
             (create-regex-dispatcher "^/[\\w-]+/api/games/new/?$"
                                      (lambda ()
                                        (base-league-page 'api-new-game)))
+            ;; Save Game API
             (create-regex-dispatcher "^/[\\w-]+/api/games/[0-9-]+/?$"
                                      (lambda ()
                                        (base-league-page 'api-game-update)))
+            ;; Chat API
+            (create-regex-dispatcher "^/[\\w-]+/api/games/chat/new?$"
+                                     (lambda ()
+                                       (base-league-page 'api-chat-new)))
+            ;; Player list page
             (create-regex-dispatcher "^/[\\w-]+/players/?$"
                                      (lambda ()
                                        (base-league-page 'www-player-list-page)))
+            ;; Player detail page
             (create-regex-dispatcher "^/[\\w-]+/players/[\\w-]+/\[\\w-]+/?$"
                                      (lambda ()
                                        (base-league-page 'www-player-detail-page)))
+            ;; League management page
             (create-regex-dispatcher "^/[\\w-]+/manage/?$"
                                      (lambda ()
                                        (base-league-page 'www-manage-league-page)))
+            ;; League API
             (create-regex-dispatcher "^/[\\w-]+/api/leagues/save/?$"
                                      (lambda ()
                                        (base-league-page 'api-league-save)))
+            ;; Test "server error" page
             (create-regex-dispatcher "^/test-server-error/?$"
                                      (lambda ()
                                        (base-league-page
                                         'www-test-server-error
                                         :require-league? nil)))
+            ;; Test "not found" page
             (create-regex-dispatcher "^/test-not-found/?$"
                                      (lambda ()
                                        (base-league-page
                                         'www-not-found-page
                                         :require-league? nil)))
+            ;; League detail page
             (create-regex-dispatcher "^/[\\w-]+/?$"
                                      (lambda ()
                                        (base-league-page
@@ -1366,7 +1394,8 @@
                 (not (string-equal "final" (game-progress game))))))
     (if (null game)
         (www-not-found-page :player player :league league)
-        (let* ((player-confirms '())
+        (let* ((chat (get-chat game))
+               (player-confirms '())
                (all-confirmed (confirmed-players game))
                (all-unconfirmed (unconfirmed-players game))
                (all-maybes (remove-if-not
@@ -1772,7 +1801,83 @@
                      :onclick "page.pickPlayers()"
                      :title "Choose players"
                      (:i :class "fa fa-check-circle-o")
-                     (:span :class "button-text" "Pick Players")))))))
+                     (:span :class "button-text" "Pick Players"))
+            ;; Chat
+            (:section
+             :id "chat"
+             (:header :class "blue-heading"
+                      (:h2 "Chat")
+                      (:span :id "chat-msg-count"
+                             :data-count (length chat)
+                             (fmt "(~A)" (length chat))))
+             (:ul :class "template-items"
+                  (:li
+                   :id "chat-msg-template"
+                   (:div
+                    (:a :class "player-name"
+                        :href (sf "/~(~A~)/players/~(~A~)/~A"
+                                  (league-name league)
+                                  (clean-uri-segment (player-name player))
+                                  (player-id player))
+                        (esc (player-name player)))
+                    (:span :class "msg-updated" ""))
+                   (:div :class "msg-content")))
+             (:ul
+              :id "chat-msg-list"
+              :class "data-list"
+              (dolist (msg chat)
+                (let* ((p (get-player :id (message-player-id msg))))
+                  (htm
+                   (:li
+                    (:div
+                     (:a :class "player-name"
+                         :href (sf "/~(~A~)/players/~(~A~)/~A"
+                                   (league-name league)
+                                   (clean-uri-segment (player-name p))
+                                   (player-id p))
+                         (esc (player-name p)))
+                     (:span :class "msg-updated"
+                            (esc (pretty-time
+                                  (message-updated-at msg)))))
+                    (:div
+                     :class "msg-content"
+                     (fmt "~A"
+                          (cl-ppcre:regex-replace-all "\\n"
+                                                      (message-msg msg)
+                                                      "<br />"))))))))
+             ;; Chat message editor
+             (:textarea :id "chat-editor"
+                        :maxlength message-max-length
+                        :onchange "page.onChatMsgChanged(this)"
+                        :onkeyup "page.onChatMsgChanged(this)"
+                        :style "display:none")
+             (:div :id "chat-msg-char-count" :style "display:none"
+                   (fmt "~A chars left" message-max-length))
+             ;; Add message button
+             (:button :id "add-msg-btn"
+                      :class "button wide-button"
+                      :onclick "page.addChatMsg()"
+                      (:i :class "fa fa-comment")
+                      (:span :class "button-text" "Add New Message"))
+             ;; Save result
+             (:div :id "save-chat-result"
+                   :style "display:none")
+             ;; Save message button
+             (:button :id "save-chat-msg-btn"
+                      :class "button wide-button"
+                      :disabled t
+                      :onclick "page.saveChatMsg()"
+                      :style "display:none"
+                      (:i :class "fa fa-plus-circle")
+                      (:span :class "button-text" "Save Message"))
+             ;; Cancel message button
+             (:button :id "cancel-msg-btn"
+                      :class "button wide-button"
+                      :onclick "page.cancelChatMsg()"
+                      :style "display:none"
+                      (:i :class "fa fa-ban")
+                      (:span :class "button-text" "Cancel Message"))
+             ))))))
 ;;; Game Detail Page -------------------------------------------------------- END
 
 ;;; Game Update API
@@ -1909,6 +2014,20 @@
                     data ""))))
       (t (json-result (new-r :error "Unable to determine save type."))))))
 ;;; Game Update API --------------------------------------------------------- END
+
+;;; New Chat API
+(defun api-chat-new (&key player league)
+  (setf (content-type*) "application/json")
+  (let* ((game-id (loose-parse-int (post-parameter "gameId")))
+         (game (get-game game-id))
+         (msg (post-parameter "msg")))
+    (if (empty? game)
+        (progn
+          (setf (return-code*) +http-not-found+)
+          (json-result (new-r :error (sf "Game (id ~A) not found." game-id))))
+        (let* ((save-res (save-message-new player league game msg)))
+          (json-result save-res)))))
+;;; New Chat API ------------------------------------------------------------ END
 
 ;;; Player List Page
 (defun www-player-list-page (&key player league)

@@ -53,6 +53,7 @@
    :game-email-reminder
    :game-confirms
    :game-league
+   :game-chat-id
    :get-game
    :get-games
    :get-upcoming-games
@@ -72,6 +73,15 @@
    :confirmed-players
    :unconfirmed-players
    :save-game-confirm
+   :message
+   :message-player-id
+   :message-created-at
+   :message-updated-at
+   :message-msg
+   :message-max-length
+   :make-message
+   :get-chat
+   :save-message-new
    :player
    :make-player
    :player-id
@@ -91,6 +101,7 @@
    :get-players
    :get-player
    :player-active-in?
+   :player-member-of?
    :is-commissioner?
    :save-player-simple
    :save-player-active
