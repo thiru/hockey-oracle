@@ -560,7 +560,7 @@ page.initGameDetailPage = function() {
 
     page.editGame = function() {
         $("#game-info-edit").toggle();
-        $("#confirm-inputs").toggle();
+        $("#confirm").toggle();
         $("#save-res").empty();
         $("#quick-crud-res").empty();
     };
@@ -833,7 +833,7 @@ page.initGameDetailPage = function() {
             return;
         }
 
-        $("#confirm-inputs").hide();
+        $("#confirm").hide();
         $("#grouped-players-sections").hide();
         $("#add-player").hide();
         populateTeams(teamsRes.data);
@@ -1040,7 +1040,7 @@ page.initGameDetailPage = function() {
     page.pickPlayers = function() {
         $("#random-teams").hide();
         $("#pick-players").hide();
-        $("#confirm-inputs").show();
+        $("#confirm").show();
         $("#grouped-players-sections").show();
         $("#add-player").show();
     };

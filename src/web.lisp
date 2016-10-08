@@ -88,7 +88,7 @@
              (mkstr
               (sf '("<p>This is a reminder of an <a href='~(~A~)'>upcoming game"
                     "</a> in the <a href='~(~A~)' title='~A'>~A</a> on ~A.</p>")
-                  (build-url (sf "~A/games/~A#confirm-inputs"
+                  (build-url (sf "~A/games/~A#confirm"
                                  (league-name league)
                                  (game-id game))
                              player)
@@ -100,7 +100,7 @@
                       (equal :no-response confirm-type))
                   (sf '("<p>Please update your <a href='~(~A~)'>game status"
                         "</a>.</p>")
-                      (build-url (sf "~A/games/~A#confirm-inputs"
+                      (build-url (sf "~A/games/~A#confirm"
                                      (league-name league)
                                      (game-id game))
                                  player))
@@ -1553,7 +1553,7 @@
             (when show-confirm-inputs
               (htm
                (:section
-                :id "confirm-inputs"
+                :id "confirm"
                 (:b "Your status for this game is:&nbsp;")
                 (:select :id "game-confirm-opts"
                          :onchange "page.confirmTypeChanged(this)"
