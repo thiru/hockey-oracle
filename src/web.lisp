@@ -1033,19 +1033,6 @@
                          (:span "Active")))))
                   (:p
                    (:label
-                    :title (sf '("Notify me immediately when the state of the "
-                                 "upcoming game changes. E.g. when a player "
-                                 "changes their status."))
-                    (:input :id "player-immediate-notify-edit"
-                            :checked (player-notify-immediately? target-player)
-                            :data-orig-val
-                            (if (player-notify-immediately? target-player)
-                                "true"
-                                "false")
-                            :type "checkbox")
-                    (:span "Immediate email notifications")))
-                  (:p
-                   (:label
                     (:span "Default Position: ")
                     (:select :id "player-pos-edit"
                              :data-orig-val
@@ -1057,6 +1044,21 @@
                                                        (player-position
                                                         target-player))
                                          :value pos (esc pos)))))))
+                  (:h3 "Email Notifications")
+                  (:p
+                   (:label
+                    :title (sf '("Notify me when a player changes their status "
+                                 "for a game"))
+                    (:input :id "notify-on-player-status-change-edit"
+                            :checked (player-notify-on-player-status-change?
+                                      target-player)
+                            :data-orig-val
+                            (if (player-notify-on-player-status-change?
+                                 target-player)
+                                "true"
+                                "false")
+                            :type "checkbox")
+                    (:span "Player status change")))
                   (:p
                    (:button :id "save-btn"
                             :class "button wide-button"
@@ -1082,8 +1084,8 @@
          (name (post-parameter "name"))
          (email (post-parameter "email"))
          (active? (string-equal "true" (post-parameter "active")))
-         (notify-immediately?
-           (string-equal "true" (post-parameter "notifyImmediately")))
+         (notify-on-player-status-change?
+           (string-equal "true" (post-parameter "notifyOnPlayerStatusChange")))
          (pos (post-parameter "position"))
          (curr-pwd (post-parameter "currentPwd"))
          (new-pwd (post-parameter "newPwd"))
@@ -1112,7 +1114,8 @@
     ;; Update simple player info
     (setf (player-name target-player) name)
     (setf (player-email target-player) email)
-    (setf (player-notify-immediately? target-player) notify-immediately?)
+    (setf (player-notify-on-player-status-change? target-player)
+          notify-on-player-status-change?)
     (setf (player-position target-player) pos)
     ;; Save simple player info
     (setf save-res (save-player-simple target-player))
@@ -1973,9 +1976,13 @@
            (send-email-to-players
             (sf "Game confirmation change in ~A" (league-name league))
             (lambda (player-to-email)
-              (if (= (player-id player-to-email)
-                     (player-id player))
-                  nil ; Don't send email to player making the change
+              (if (or (= (player-id player-to-email)
+                         (player-id player))
+                      (null (player-notify-on-player-status-change?
+                             player-to-email)))
+                  ;; Don't send email to player making the change, or those not
+                  ;; interested in these types of notifications
+                  nil
                   (sf '("<p><a href='~(~A~)'>~A</a> updated their confirmation "
                         "status for the <a href='~(~A~)'>upcoming game</a> in "
                         "the <strong title='~A'>~A</strong> on ~A.</p>"
@@ -2001,8 +2008,7 @@
                           (sf '("<p>Notes:</p>"
                                 "<blockquote>~A</blockquote>")
                               reason)))))
-            league
-            :immediate-notify-only? t))
+            league))
        (json:encode-json-plist-to-string
         (if (succeeded? save-res)
             `(level :success

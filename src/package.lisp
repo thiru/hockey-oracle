@@ -87,7 +87,7 @@
    :player-id
    :player-name
    :player-admin?
-   :player-notify-immediately?
+   :player-notify-on-player-status-change?
    :player-email
    :player-auth
    :player-perm-auth

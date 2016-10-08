@@ -265,7 +265,7 @@ page.initUserDetailPage = function() {
         if (dataChanged("player-name-edit")
             || dataChanged("player-email-edit")
             || dataChanged("player-active-edit")
-            || dataChanged("player-immediate-notify-edit")
+            || dataChanged("notify-on-player-status-change-edit")
             || dataChanged("player-pos-edit")
             || dataChanged("pwd-new-repeat"))
             $("#save-btn").show();
@@ -308,8 +308,9 @@ page.initUserDetailPage = function() {
         else
             player.active = false;
 
-        // Get immediate email notifications option
-        player.notifyImmediately = get("player-immediate-notify-edit").checked;
+        // Get notification options
+        player.notifyOnPlayerStatusChange =
+            get("notify-on-player-status-change-edit").checked;
 
         // Get player position
         player.position = $("#player-pos-edit :selected").val();
@@ -357,7 +358,7 @@ page.initUserDetailPage = function() {
                     updateOrigDataVal("player-name-edit");
                     updateOrigDataVal("player-email-edit");
                     updateOrigDataVal("player-active-edit");
-                    updateOrigDataVal("player-immediate-notify-edit");
+                    updateOrigDataVal("notify-on-player-status-change-edit");
                     updateOrigDataVal("player-pos-edit");
                     $("#save-btn").hide();
                 }
@@ -380,7 +381,7 @@ page.initUserDetailPage = function() {
     $("#player-name-edit").on("input", page.inputChanged);
     $("#player-email-edit").on("input", page.inputChanged);
     $("#player-active-edit").change(page.inputChanged);
-    $("#player-immediate-notify-edit").change(page.inputChanged);
+    $("#notify-on-player-status-change-edit").change(page.inputChanged);
     $("#player-pos-edit").change(page.inputChanged);
     $("#pwd-new-repeat").on("input", page.inputChanged);
 };

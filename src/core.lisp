@@ -731,7 +731,8 @@
    * NAME: his/her name
    * ADMIN?: whether a site-wide administrator
    * EMAIL: email address
-   * NOTIFY-IMMEDIATELY?: notify immediately if upcoming game state changes
+   * NOTIFY-ON-PLAYER-STATUS-CHANGE?: whether this player wants to be notified
+     on player status changes in a game
    * AUTH: current authentication (hashed and salted password)
    * TEMP-AUTH: a random short-lived authentication token
    * PERM-AUTH: a random longer-lived authentication token
@@ -744,7 +745,7 @@
   (name "")
   (admin? nil)
   (email "")
-  (notify-immediately? nil)
+  (notify-on-player-status-change?)
   (auth "")
   (perm-auth "")
   (temp-auth "")
@@ -815,15 +816,11 @@
                    player))
               (t player)))))
 
-(defun get-emailable-players (league &key immediate-notify-only?)
-  "Get email addresses of all players in LEAGUE.
-   If IMMEDIATE-NOTIFY-ONLY? is T, only players who requested immediate email
-   notification will be returned."
+(defun get-emailable-players (league)
+  "Get active players in LEAGUE with valid email address."
   (remove-if (complement
               (lambda (p)
                 (and (player-active-in? p league)
-                     (or (not immediate-notify-only?)
-                         (player-notify-immediately? p))
                      (non-empty? (player-email p)))))
              (get-players :league league)))
 
@@ -966,8 +963,8 @@
           (setf (player-id player) p-id))
         (red-hset player-key "name" (player-name player))
         (red-hset player-key "email" (player-email player))
-        (red-hset player-key "notify-immediately?"
-                  (if (player-notify-immediately? player) 1 0))
+        (red-hset player-key "notify-on-player-status-change?"
+                  (if (player-notify-on-player-status-change? player) 1 0))
         (red-hset player-key "position" (player-position player)))))
   (new-r :success "Save successful!" player))
 
@@ -1004,8 +1001,9 @@
                                             (red-smembers "admin:users")
                                             :test #'string-equal))
                      :email (red-hget player-key "email")
-                     :notify-immediately?
-                     (to-bool (red-hget player-key "notify-immediately?"))
+                     :notify-on-player-status-change?
+                     (to-bool (red-hget player-key
+                                        "notify-on-player-status-change?"))
                      :auth (red-hget player-key "auth")
                      :perm-auth (red-hget player-key "perm-auth")
                      :temp-auth (red-hget player-key "temp-auth")
@@ -1051,13 +1049,10 @@
                                             :ssl :tls
                                             :authentication `(,username ,pwd)))))))
 
-(defun send-email-to-players (subject get-message league
-                              &key immediate-notify-only?)
+(defun send-email-to-players (subject get-message league)
   "Sends an HTML email to certain players belonging to LEAGUE.
    GET-MESSAGE is a func that takes a PLAYER and returns the body of the email.
-   If the body of the message is empty the email will not be sent.
-   If IMMEDIATE-NOTIFY-ONLY? is T, only players who requested immediate email
-   notification will be included."
+   If the body of the message is empty the email will not be sent."
   (if (empty? subject)
       (return-from send-email-to-players
         (new-r :error "No subject provided.")))
@@ -1071,9 +1066,7 @@
       (return-from send-email-to-players
         (new-r :info (sf "Automated emails currently disabled for league, '~A'."
                          (league-name league)))))
-  (let* ((players (get-emailable-players
-                   league
-                   :immediate-notify-only? immediate-notify-only?))
+  (let* ((players (get-emailable-players league))
          (emails-sent 0))
     (if (empty? players)
         (return-from send-email-to-players
