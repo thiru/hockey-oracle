@@ -56,6 +56,46 @@
 ;;; General ----------------------------------------------------------------- END
 
 ;;; Email
+(defun send-email-to-players (subject get-message league)
+  "Sends an HTML email to certain players belonging to LEAGUE.
+   GET-MESSAGE is a func that takes a PLAYER and returns the body of the email.
+   If the body of the message is empty the email will not be sent."
+  (if (empty? subject)
+      (return-from send-email-to-players
+        (new-r :error "No subject provided.")))
+  (if (null get-message)
+      (return-from send-email-to-players
+        (new-r :error "No func provided to get message.")))
+  (if (null league)
+      (return-from send-email-to-players
+        (new-r :error "No league provided.")))
+  (if (not (league-send-automated-emails? league))
+      (return-from send-email-to-players
+        (new-r :info (sf "Automated emails currently disabled for league, '~A'."
+                         (league-name league)))))
+  (let* ((players (get-emailable-players league))
+         (emails-sent 0))
+    (if (empty? players)
+        (return-from send-email-to-players
+          (new-r :info
+                 (sf "No players have email addresses in the league, '~A'."
+                     (league-name league)))))
+    (dolist (player players)
+      (let* ((email-body (funcall get-message player)))
+        (when (non-empty? email-body)
+          (setf email-body
+                (sf '("~A <br />"
+                      "<p style='font-size:0.8em;color:grey'>Email and "
+                      "notification settings can be changed <a href='~(~A~)'>"
+                      "here</a>.</p>")
+                    email-body
+                    (build-url (sf "~A/users/me#notifications"
+                                   (league-name league))
+                               player)))
+          (incf emails-sent)
+          (send-email subject email-body (player-email player)))))
+    (new-r :success (sf "Sent email to ~A players." emails-sent))))
+
 (defun email-game-reminder (game)
   "Sends an email reminder of an upcoming game."
   (check-type game GAME)
@@ -1044,7 +1084,7 @@
                                                        (player-position
                                                         target-player))
                                          :value pos (esc pos)))))))
-                  (:h3 "Email Notifications")
+                  (:h3 :id "notifications" "Email Notifications")
                   (:p
                    (:label
                     :title (sf '("Notify me when a player changes their status "

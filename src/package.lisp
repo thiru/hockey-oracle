@@ -100,6 +100,7 @@
    :players-positions
    :get-players
    :get-player
+   :get-emailable-players
    :player-active-in?
    :player-member-of?
    :is-commissioner?
@@ -118,8 +119,7 @@
    :server-info
    :server-info-host
    :get-server-info
-   :send-email
-   :send-email-to-players))
+   :send-email))
 
 (defpackage :hockey-oracle.web
   (:use :alexandria :cl :cl-who :glu :hockey-oracle.core :hunchentoot :local-time

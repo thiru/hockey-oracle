@@ -1048,35 +1048,4 @@
                                             :html-message message
                                             :ssl :tls
                                             :authentication `(,username ,pwd)))))))
-
-(defun send-email-to-players (subject get-message league)
-  "Sends an HTML email to certain players belonging to LEAGUE.
-   GET-MESSAGE is a func that takes a PLAYER and returns the body of the email.
-   If the body of the message is empty the email will not be sent."
-  (if (empty? subject)
-      (return-from send-email-to-players
-        (new-r :error "No subject provided.")))
-  (if (null get-message)
-      (return-from send-email-to-players
-        (new-r :error "No func provided to get message.")))
-  (if (null league)
-      (return-from send-email-to-players
-        (new-r :error "No league provided.")))
-  (if (not (league-send-automated-emails? league))
-      (return-from send-email-to-players
-        (new-r :info (sf "Automated emails currently disabled for league, '~A'."
-                         (league-name league)))))
-  (let* ((players (get-emailable-players league))
-         (emails-sent 0))
-    (if (empty? players)
-        (return-from send-email-to-players
-          (new-r :info
-                 (sf "No players have email addresses in the league, '~A'."
-                     (league-name league)))))
-    (dolist (player players)
-      (let* ((email-body (funcall get-message player)))
-        (when (non-empty? email-body)
-          (incf emails-sent)
-          (send-email subject email-body (player-email player)))))
-    (new-r :success (sf "Sent email to ~A players." emails-sent))))
 ;;; Email ------------------------------------------------------------------- END
