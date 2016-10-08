@@ -1974,7 +1974,10 @@
                 (not (string-equal "cancelled" (game-progress game)))
                 (not (string-equal "final" (game-progress game))))
            (send-email-to-players
-            (sf "Game confirmation change in ~A" (league-name league))
+            (sf "~A updated their status to ~(~A~)"
+                (player-name player)
+                (getf confirm-types
+                      (find confirm-type confirm-types :test #'string-equal)))
             (lambda (player-to-email)
               (if (or (= (player-id player-to-email)
                          (player-id player))
