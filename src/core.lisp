@@ -733,6 +733,8 @@
    * EMAIL: email address
    * NOTIFY-ON-PLAYER-STATUS-CHANGE?: whether this player wants to be notified
      on player status changes in a game
+   * NOTIFY-ON-PLAYER-CHAT?: whether this player wants to be notified when other
+     players post a message (e.g. game chat)
    * AUTH: current authentication (hashed and salted password)
    * TEMP-AUTH: a random short-lived authentication token
    * PERM-AUTH: a random longer-lived authentication token
@@ -746,6 +748,7 @@
   (admin? nil)
   (email "")
   (notify-on-player-status-change?)
+  (notify-on-player-chat?)
   (auth "")
   (perm-auth "")
   (temp-auth "")
@@ -965,6 +968,8 @@
         (red-hset player-key "email" (player-email player))
         (red-hset player-key "notify-on-player-status-change?"
                   (if (player-notify-on-player-status-change? player) 1 0))
+        (red-hset player-key "notify-on-player-chat?"
+                  (if (player-notify-on-player-chat? player) 1 0))
         (red-hset player-key "position" (player-position player)))))
   (new-r :success "Save successful!" player))
 
@@ -1004,6 +1009,9 @@
                      :notify-on-player-status-change?
                      (to-bool (red-hget player-key
                                         "notify-on-player-status-change?"))
+                     :notify-on-player-chat?
+                     (to-bool (red-hget player-key
+                                        "notify-on-player-chat?"))
                      :auth (red-hget player-key "auth")
                      :perm-auth (red-hget player-key "perm-auth")
                      :temp-auth (red-hget player-key "temp-auth")

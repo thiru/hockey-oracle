@@ -88,6 +88,7 @@
    :player-name
    :player-admin?
    :player-notify-on-player-status-change?
+   :player-notify-on-player-chat?
    :player-email
    :player-auth
    :player-perm-auth

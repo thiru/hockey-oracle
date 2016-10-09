@@ -1087,6 +1087,19 @@
                   (:h3 :id "notifications" "Email Notifications")
                   (:p
                    (:label
+                    :title "Notify me when a player posts a message"
+                    (:input :id "notify-on-player-chat-edit"
+                            :checked (player-notify-on-player-chat?
+                                      target-player)
+                            :data-orig-val
+                            (if (player-notify-on-player-chat?
+                                 target-player)
+                                "true"
+                                "false")
+                            :type "checkbox")
+                    (:span "Game chats")))
+                  (:p
+                   (:label
                     :title (sf '("Notify me when a player changes their status "
                                  "for a game"))
                     (:input :id "notify-on-player-status-change-edit"
@@ -1126,6 +1139,8 @@
          (active? (string-equal "true" (post-parameter "active")))
          (notify-on-player-status-change?
            (string-equal "true" (post-parameter "notifyOnPlayerStatusChange")))
+         (notify-on-player-chat?
+           (string-equal "true" (post-parameter "notifyOnPlayerChat")))
          (pos (post-parameter "position"))
          (curr-pwd (post-parameter "currentPwd"))
          (new-pwd (post-parameter "newPwd"))
@@ -1156,6 +1171,8 @@
     (setf (player-email target-player) email)
     (setf (player-notify-on-player-status-change? target-player)
           notify-on-player-status-change?)
+    (setf (player-notify-on-player-chat? target-player)
+          notify-on-player-chat?)
     (setf (player-position target-player) pos)
     ;; Save simple player info
     (setf save-res (save-player-simple target-player))
