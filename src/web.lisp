@@ -246,6 +246,13 @@
                      current-path)
       (cl-ppcre:scan (sf "^/~(~A~)" test-path) current-path)))
 
+(defun escaped-html (plain-text)
+  "Transforms PLAIN-TEXT into safely injectable HTML. New line characters are
+   replaced with line breaks, etc."
+  (cl-ppcre:regex-replace-all "\\n"
+                              (escape-string plain-text)
+                              "<br />"))
+
 (defun path-segments (req)
   "Gets a list of path segments, excluding query parameters."
   (split-sequence #\/ (script-name* req) :remove-empty-subseqs t))
@@ -1901,10 +1908,7 @@
                                   (message-updated-at msg)))))
                     (:div
                      :class "msg-content"
-                     (fmt "~A"
-                          (cl-ppcre:regex-replace-all "\\n"
-                                                      (message-msg msg)
-                                                      "<br />"))))))))
+                     (fmt "~A" (escaped-html (message-msg msg)))))))))
              ;; Chat message editor
              (:textarea :id "chat-editor"
                         :maxlength message-max-length
