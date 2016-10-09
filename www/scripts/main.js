@@ -563,6 +563,13 @@ page.initGameDetailPage = function() {
         }
     });
 
+    // Go to last chat message if applicable
+    if (window.location.hash.toLowerCase() == '#chat') {
+        var lastMsg = $("#chat-msg-list li:last-child");
+        if (lastMsg && lastMsg.length)
+            lastMsg[0].scrollIntoView(true);
+    }
+
     page.editGame = function() {
         $("#game-info-edit").toggle();
         $("#confirm").toggle();
