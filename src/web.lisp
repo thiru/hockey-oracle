@@ -55,6 +55,110 @@
       (stop main-acceptor :soft t)))
 ;;; General ----------------------------------------------------------------- END
 
+;;; Utils
+(defun build-url (path &optional player)
+  "Builds an absolute URL to this website at the specified path. The player is
+   used to include a temporary authentication token in case they have not set a
+   permanent password."
+  (if player
+      (check-type player PLAYER))
+  ;; We split the path on the hash character in order to place it back at the
+  ;; end. This is necessary because we may need to insert the temp auth query
+  ;; parameter
+  (let* ((pathSegs (split-sequence #\# path))
+         (pathSansHashSeg (first pathSegs))
+         (hashSeg (second pathSegs)))
+    (sf "~A/~(~A~)~(~A~)~A"
+        (server-info-host server-info)
+        pathSansHashSeg
+        (if (and player (empty? (player-perm-auth player)))
+            (sf "~Ame=~A-~A"
+                (if (search "?" pathSansHashSeg) "&" "?")
+                (player-id player)
+                (player-temp-auth player))
+            "")
+        (if (non-empty? hashSeg)
+            (concatenate 'string "#" hashSeg)
+            ""))))
+
+;;; TODO: Following is not being used
+(defmacro html-snippet (root-tag)
+  "Generate HTML given a single root HTML tag."
+  `(with-html-output-to-string (*standard-output* nil :indent t)
+     ,root-tag))
+
+(defun clean-uri-segment (input)
+  "Replaces non-alphanumeric chars in INPUT for a cleaner URI segment."
+  (setf input (cl-ppcre:regex-replace-all "[ ]+" input "-"))
+  (cl-ppcre:regex-replace-all "[^A-Za-z0-9-]" input ""))
+
+(defun based-on-path? (current-path test-path &optional league)
+  "Determine whether CURRENT-PATH is rooted in TEST-PATH.
+   If LEAGUE is given, the league's name is expected to be at the root of
+   CURRENT-PATH.
+   All paths are expected to be relative and only contain the 'file' path. I.e.
+   no query parameters or hash segments."
+  (if league
+      (cl-ppcre:scan (sf "^/~(~A~)/~(~A~)" (league-name league) test-path)
+                     current-path)
+      (cl-ppcre:scan (sf "^/~(~A~)" test-path) current-path)))
+
+(defun escaped-html (plain-text)
+  "Transforms PLAIN-TEXT into safely injectable HTML. New line characters are
+   replaced with line breaks, etc."
+  (cl-ppcre:regex-replace-all "\\n"
+                              (escape-string plain-text)
+                              "<br />"))
+
+(defun path-segments (req)
+  "Gets a list of path segments, excluding query parameters."
+  (split-sequence #\/ (script-name* req) :remove-empty-subseqs t))
+
+(defun json-result (result &optional data)
+  "Converts the given R instance to a JSON string."
+  (json:encode-json-plist-to-string
+   `(level ,(r-level result)
+           message ,(r-message result)
+           data ,data)))
+
+(defun parse-league (req)
+  "Parses the request path to obtain the league defined as the first segment.
+   The league is returned."
+  (let* ((path-segs (path-segments req))
+         (league-name (first path-segs)))
+    (if (not (empty? league-name))
+        (get-league :name league-name))))
+
+(defun set-auth-cookie (player &key perm?)
+  "Set the temporary or permanent authorisation cookie."
+  (if player
+      (set-cookie (if perm? "puser" "tuser")
+                  :value (sf "~A-~A"
+                             (player-id player)
+                             (if perm?
+                                 (player-perm-auth player)
+                                 (player-temp-auth player)))
+                  ;; Expire a month from now
+                  :max-age (* 60 60 24 30)
+                  :path "/"
+                  :secure (not *debug*)
+                  :http-only t)))
+
+(defun remove-cookie (id)
+  "Removes the cookie with the specified ID."
+  (set-cookie id
+              :value ""
+              :max-age 0
+              :path "/"
+              :secure (not *debug*)
+              :http-only t))
+
+(defun remove-auth-cookies ()
+  "Invalidates all authorisation cookies."
+  (remove-cookie "puser")
+  (remove-cookie "tuser"))
+;;; Utils ------------------------------------------------------------------- END
+
 ;;; Email
 (defun send-email-to-players (subject get-message league)
   "Sends an HTML email to certain players belonging to LEAGUE.
@@ -200,110 +304,6 @@
                   "")))))
      league)))
 ;;; Email ------------------------------------------------------------------- END
-
-;;; Utils
-(defun build-url (path &optional player)
-  "Builds an absolute URL to this website at the specified path. The player is
-   used to include a temporary authentication token in case they have not set a
-   permanent password."
-  (if player
-      (check-type player PLAYER))
-  ;; We split the path on the hash character in order to place it back at the
-  ;; end. This is necessary because we may need to insert the temp auth query
-  ;; parameter
-  (let* ((pathSegs (split-sequence #\# path))
-         (pathSansHashSeg (first pathSegs))
-         (hashSeg (second pathSegs)))
-    (sf "~A/~(~A~)~(~A~)~A"
-        (server-info-host server-info)
-        pathSansHashSeg
-        (if (and player (empty? (player-perm-auth player)))
-            (sf "~Ame=~A-~A"
-                (if (search "?" pathSansHashSeg) "&" "?")
-                (player-id player)
-                (player-temp-auth player))
-            "")
-        (if (non-empty? hashSeg)
-            (concatenate 'string "#" hashSeg)
-            ""))))
-
-;;; TODO: Following is not being used
-(defmacro html-snippet (root-tag)
-  "Generate HTML given a single root HTML tag."
-  `(with-html-output-to-string (*standard-output* nil :indent t)
-     ,root-tag))
-
-(defun clean-uri-segment (input)
-  "Replaces non-alphanumeric chars in INPUT for a cleaner URI segment."
-  (setf input (cl-ppcre:regex-replace-all "[ ]+" input "-"))
-  (cl-ppcre:regex-replace-all "[^A-Za-z0-9-]" input ""))
-
-(defun based-on-path? (current-path test-path &optional league)
-  "Determine whether CURRENT-PATH is rooted in TEST-PATH.
-   If LEAGUE is given, the league's name is expected to be at the root of
-   CURRENT-PATH.
-   All paths are expected to be relative and only contain the 'file' path. I.e.
-   no query parameters or hash segments."
-  (if league
-      (cl-ppcre:scan (sf "^/~(~A~)/~(~A~)" (league-name league) test-path)
-                     current-path)
-      (cl-ppcre:scan (sf "^/~(~A~)" test-path) current-path)))
-
-(defun escaped-html (plain-text)
-  "Transforms PLAIN-TEXT into safely injectable HTML. New line characters are
-   replaced with line breaks, etc."
-  (cl-ppcre:regex-replace-all "\\n"
-                              (escape-string plain-text)
-                              "<br />"))
-
-(defun path-segments (req)
-  "Gets a list of path segments, excluding query parameters."
-  (split-sequence #\/ (script-name* req) :remove-empty-subseqs t))
-
-(defun json-result (result &optional data)
-  "Converts the given R instance to a JSON string."
-  (json:encode-json-plist-to-string
-   `(level ,(r-level result)
-           message ,(r-message result)
-           data ,data)))
-
-(defun parse-league (req)
-  "Parses the request path to obtain the league defined as the first segment.
-   The league is returned."
-  (let* ((path-segs (path-segments req))
-         (league-name (first path-segs)))
-    (if (not (empty? league-name))
-        (get-league :name league-name))))
-
-(defun set-auth-cookie (player &key perm?)
-  "Set the temporary or permanent authorisation cookie."
-  (if player
-      (set-cookie (if perm? "puser" "tuser")
-                  :value (sf "~A-~A"
-                             (player-id player)
-                             (if perm?
-                                 (player-perm-auth player)
-                                 (player-temp-auth player)))
-                  ;; Expire a month from now
-                  :max-age (* 60 60 24 30)
-                  :path "/"
-                  :secure (not *debug*)
-                  :http-only t)))
-
-(defun remove-cookie (id)
-  "Removes the cookie with the specified ID."
-  (set-cookie id
-              :value ""
-              :max-age 0
-              :path "/"
-              :secure (not *debug*)
-              :http-only t))
-
-(defun remove-auth-cookies ()
-  "Invalidates all authorisation cookies."
-  (remove-cookie "puser")
-  (remove-cookie "tuser"))
-;;; Utils ------------------------------------------------------------------- END
 
 ;;; Routes
 (setf *dispatch-table*
