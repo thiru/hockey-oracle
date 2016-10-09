@@ -630,6 +630,19 @@
                                                 (league-name ,league))
                                       (:i :class "fa fa-fw fa-pencil-square")
                                       (:span "Manage")))))
+                            (if ,player
+                                (if ,league
+                                    (htm
+                                     (:li
+                                      (:a :href (sf "/~(~A~)/users/me"
+                                                    (league-name ,league))
+                                          (:i :class "fa fa-fw fa-user")
+                                          (:span "Profile"))))
+                                    (htm
+                                     (:li
+                                      (:a :href "/users/me"
+                                          (:i :class "fa fa-fw fa-user")
+                                          (:span "Profile"))))))
                             (if (null ,league)
                                 (htm (:li (:a :class (if (based-on-path? path
                                                                          "about")
