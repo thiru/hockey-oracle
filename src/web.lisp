@@ -85,9 +85,8 @@
         (when (non-empty? email-body)
           (setf email-body
                 (sf '("~A <br />"
-                      "<p style='font-size:0.8em;color:grey'>Email and "
-                      "notification settings can be changed <a href='~(~A~)'>"
-                      "here</a>.</p>")
+                      "<p style='font-size:0.8em;color:grey'>Email notification "
+                      "settings can be changed <a href='~(~A~)'> here</a>.</p>")
                     email-body
                     (build-url (sf "~A/users/me#notifications"
                                    (league-name league))
