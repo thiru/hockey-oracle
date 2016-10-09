@@ -2096,6 +2096,23 @@
           (setf (return-code*) +http-not-found+)
           (json-result (new-r :error (sf "Game (id ~A) not found." game-id))))
         (let* ((save-res (save-message-new player league game msg)))
+          (if (succeeded? save-res)
+              (send-email-to-players
+               (sf "New message from ~A"
+                   (escape-string (player-name player)))
+               (lambda (p)
+                 ;; Don't send email to player that wrote the message and those
+                 ;; not interested in chat message notifications
+                 (if (and (/= (player-id p) (player-id player))
+                          (player-notify-on-player-chat? p))
+                     (sf '("~A<br />"
+                           "<p><a href='~(~A~)'>View full chat</a></p>")
+                         (escaped-html msg)
+                         (build-url (sf "~A/games/~A#chat"
+                                        (league-name league)
+                                        (game-id game))
+                                    p))))
+               league))
           (json-result save-res)))))
 ;;; New Chat API ------------------------------------------------------------ END
 

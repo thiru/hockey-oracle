@@ -653,7 +653,7 @@
 
 (defun save-message-new (player league game msg)
   "Save a chat message for the specified GAME in LEAGUE by PLAYER.
-   Returns an R, containing the new MESSAGE if successful."
+   Returns an R."
   (if (empty? league)
       (return-from save-message-new
         (new-r :error "No league specified.")))
@@ -703,9 +703,7 @@
                    (to-string current-time)
                    msg)))
       (red-rpush chat-key new-message)
-      (new-r :success
-             (sf "Saved new chat message!")
-             new-message))))
+      (new-r :success "Saved new chat message!"))))
 
 (defun new-chat-from-db (chat-id)
   "Create a list of MESSAGE structs for the given chat id."
