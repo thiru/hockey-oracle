@@ -1139,12 +1139,13 @@ page.initGameDetailPage = function() {
     };
 
     page.addChatMsg = function() {
-        $("#chat-editor").show();
+        $("#chat-editor").show().focus();
         $("#chat-msg-char-count").show();
         $("#add-msg-btn").hide();
         $("#save-chat-msg-btn").show();
         $("#cancel-msg-btn").show();
         $("#save-chat-result").attr("class", "").html("").hide();
+        $("#chat-editor")[0].scrollIntoView();
     };
 
     page.saveChatMsg = function() {
