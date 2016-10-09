@@ -1987,14 +1987,17 @@
             (lambda (player-to-email)
               (sf '("<p>An upcoming game in the <a href='~A' title='~A'>~A</a> "
                     "on ~A was cancelled.</p>"
-                    "<p><strong>Game Notes:</strong></p>"
-                    "<p>~A</p>")
+                    "~A")
                   (build-url (sf "~A/games/schedule" (league-name league))
                              player-to-email)
-                  (league-full-name league)
+                  (escape-string (league-full-name league))
                   (league-name league)
                   (pretty-time (game-time game))
-                  (escape-string (game-notes game))))
+                  (if (empty? (game-notes game))
+                      ""
+                      (sf '("<p><strong>Game Notes:</strong></p>"
+                            "<p>~A</p>")
+                          (escape-string (game-notes game))))))
             league))
        (json-result save-res))
       ;; Update game info (e.g. time, progress, notes, etc.)
