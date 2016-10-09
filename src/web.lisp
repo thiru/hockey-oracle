@@ -158,7 +158,8 @@
                       (map 'list
                            (lambda (gc)
                              (sf "~A - <i>~A</i>"
-                                 (player-name (game-confirm-player gc))
+                                 (escape-string
+                                  (player-name (game-confirm-player gc)))
                                  (player-position (game-confirm-player gc))))
                            all-confirmed)))
               (if (non-empty? all-maybes)
@@ -168,7 +169,8 @@
                       (map 'list
                            (lambda (gc)
                              (sf "~A - <i>~A</i>"
-                                 (player-name (game-confirm-player gc))
+                                 (escape-string
+                                  (player-name (game-confirm-player gc)))
                                  (player-position (game-confirm-player gc))))
                            all-maybes))
                   "")
@@ -179,7 +181,8 @@
                       (map 'list
                            (lambda (gc)
                              (sf "~A - <i>~A</i>"
-                                 (player-name (game-confirm-player gc))
+                                 (escape-string
+                                  (player-name (game-confirm-player gc)))
                                  (player-position (game-confirm-player gc))))
                            all-cant-play))
                   "")
@@ -190,7 +193,8 @@
                       (map 'list
                            (lambda (gc)
                              (sf "~A - <i>~A</i>"
-                                 (player-name (game-confirm-player gc))
+                                 (escape-string
+                                  (player-name (game-confirm-player gc)))
                                  (player-position (game-confirm-player gc))))
                            all-no-response))
                   "")))))
@@ -976,7 +980,7 @@
                                     "Me")
                                    (new-player?
                                     "New Player")
-                                   (t (player-name target-player))))
+                                   (t (esc (player-name target-player)))))
            :player player
            :league league
            :page-id "user-detail-page")
@@ -1737,12 +1741,12 @@
                              (htm
                               (:li :class "player-item"
                                    :data-id (player-id (-> pc player))
-                                   :data-name (player-name (-> pc player))
+                                   :data-name (esc (player-name (-> pc player)))
                                    :data-uri
                                    (sf "/~(~A~)/players/~(~A~)/~A"
                                        (league-name league)
                                        (clean-uri-segment
-                                        (player-name (-> pc player)))
+                                        (esc (player-name (-> pc player))))
                                        (player-id (-> pc player)))
                                    :data-position (player-position (-> pc player))
                                    :data-confirm-type
@@ -1757,7 +1761,7 @@
                                        :href (sf "/~(~A~)/players/~(~A~)/~A"
                                                  (league-name league)
                                                  (clean-uri-segment
-                                                  (player-name (-> pc player)))
+                                                  (esc (player-name (-> pc player))))
                                                  (player-id (-> pc player)))
                                        (esc (player-name (-> pc player))))
                                    (:span :class "playing-toggle-col"
@@ -1883,7 +1887,8 @@
                     (:a :class "player-name"
                         :href (sf "/~(~A~)/players/~(~A~)/~A"
                                   (league-name league)
-                                  (clean-uri-segment (player-name player))
+                                  (clean-uri-segment
+                                   (esc (player-name player)))
                                   (player-id player))
                         (esc (player-name player)))
                     (:span :class "msg-updated" ""))
@@ -1899,7 +1904,8 @@
                      (:a :class "player-name"
                          :href (sf "/~(~A~)/players/~(~A~)/~A"
                                    (league-name league)
-                                   (clean-uri-segment (player-name p))
+                                   (clean-uri-segment
+                                    (esc (player-name p)))
                                    (player-id p))
                          (esc (player-name p)))
                      (:span :class "msg-updated"
@@ -2035,7 +2041,7 @@
                 (not (string-equal "final" (game-progress game))))
            (send-email-to-players
             (sf "~A updated their status to ~(~A~)"
-                (player-name player)
+                (escape-string (player-name player))
                 (getf confirm-types
                       (find confirm-type confirm-types :test #'string-equal)))
             (lambda (player-to-email)
@@ -2053,10 +2059,10 @@
                         "~A")
                       (build-url (sf "~A/players/~A/~A"
                                      (league-name league)
-                                     (player-name player)
+                                     (escape-string (player-name player))
                                      (player-id player))
                                  player-to-email)
-                      (player-name player)
+                      (escape-string (player-name player))
                       (build-url (sf "~A/games/~A"
                                      (league-name league)
                                      (game-id game))
@@ -2148,7 +2154,7 @@
                     (:a :class "player-name"
                         :href (sf "/~(~A~)/players/~(~A~)/~A"
                                   (league-name league)
-                                  (clean-uri-segment (player-name p))
+                                  (clean-uri-segment (esc (player-name p)))
                                   (player-id p))
                         (esc (player-name p)))
                     (if (not (player-active-in? p league))
@@ -2195,7 +2201,7 @@
                            :href (sf "/~(~A~)/users/~(~A~)/~A"
                                      (league-name league)
                                      (clean-uri-segment
-                                      (player-name target-player))
+                                      (esc (player-name target-player)))
                                      (player-id target-player))
                            "Edit")))
                   ;; Name/active status
@@ -2244,7 +2250,7 @@
           (htm
            (:a :href (sf "/~(~A~)/players/~(~A~)/~A"
                          (league-name league)
-                         (clean-uri-segment (player-name commish))
+                         (clean-uri-segment (esc (player-name commish)))
                          (player-id commish))
                (esc (player-name commish)))
            (:span :class "comma" ","))))
