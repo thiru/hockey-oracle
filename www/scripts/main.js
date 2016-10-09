@@ -268,8 +268,10 @@ page.initUserDetailPage = function() {
             || dataChanged("notify-on-player-status-change-edit")
             || dataChanged("notify-on-player-chat-edit")
             || dataChanged("player-pos-edit")
-            || dataChanged("pwd-new-repeat"))
+            || dataChanged("pwd-new-repeat")) {
             $("#save-btn").show();
+            $("#save-result").empty();
+        }
         else
             $("#save-btn").hide();
     };
