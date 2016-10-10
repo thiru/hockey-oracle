@@ -853,6 +853,7 @@ page.initGameDetailPage = function() {
         populateTeams(teamsRes.data);
         $("#random-teams").show();
         $("#pick-players").show();
+        $("#chat").hide();
 
         function getActivePlayers() {
             var players = [];
@@ -1057,6 +1058,7 @@ page.initGameDetailPage = function() {
         $("#confirm").show();
         $("#grouped-players-sections").show();
         $("#add-player").show();
+        $("#chat").show();
     };
 
     page.addPlayer = function() {
