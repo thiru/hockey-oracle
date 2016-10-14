@@ -1951,15 +1951,14 @@
                       :onclick "page.saveChatMsg()"
                       :style "display:none"
                       (:i :class "fa fa-plus-circle")
-                      (:span :class "button-text" "Save Message"))
+                      (:span :class "button-text" "Send Message"))
              ;; Cancel message button
              (:button :id "cancel-msg-btn"
                       :class "button wide-button"
                       :onclick "page.cancelChatMsg()"
                       :style "display:none"
                       (:i :class "fa fa-ban")
-                      (:span :class "button-text" "Cancel Message"))
-             ))))))
+                      (:span :class "button-text" "Cancel Message"))))))))
 ;;; Game Detail Page -------------------------------------------------------- END
 
 ;;; Game Update API

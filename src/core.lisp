@@ -677,7 +677,7 @@
                           (game-id game) (league-name league)))))
   (if (empty? msg)
       (return-from save-message-new
-        (new-r :error "Can't save empty message.")))
+        (new-r :error "Message can't be blank.")))
   (if (> (length msg) message-max-length)
       (return-from save-message-new
         (new-r :error (sf "Message exceeds maximum length of ~A chars."
@@ -703,7 +703,7 @@
                    (to-string current-time)
                    msg)))
       (red-rpush chat-key new-message)
-      (new-r :success "Saved new chat message!"))))
+      (new-r :success "Message sent!"))))
 
 (defun new-chat-from-db (chat-id)
   "Create a list of MESSAGE structs for the given chat id."
