@@ -256,18 +256,26 @@
                   "")
               (if (empty? all-confirmed)
                   "<p><u>No players have confirmed to play as yet.</u></p>"
-                  (sf '("<strong>Confirmed to play (~A):</strong>"
-                        "<ul>~{<li>~A</li>~}</ul>")
-                      (length all-confirmed)
-                      (map 'list
-                           (lambda (gc)
-                             (sf "~A - <i>~A</i>"
-                                 (escape-string
-                                  (player-name (game-confirm-player gc)))
-                                 (player-position (game-confirm-player gc))))
-                           all-confirmed)))
+                  (let* ((goalie-count (count "G"
+                                              all-confirmed
+                                              :key
+                                              (lambda (x) (player-position
+                                                           (game-confirm-player x)))
+                                              :test #'string-equal))
+                         (player-count (- (length all-confirmed) goalie-count)))
+                    (sf '("<strong>Confirmed to play (~A player~:P - ~A goalie~:P)</strong>"
+                          "<ul>~{<li>~A</li>~}</ul>")
+                        player-count
+                        goalie-count
+                        (map 'list
+                             (lambda (gc)
+                               (sf "~A - <i>~A</i>"
+                                   (escape-string
+                                    (player-name (game-confirm-player gc)))
+                                   (player-position (game-confirm-player gc))))
+                             all-confirmed))))
               (if (non-empty? all-maybes)
-                  (sf '("<strong>Might play (~A):</strong>"
+                  (sf '("<strong>Might play (~A)</strong>"
                         "<ul>~{<li>~A</li>~}</ul>")
                       (length all-maybes)
                       (map 'list
@@ -279,7 +287,7 @@
                            all-maybes))
                   "")
               (if (non-empty? all-cant-play)
-                  (sf '("<strong>Not playing (~A):</strong>"
+                  (sf '("<strong>Not playing (~A)</strong>"
                         "<ul>~{<li>~A</li>~}</ul>")
                       (length all-cant-play)
                       (map 'list
@@ -291,7 +299,7 @@
                            all-cant-play))
                   "")
               (if (non-empty? all-no-response)
-                  (sf '("<strong>No response (~A):</strong>"
+                  (sf '("<strong>No response (~A)</strong>"
                         "<ul>~{<li>~A</li>~}</ul>")
                       (length all-no-response)
                       (map 'list
@@ -2152,7 +2160,7 @@
       (htm
        (:header :class "blue-heading"
                 :title (if (/= active-count (length players))
-                           (sf "~A player(s) inactive"
+                           (sf "~A player~:P inactive"
                                (- (length players) active-count)))
                 (:h2 "Players")
                 (:span
