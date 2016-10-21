@@ -1,6 +1,6 @@
 ;;;; Core domain.
 
-(in-package :hockey-oracle.core)
+(in-package :hockey-oracle)
 
 ;;; App Info
 (defstruct app

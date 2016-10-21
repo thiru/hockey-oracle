@@ -1,6 +1,6 @@
 ;;;; Web-specific functionality.
 
-(in-package :hockey-oracle.web)
+(in-package :hockey-oracle)
 
 ;;; General
 (defvar *debug* t)
