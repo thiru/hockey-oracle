@@ -1001,7 +1001,7 @@
                                     "Me")
                                    (new-player?
                                     "New Player")
-                                   (t (esc (player-name target-player)))))
+                                   (t (escape-string (player-name target-player)))))
            :player player
            :league league
            :page-id "user-detail-page")
