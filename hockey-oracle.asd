@@ -10,6 +10,5 @@
   :serial t
   :depends-on (:alexandria :bordeaux-threads :cl-json :cl-redis :cl-smtp :cl-who
                :glu :hunchentoot :ironclad :local-time :split-sequence)
-  :components ((:file "src/package")
-               (:file "src/core")
-               (:file "src/web")))
+  :components ((:file "package")
+               (:file "app")))

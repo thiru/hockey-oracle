@@ -1,25 +1,5 @@
 (in-package :hockey-oracle)
 
-;;; App Info
-(defstruct app
-  "Defines high-level app details."
-  base-dir
-  updated
-  version)
-
-(defun get-app-info ()
-  "Get app details."
-  (make-app
-   :base-dir (asdf:system-relative-pathname :hockey-oracle "")
-   :version (asdf::read-file-form
-             (asdf:system-relative-pathname :hockey-oracle "version"))
-   :updated (universal-to-timestamp
-             (file-write-date
-              (asdf:system-relative-pathname :hockey-oracle "version")))))
-
-(defparameter *app* (get-app-info))
-;;; App Info --------------------------------------------------------------------
-
 ;;; Utils
 (defun first1 (obj)
   "Gets the first item in OBJ if it's a list, otherwise OBJ is simply returned."
@@ -97,6 +77,26 @@
 
         (format-timestring nil timestamp :format format-desc))))
 ;;; Utils ------------------------------------------------------------------- END
+
+;;; App Info
+(defstruct app
+  "Defines high-level app details."
+  base-dir
+  updated
+  version)
+
+(defun get-app-info ()
+  "Get app details."
+  (make-app
+   :base-dir (asdf:system-relative-pathname :hockey-oracle "")
+   :version (asdf::read-file-form
+             (asdf:system-relative-pathname :hockey-oracle "version"))
+   :updated (universal-to-timestamp
+             (file-write-date
+              (asdf:system-relative-pathname :hockey-oracle "version")))))
+
+(defparameter *app* (get-app-info))
+;;; App Info --------------------------------------------------------------------
 
 ;;; Leagues
 (defstruct league
@@ -1029,35 +1029,7 @@
                         (red-hget key "host")))))
 ;;; Web Server -------------------------------------------------------------- END
 
-;;; Email
-(defun send-email (subject message &optional to)
-  "Sends an HTML email with the specified parameters. If TO is not specified the
-   email is sent to the administrator. The email is sent in a background thread."
-  (if (empty? subject)
-      (return-from send-email
-        (new-r :error "No subject provided.")))
-  (if (empty? message)
-      (return-from send-email
-        (new-r :error "No message provided.")))
-  (redis:with-persistent-connection ()
-    (let ((username (red-hget "admin:email" "username"))
-          (pwd (red-hget "admin:email" "pwd"))
-          (server (red-hget "admin:email" "server"))
-          (reply-to (red-hget "admin:email" "reply-to")))
-      (if (empty? to)
-          (setf to (red-hget "admin:email" "admin")))
-      (bt:make-thread (lambda ()
-                        (cl-smtp:send-email server reply-to to subject ""
-                                            :display-name "Hockey Oracle"
-                                            :html-message message
-                                            :ssl :tls
-                                            :authentication `(,username ,pwd)))))))
-;;; Email ------------------------------------------------------------------- END
-;;;; Web-specific functionality.
-
-(in-package :hockey-oracle)
-
-;;; General
+;;; High-level Web
 (defvar *debug* t)
 (defvar main-acceptor nil "The global web-server instance.")
 (defvar static-files-dir (merge-pathnames "www/" (app-base-dir *app*)))
@@ -1108,9 +1080,9 @@
   "Stops the web server referenced by the special variable main-acceptor."
   (if main-acceptor
       (stop main-acceptor :soft t)))
-;;; General ----------------------------------------------------------------- END
+;;; High-level Web --------------------------------------------------------- END
 
-;;; Utils
+;;; Web Utils
 (defun build-url (path &optional player)
   "Builds an absolute URL to this website at the specified path. The player is
    used to include a temporary authentication token in case they have not set a
@@ -1212,9 +1184,32 @@
   "Invalidates all authorisation cookies."
   (remove-cookie "puser")
   (remove-cookie "tuser"))
-;;; Utils ------------------------------------------------------------------- END
+;;; Web Utils -------------------------------------------------------------- END
 
 ;;; Email
+(defun send-email (subject message &optional to)
+  "Sends an HTML email with the specified parameters. If TO is not specified the
+   email is sent to the administrator. The email is sent in a background thread."
+  (if (empty? subject)
+      (return-from send-email
+        (new-r :error "No subject provided.")))
+  (if (empty? message)
+      (return-from send-email
+        (new-r :error "No message provided.")))
+  (redis:with-persistent-connection ()
+    (let ((username (red-hget "admin:email" "username"))
+          (pwd (red-hget "admin:email" "pwd"))
+          (server (red-hget "admin:email" "server"))
+          (reply-to (red-hget "admin:email" "reply-to")))
+      (if (empty? to)
+          (setf to (red-hget "admin:email" "admin")))
+      (bt:make-thread (lambda ()
+                        (cl-smtp:send-email server reply-to to subject ""
+                                            :display-name "Hockey Oracle"
+                                            :html-message message
+                                            :ssl :tls
+                                            :authentication `(,username ,pwd)))))))
+
 (defun send-email-to-players (subject get-message league)
   "Sends an HTML email to certain players belonging to LEAGUE.
    GET-MESSAGE is a func that takes a PLAYER and returns the body of the email.
