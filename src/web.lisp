@@ -263,7 +263,7 @@
                                                            (game-confirm-player x)))
                                               :test #'string-equal))
                          (player-count (- (length all-confirmed) goalie-count)))
-                    (sf '("<strong>Confirmed to play (~A player~:P - ~A goalie~:P)</strong>"
+                    (sf '("<strong>Confirmed to play (~A player~:P, ~A goalie~:P)</strong>"
                           "<ul>~{<li>~A</li>~}</ul>")
                         player-count
                         goalie-count
