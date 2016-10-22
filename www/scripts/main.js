@@ -299,11 +299,6 @@ page.initUserDetailPage = function() {
 
         // Get player email
         player.email = $("#player-email-edit").val().trim();
-        if (isBlank(player.email)) {
-            $("#save-result").empty();
-            alert("Email address can't be blank.");
-            return;
-        }
 
         // Get active status
         if (get("player-active-edit"))

@@ -2249,6 +2249,13 @@
       (return-from api-user-save
         (json-result (new-r :error
                             "You do not have permission to make this change."))))
+    ;; Verify email is not being blanked out by non-commish
+    (when (and (empty? email)
+               (not (is-commissioner? player league)))
+      (setf (return-code*) +http-bad-request+)
+      (return-from api-user-save
+                   (json-result (new-r :warning
+                                       "Email address can't be blank."))))
     ;; Update simple player info
     (setf (player-name target-player) name)
     (setf (player-email target-player) email)
