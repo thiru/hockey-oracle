@@ -950,13 +950,14 @@
       (return-from save-player-simple
         (new-r :error (sf "This email address is already in use."))))
   (redis:with-persistent-connection ()
-    (let* ((p-id (if (zerop (player-id player))
+    (let* ((new? (zerop (player-id player)))
+           (p-id (if new?
                      (parse-integer (red-hget "id-seeds" "players"))
                      (player-id player)))
            (player-key (sf "player:~A" p-id)))
-      (when (or (zerop (player-id player))
+      (when (or new?
                 (red-exists player-key))
-        (when (zerop (player-id player))
+        (when new?
           (red-hincrby "id-seeds" "players" 1)
           (red-hset player-key "active?" 1)
           (setf (player-id player) p-id))
@@ -966,7 +967,8 @@
                   (if (player-notify-on-player-status-change? player) 1 0))
         (red-hset player-key "notify-on-player-chat?"
                   (if (player-notify-on-player-chat? player) 1 0))
-        (red-hset player-key "position" (player-position player)))))
+        (red-hset player-key "position" (player-position player)))
+      (if new? (change-player-temp-auth player))))
   (new-r :success "Save successful!" player))
 
 ;; Transactify
