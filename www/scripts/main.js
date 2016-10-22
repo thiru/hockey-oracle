@@ -956,18 +956,29 @@ page.initGameDetailPage = function() {
 
     page.updateGroupedPlayersSections = function() {
         $(".grouped-players-section").each(function() {
-            var playerEles = $(this).find(".player-item");
-            if (playerEles.length) {
-                $(this).show();
-                $(this).find(".player-count")
-                    .text("(" + playerEles.length + ")");
+            var sectionEle = $(this);
+            var playerCount = 0;
+            var goalieCount = 0;
+            var playerEles = $(this).find(".player-item").each(function() {
+                if ($(this).data().position == "G")
+                    goalieCount++;
+                else
+                    playerCount++;
+            });
+            if (!playerCount && !goalieCount) {
+                sectionEle.hide();
+                sectionEle.find(".player-count").text("");
             }
             else {
-                $(this).hide();
-                $(this).find(".player-count").text("");
+                // NOTE: this grammar needs to be in sync with backend
+                var countsTxt =
+                  "(" + playerCount + pluralize(" player", playerCount) +
+                  ", " + goalieCount + pluralize(" goalie", goalieCount) + ")";
+                sectionEle.show();
+                sectionEle.find(".player-count").text(countsTxt);
             }
 
-            if ($(this).attr("id") == "playing-players-section") {
+            if (sectionEle.attr("id") == "playing-players-section") {
                 if (playerEles.length)
                     $("#no-confirmed-players-heading").hide();
                 else

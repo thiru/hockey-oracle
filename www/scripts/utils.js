@@ -90,6 +90,13 @@ Result.prototype.failure = new Result(Level.failure,
 function isBlank(text) {
     return !text || text.trim().length <= 0;
 }
+
+function pluralize(text, count, customPlural) {
+  if (count == 1)
+    return text;
+  else
+    return text + (customPlural == undefined ? "s" : customPlural);
+}
 // Language-Level ----------------------------------------------------------- END
 
 // UI-Level

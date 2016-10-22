@@ -2788,17 +2788,35 @@
                    (:i :class "fa fa-toggle-off")))
             ;; Players grouped by confirm type
             (:div :id "grouped-players-sections"
-                  (doplist
-                      (ct-id ct-name confirm-types)
-                      (cond ((eq ct-id :playing)
-                             (setf player-confirms all-confirmed))
-                            ((eq ct-id :maybe)
-                             (setf player-confirms all-maybes))
-                            ((eq ct-id :cant-play)
-                             (setf player-confirms all-cant-play))
-                            ((eq ct-id :no-response)
-                             (setf player-confirms all-no-response)))
-                    (htm
+             (doplist
+               (ct-id ct-name confirm-types)
+               (cond ((eq ct-id :playing)
+                      (setf player-confirms all-confirmed))
+                     ((eq ct-id :maybe)
+                      (setf player-confirms all-maybes))
+                     ((eq ct-id :cant-play)
+                      (setf player-confirms all-cant-play))
+                     ((eq ct-id :no-response)
+                      (setf player-confirms all-no-response)))
+               (let* ((goalie-count (count "G"
+                                           player-confirms
+                                           :key
+                                           (lambda (x) (player-position
+                                                         (game-confirm-player x)))
+                                           :test #'string-equal))
+                      (player-count (- (length player-confirms) goalie-count)))
+                 (sf '("<strong>Confirmed to play (~A player~:P, ~A goalie~:P)</strong>"
+                       "<ul>~{<li>~A</li>~}</ul>")
+                     player-count
+                     goalie-count
+                     (map 'list
+                          (lambda (gc)
+                            (sf "~A - <i>~A</i>"
+                                (escape-string
+                                  (player-name (game-confirm-player gc)))
+                                (player-position (game-confirm-player gc))))
+                          all-confirmed))
+                 (htm
                      (:section
                       :id (sf "~(~A~)-players-section" ct-id)
                       :class "grouped-players-section"
@@ -2806,7 +2824,9 @@
                       (:h2 :class "blue-heading"
                            (esc ct-name)
                            (:span :class "player-count"
-                                  (fmt "(~A)" (length player-confirms))))
+                                  (fmt "(~A player~:P, ~A goalie~:P)"
+                                       player-count
+                                       goalie-count)))
                       (:ul :class "player-confirms data-list"
                            (dolist (pc player-confirms)
                              (htm
@@ -2870,7 +2890,7 @@
                                           :title "Date confirmed"
                                           (esc (pretty-time
                                                 (game-confirm-time pc))))
-                                   (:span :class "clear-fix")))))))))
+                                   (:span :class "clear-fix"))))))))))
             ;; Random Teams
             (:section :id "random-teams"
                       (:ul :class "template-player-item template-items"
