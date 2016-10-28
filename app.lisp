@@ -23,6 +23,15 @@
          (third obj))
         (t fallback)))
 
+(defun fourth1 (obj &optional fallback)
+  "Gets the fourth item in OBJ if it's a list of at least three items, otherwise
+   FALLBACK."
+  (cond ((atom obj)
+         fallback)
+        ((and (listp obj) (> (length obj) 3))
+         (fourth obj))
+        (t fallback)))
+
 (defun parse-id (key &key idx)
   "Parses an integer id from a redis key. If IDX is non-null it specifies the
    index to retrieve the id from, after the key has been split by colons. If
@@ -261,11 +270,13 @@
 (defstruct game-confirm
   "Describes the confirmation state of a player for a game.
    * PLAYER: the respective PLAYER
+   * EDITOR: the PLAYER that created this confirmation
    * TIME: when the PLAYER made a response
    * CONFIRM-TYPE: a key value of an item in the plist CONFIRM-TYPES
    * REASON: typically a description of why a player is unable/unsure of
      playing"
   (player nil)
+  (editor nil)
   (time "")
   (confirm-type nil)
   (reason ""))
@@ -538,11 +549,12 @@
       (new-r :success "Deleted game!" game))))
 
 ;; TODO: transactify
-(defun save-game-confirm (game player confirm-type &optional reason)
+(defun save-game-confirm (game editor player confirm-type &optional reason)
   "Save the game confirm details for the game GAME and player PLAYER. If REASON
    is NIL it is not updated, therefore keeping any previous value.
    Returns an R, with an updated GAME object if successful."
   (check-type game GAME)
+  (check-type editor PLAYER)
   (check-type player PLAYER)
   (if (empty? confirm-type)
       (return-from save-game-confirm
@@ -580,17 +592,22 @@
                    (game-confirm-time gc))
                (if (and p-to-update? (not (null reason)))
                    reason
-                   (game-confirm-reason gc))))))
+                   (game-confirm-reason gc))
+               (if p-to-update?
+                   (player-id editor)
+                   (player-id (game-confirm-editor gc)))
+               ))))
     (dolist (p (get-players :league (game-league game)))
       (if (and (not (getf new-gcs (player-id p)))
                (= (player-id p) (player-id player)))
           (setf (getf new-gcs (player-id p))
                 (list confirm-type
                       (to-string (now))
-                      (or reason "")))))
+                      (or reason "")
+                      (player-id editor)))))
     (redis:with-persistent-connection ()
       (red-hset (sf "game:~A" (game-id game)) "confirms" new-gcs))
-    (new-r :success "" (get-game (game-id game)))))
+    (new-r :success "Confirmation updated!" (get-game (game-id game)))))
 
 (defun new-game-from-db (game-key)
   "Create a GAME struct based on the given redis key."
@@ -621,13 +638,19 @@
    form: (CONFIRM-TYPE TIME REASON). REASON is optional."
   (let ((game-confirms '()))
     (doplist (player-id confirm-info plist)
-             (push (make-game-confirm :player (get-player :id player-id)
-                                      :confirm-type (find (first1 confirm-info)
-                                                          confirm-types
-                                                          :test #'string-equal)
-                                      :time (second1 confirm-info "")
-                                      :reason (third1 confirm-info ""))
-                   game-confirms))
+      (let* ((player (get-player :id player-id))
+             (editor-id (fourth1 confirm-info 0))
+             (editor (if (zerop editor-id)
+                       player
+                       (get-player :id (fourth1 confirm-info 0)))))
+        (push (make-game-confirm :player (get-player :id player-id)
+                                 :confirm-type (find (first1 confirm-info)
+                                                     confirm-types
+                                                     :test #'string-equal)
+                                 :time (second1 confirm-info "")
+                                 :reason (third1 confirm-info "")
+                                 :editor editor)
+              game-confirms)))
     game-confirms))
 ;;; Games ------------------------------------------------------------------- END
 
@@ -2567,7 +2590,7 @@
           (when (and (non-empty? confirm-qp)
                      (not (string-equal "final" (game-progress game))))
             (setf confirm-save-res
-                  (save-game-confirm game player confirm-qp))
+                  (save-game-confirm game player player confirm-qp))
             (when (succeeded? confirm-save-res)
               (setf game (r-data confirm-save-res))
               (setf player-gc (game-confirm-for game player))))
@@ -2701,7 +2724,20 @@
               (htm
                (:section
                 :id "confirm"
-                (:b "Your status for this game is:&nbsp;")
+                (if (is-commissioner? player league)
+                  (htm
+                    (:select
+                      :id "target-confirm-player"
+                      :onchange "page.targetConfirmPlayerChanged(this)"
+                      (dolist (p (get-players :league league))
+                        (htm
+                          (:option
+                            :selected (= (player-id player) (player-id p))
+                            :value (player-id p)
+                            (esc (player-name p))))))
+                    (:b "'s status for this game is: "))
+                  (htm
+                    (:b "Your status for this game is: ")))
                 (:select :id "game-confirm-opts"
                          :onchange "page.confirmTypeChanged(this)"
                          (doplist (ct-id ct-name confirm-types)
@@ -2780,7 +2816,8 @@
                              (:span :class "confirm-reason" "")
                              (:span :class "confirm-time"
                                     :title "Date confirmed"
-                                    ""))
+                                    "")
+                             (:span :class "confirmed-by" ""))
                       (:span :class "clear-fix")))
             ;; Player playing toggle/button
             (:div :id "playing-toggle-templates"
@@ -2841,22 +2878,28 @@
                              (htm
                               (:li :class "player-item"
                                    :data-id (player-id (-> pc player))
-                                   :data-name (esc (player-name (-> pc player)))
+                                   :data-name (escape-string (player-name (-> pc player)))
                                    :data-uri
                                    (sf "/~(~A~)/players/~(~A~)/~A"
                                        (league-name league)
                                        (clean-uri-segment
-                                        (esc (player-name (-> pc player))))
+                                        (escape-string (player-name (-> pc player))))
                                        (player-id (-> pc player)))
                                    :data-position (player-position (-> pc player))
                                    :data-confirm-type
-                                   (esc (getf confirm-types
-                                              (game-confirm-confirm-type
-                                               pc)))
+                                   (escape-string (getf confirm-types
+                                                        (game-confirm-confirm-type
+                                                          pc)))
                                    :data-reason
                                    (sf "~A" (escape-string (game-confirm-reason pc)))
                                    :data-response-time (pretty-time
                                                         (game-confirm-time pc))
+                                   :data-confirmed-by
+                                   (escape-string
+                                     (if (-> pc editor)
+                                       (player-name (-> pc editor)) 
+                                       ""))
+                                   ;(escape-string (player-name (game-confirm-editor pc)))
                                    (:a :class "player-name"
                                        :href (sf "/~(~A~)/players/~(~A~)/~A"
                                                  (league-name league)
@@ -2899,6 +2942,16 @@
                                           :title "Date confirmed"
                                           (esc (pretty-time
                                                 (game-confirm-time pc))))
+                                   (if (and (-> pc editor)
+                                            (/= (player-id (-> pc player))
+                                                (player-id (-> pc editor))))
+                                     (htm
+                                       (:span
+                                         :class "confirmed-by"
+                                         (esc (sf " - by ~A"
+                                                  (player-name (-> pc editor))))))
+                                     (htm
+                                       (:span :class "confirmed-by" "")))
                                    (:span :class "clear-fix"))))))))))
             ;; Random Teams
             (:section :id "random-teams"
@@ -3060,6 +3113,8 @@
          (game-time (post-parameter "gameTime"))
          (game-progress (post-parameter "gameProgress"))
          (game-notes (post-parameter "gameNotes"))
+         (target-confirm-player-id
+           (loose-parse-int (post-parameter "targetPlayerId")))
          (confirm-type (post-parameter "confirmType"))
          (reason (post-parameter "reason"))
          (save-res (new-r :info "Nothing updated.")))
@@ -3126,69 +3181,108 @@
             league))
        (json-result save-res))
       (send-email-reminder?
-       (if (or (string-equal "final" (game-progress game))
-               (string-equal "cancelled" (game-progress game)))
-           (return-from api-game-update
-             (json-result
-              (new-r :warning
-                     (sf '("Can't send email reminders for cancelled or final "
-                           "games."))))))
+       (when (or (string-equal "final" (game-progress game))
+                 (string-equal "cancelled" (game-progress game)))
+         (setf (return-code*) +http-bad-request+)
+         (return-from api-game-update
+                      (json-result
+                        (new-r :warning
+                               (sf '("Can't send email reminders for cancelled or final "
+                                     "games."))))))
        (email-game-reminder game)
        (json-result (new-r :success "Emails sent!")))
       ;; Update player's confirmation status
       (confirm-type
-       (setf save-res (save-game-confirm game player confirm-type reason))
-       (if (and (succeeded? save-res)
-                (not (string-equal "cancelled" (game-progress game)))
-                (not (string-equal "final" (game-progress game))))
+       (let* ((target-confirm-player
+                (if (zerop target-confirm-player-id)
+                  player
+                  (get-player :id target-confirm-player-id))))
+         ;; Return error if target player not found
+         (when (empty? target-confirm-player)
+           (setf (return-code*) +http-bad-request+)
+           (return-from
+             api-game-update
+             (json-result
+               (new-r :error (sf "Player with id ~A not found."
+                                 target-confirm-player-id)))))
+         ;; Verify non-commish isn't attempting to update another player's
+         ;; confirm status
+         (when (and (not (zerop target-confirm-player-id))
+                    (not (is-commissioner? player league))
+                    (/= (player-id player) target-confirm-player-id))
+           (setf (return-code*) +http-bad-request+)
+           (return-from
+             api-game-update
+             (json-result
+               (new-r :error
+                      (sf '("You don't have permission to change other players "
+                            "confirmation status."))))))
+         (setf save-res (save-game-confirm game
+                                           player
+                                           target-confirm-player
+                                           confirm-type
+                                           reason))
+         (if (and (succeeded? save-res)
+                  (not (string-equal "cancelled" (game-progress game)))
+                  (not (string-equal "final" (game-progress game))))
            (send-email-to-players
-            (sf "~A updated their status to ~(~A~)"
-                (escape-string (player-name player))
-                (getf confirm-types
-                      (find confirm-type confirm-types :test #'string-equal)))
-            (lambda (player-to-email)
-              (if (or (= (player-id player-to-email)
-                         (player-id player))
-                      (null (player-notify-on-player-status-change?
-                             player-to-email)))
-                  ;; Don't send email to player making the change, or those not
-                  ;; interested in these types of notifications
-                  nil
-                  (sf '("<p><a href='~(~A~)'>~A</a> updated their confirmation "
-                        "status for the <a href='~(~A~)'>upcoming game</a> in "
-                        "the <strong title='~A'>~A</strong> on ~A.</p>"
-                        "<p>Status: <b>~(~A~)</b></p>"
-                        "~A")
-                      (build-url (sf "~A/players/~A/~A"
-                                     (league-name league)
-                                     (escape-string (player-name player))
-                                     (player-id player))
-                                 player-to-email)
-                      (escape-string (player-name player))
-                      (build-url (sf "~A/games/~A"
-                                     (league-name league)
-                                     (game-id game))
-                                 player-to-email)
-                      (league-full-name league)
-                      (league-name league)
-                      (pretty-time (game-time game))
-                      (getf confirm-types
-                            (find confirm-type confirm-types :test #'string-equal))
-                      (if (empty? reason)
-                          ""
-                          (sf '("<p>Notes:</p>"
-                                "<blockquote>~A</blockquote>")
-                              reason)))))
-            league))
+             (sf "~A's status updated to ~(~A~)"
+                 (escape-string (player-name target-confirm-player))
+                 (getf confirm-types
+                       (find confirm-type confirm-types :test #'string-equal)))
+             (lambda (player-to-email)
+               (if (or (= (player-id player-to-email)
+                          (player-id player))
+                       (null (player-notify-on-player-status-change?
+                               player-to-email)))
+                 ;; Don't send email to player making the change, or those not
+                 ;; interested in these types of notifications
+                 nil
+                 (sf '("<p><a href='~(~A~)'>~A</a>'s status for the "
+                       "<a href='~(~A~)'>upcoming game</a> in the "
+                       "<strong title='~A'>~A</strong> on ~A was updated "
+                       "to <b>~(~A~)</b>.</p>"
+                       "~A" ; Reason
+                       "~A" ; Updated by (if applicable)
+                       )
+                     (build-url (sf "~A/players/~A/~A"
+                                    (league-name league)
+                                    (escape-string (player-name
+                                                     target-confirm-player))
+                                    (player-id target-confirm-player))
+                                player-to-email)
+                     (escape-string (player-name target-confirm-player))
+                     (build-url (sf "~A/games/~A"
+                                    (league-name league)
+                                    (game-id game))
+                                player-to-email)
+                     (league-full-name league)
+                     (league-name league)
+                     (pretty-time (game-time game))
+                     (getf confirm-types
+                           (find confirm-type confirm-types :test #'string-equal))
+                     (if (empty? reason)
+                       ""
+                       (sf '("<p>Notes:</p>"
+                             "<blockquote>~A</blockquote>")
+                           reason))
+                     ;; Include notice on who the status was updated by if it
+                     ;; was not the same player
+                     (if (= target-confirm-player-id
+                            (player-id player)) 
+                       ""
+                       (sf '("Note, status was updated by "
+                             "<a href='~(~A~)'>~A</a> on player's behalf.")
+                           (build-url (sf "~A/players/~A/~A"
+                                    (league-name league)
+                                    (escape-string (player-name player))
+                                    (player-id player))
+                                player-to-email)
+                           (player-name player))))))
+             league)))
        (json:encode-json-plist-to-string
-        (if (succeeded? save-res)
-            `(level :success
-                    message "Confirmation updated!"
-                    data ,(game-confirm-reason
-                           (game-confirm-for (r-data save-res) player)))
-            `(level ,(r-level save-res)
-                    message ,(r-message save-res)
-                    data ""))))
+         `(level ,(r-level save-res)
+                 message ,(r-message save-res))))
       (t (json-result (new-r :error "Unable to determine save type."))))))
 ;;; Game Update API --------------------------------------------------------- END
 

@@ -716,6 +716,31 @@ page.initGameDetailPage = function() {
         $("#game-state-ro").text(" - " + gameStatus);
     };
 
+    page.targetConfirmPlayerChanged = function(ele) {
+        var targetPlayerId = parseInt($(ele).val());
+
+        // Find player row
+        var playerEle = $(".player-item").filter(function() {
+          var p = $(this).data();
+          return p && (p.id == targetPlayerId);
+        });
+
+        var confirmType = "NO-RESPONSE";
+        var reason = "";
+
+        // Update player confirm info
+        if (playerEle && playerEle.length) {
+          reason = playerEle.data().reason;
+          confirmType = playerEle.data().confirmType
+              .replace(" ", "-")
+              .replace(/[^a-zA-Z0-9-]/gi, "")
+              .toUpperCase();
+        }
+
+        $("#reason-input").val(reason);
+        $("#game-confirm-opts").val(confirmType);
+    };
+
     page.confirmTypeChanged = function(ele) {
         var selectedVal = $(ele).val().toUpperCase();
         if ("NO-RESPONSE" == selectedVal) {
@@ -752,6 +777,13 @@ page.initGameDetailPage = function() {
             return;
         }
 
+        var targetPlayer = $("#target-confirm-player option:selected");
+        var targetPlayerId = 0;
+        if (targetPlayer && targetPlayer.length)
+            targetPlayerId = parseInt(targetPlayer.val());
+        else
+            targetPlayerId = page.userId;
+
         var confirmTypeTxt =
             $("#game-confirm-opts option:selected").text().trim();
         var reason = $("#reason-input").val();
@@ -765,7 +797,8 @@ page.initGameDetailPage = function() {
 
         var gameId = parseInt(get("game-info-edit").dataset.game);
         var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
-        $.post(url, { confirmType: confirmType, reason: reason})
+        $.post(url, { targetPlayerId: targetPlayerId,
+                      confirmType: confirmType, reason: reason})
             .done(function (result) {
                 if (!result) {
                     result = Result.error("No response from server.");
@@ -778,32 +811,42 @@ page.initGameDetailPage = function() {
                     showIconResult($("#confirm-type-status"), result);
                     showResult($("#reason-input-info"), result, originalInfo);
 
-                    $("#reason-input").val(result.data);
                     if (result.succeeded()) {
                         $("#save-confirm-info-btn").prop("disabled", true);
                         page.origReasonTxt = $("#reason-input").val();
                     }
 
-                    page.updatePlayerConfirmOnPage(confirmTypeTxt, result.data);
+                    page.updatePlayerConfirmOnPage(
+                        targetPlayerId,
+                        confirmTypeTxt,
+                        reason);
                 }
             })
             .fail(function(data) {
-                var result = Result.error("Unexpected error. " + data.statusText +
+                var result;
+                if (data.responseJSON && data.responseJSON.level)
+                    result = new Result(data.responseJSON.level,
+                                        data.responseJSON.message,
+                                        data.responseJSON.data);
+                else
+                    result = Result.error("Unexpected error. " + data.statusText +
                                           " (" + data.status + ").");
+
+                showIconResult($("#confirm-type-status"), result);
                 showResult($("#reason-input-info"), result);
             });
     };
 
-    page.updatePlayerConfirmOnPage = function(confirmType, reason) {
+    page.updatePlayerConfirmOnPage = function(playerId, confirmType, reason) {
         // Find player row
         var playerEle = $(".player-item").filter(function() {
             var p = $(this).data();
-            return p && (p.id == page.userId);
+            return p && (p.id == playerId);
         });
 
         // Update player confirm info
         if (playerEle && playerEle.length) {
-            playerEle.data().confirmType = "(" + confirmType + ")";
+            playerEle.data().confirmType = "(" + confirmType + ")"; // TODO: is this needed?
             playerEle.data().responseTime = "just updated";
             playerEle.data().reason = reason;
 

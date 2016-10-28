@@ -626,10 +626,10 @@ main
     font-size: 0.8em;
     margin: 0.2em 0 0 0;
 }
-#game-detail-page .player-confirms .confirm-time
+#game-detail-page .player-confirms .confirm-time,
+#game-detail-page .player-confirms .confirmed-by
 {
     color: #777;
-    display: block;
     font-size: 0.6em;
     font-style: italic;
     margin: 0.5em 0 0 0;
