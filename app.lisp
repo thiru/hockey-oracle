@@ -246,7 +246,6 @@
    * NOTES: any special notices/alerts on the game
    * TIME: date/time of the game
    * PROGRESS: is the state of the game, and defined in GAME-PROGRESS-STATES
-   * CONFIRMS: list of GAME-CONFIRM structs
    * EMAIL-REMINDER: the time to send an email reminder to players about this
      game
    * CHAT-ID: the id of the chat for this game (if any)"
@@ -262,7 +261,6 @@
   (home-score 0)
   (away-score 0)
   (email-reminder "")
-  (confirms '())
   (chat-id 0))
 
 (defparameter game-progress-states '(:new :underway :final :cancelled))
@@ -291,27 +289,28 @@
   "Get GAME-CONFIRM (if any) for PLAYER for the game GAME."
   (if game
       (find (player-id player)
-            (game-confirms game)
+            (get-game-confirms (game-id game))
             :key (lambda (x) (player-id (game-confirm-player x))))))
 
 (defun confirmed-players (game)
   "Gets PLAYER's confirmed to play for the given GAME as a list of GAME-CONFIRM
-   structs."
+   objects."
   (sort (remove-if (complement (lambda (x) (string-equal :playing
                                                          (-> x confirm-type))))
-                   (-> game confirms))
+                   (get-game-confirms (game-id game)))
         #'string<
         :key (lambda (x) (player-name (game-confirm-player x)))))
 
 (defun unconfirmed-players (game)
   "Gets PLAYER's that have not confirmed, are not able to play, or are unsure of
-   being able to player for the given game, as a list of GAME-CONFIRM structs."
-  (let* ((unconfirmed (remove-if (lambda (x) (string-equal :playing
+   being able to play for the given game, as a list of GAME-CONFIRM objects."
+  (let* ((all-with-confirms (get-game-confirms (game-id game)))
+         (unconfirmed (remove-if (lambda (x) (string-equal :playing
                                                            (-> x confirm-type)))
-                                 (-> game confirms)))
+                                 all-with-confirms))
          (active-p-ids (league-active-player-ids (game-league game))))
     (dolist (p-id active-p-ids)
-      (unless (find p-id (-> game confirms)
+      (unless (find p-id all-with-confirms
                     :key (lambda (x) (player-id (game-confirm-player x))))
         (push (make-game-confirm :player (get-player :id p-id)
                                  :confirm-type :no-response)
@@ -384,6 +383,15 @@
                             compare-time))
                          new-games))
     (subseq upcoming-games 0 (min (length upcoming-games) count))))
+
+(defun get-game-confirms (game-id)
+  "Get a list of GAME-CONFIRM objects for the specified GAME."
+  (if game-id
+    (redis:with-persistent-connection ()
+      (let* ((game-key (sf "game:~A" game-id)))
+        (if (redis:red-exists game-key)
+          (new-game-confirm
+            (read-object (red-hget game-key "confirms"))))))))
 
 ;; TODO: transactify
 (defun save-new-game (league time user)
@@ -578,7 +586,7 @@
   (let* ((new-gcs nil))
     ;; Get latest game info
     (setf game (get-game (game-id game)))
-    (dolist (gc (game-confirms game))
+    (dolist (gc (get-game-confirms (game-id game)))
       (let* ((p-id (player-id (game-confirm-player gc)))
              (p-to-update? (= (player-id player)
                               (player-id (game-confirm-player gc)))))
@@ -629,8 +637,6 @@
                :home-score (parse-integer (red-hget game-key "home-score"))
                :away-score (parse-integer (red-hget game-key "away-score"))
                :email-reminder (red-hget game-key "email-reminder")
-               :confirms (new-game-confirm
-                          (read-object (red-hget game-key "confirms")))
                :chat-id (loose-parse-int (red-hget game-key "chat-id")))))
 
 (defun new-game-confirm (plist)
@@ -2899,7 +2905,6 @@
                                      (if (-> pc editor)
                                        (player-name (-> pc editor)) 
                                        ""))
-                                   ;(escape-string (player-name (game-confirm-editor pc)))
                                    (:a :class "player-name"
                                        :href (sf "/~(~A~)/players/~(~A~)/~A"
                                                  (league-name league)
