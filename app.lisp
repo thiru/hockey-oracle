@@ -285,32 +285,29 @@
                               :cant-play "Can't play"
                               :no-response "No response"))
 
-(defun game-confirm-for (game player)
-  "Get GAME-CONFIRM (if any) for PLAYER for the game GAME."
-  (if game
+(defun game-confirm-for (player game-confirms)
+  "Find GAME-CONFIRM of give PLAYER (if any)."
+  (if game-confirms
       (find (player-id player)
-            (get-game-confirms (game-id game))
+            game-confirms
             :key (lambda (x) (player-id (game-confirm-player x))))))
 
-(defun confirmed-players (game)
-  "Gets PLAYER's confirmed to play for the given GAME as a list of GAME-CONFIRM
-   objects."
+(defun confirmed-players (game-confirms)
+  "Find confirmed players in given GAME-CONFIRM list."
   (sort (remove-if (complement (lambda (x) (string-equal :playing
                                                          (-> x confirm-type))))
-                   (get-game-confirms (game-id game)))
+                   game-confirms)
         #'string<
         :key (lambda (x) (player-name (game-confirm-player x)))))
 
-(defun unconfirmed-players (game)
-  "Gets PLAYER's that have not confirmed, are not able to play, or are unsure of
-   being able to play for the given game, as a list of GAME-CONFIRM objects."
-  (let* ((all-with-confirms (get-game-confirms (game-id game)))
-         (unconfirmed (remove-if (lambda (x) (string-equal :playing
+(defun unconfirmed-players (game-confirms game)
+  "Find PLAYERs that did not confirm they are playing in the given list of GAME-CONFIRMs, for the relevant GAME."
+  (let* ((unconfirmed (remove-if (lambda (x) (string-equal :playing
                                                            (-> x confirm-type)))
-                                 all-with-confirms))
+                                 game-confirms))
          (active-p-ids (league-active-player-ids (game-league game))))
     (dolist (p-id active-p-ids)
-      (unless (find p-id all-with-confirms
+      (unless (find p-id game-confirms
                     :key (lambda (x) (player-id (game-confirm-player x))))
         (push (make-game-confirm :player (get-player :id p-id)
                                  :confirm-type :no-response)
@@ -1287,12 +1284,13 @@
     (send-email-to-players
      (sf "Upcoming game in ~A" (league-name league))
      (lambda (player)
-       (let* ((player-confirm (game-confirm-for game player))
+       (let* ((game-confirms (get-game-confirms (game-id game)))
+              (player-confirm (game-confirm-for player game-confirms))
               (confirm-type (if player-confirm
                                 (game-confirm-confirm-type player-confirm)
                                 :no-response))
-              (all-confirmed (confirmed-players game))
-              (all-unconfirmed (unconfirmed-players game))
+              (all-confirmed (confirmed-players game-confirms))
+              (all-unconfirmed (unconfirmed-players game-confirms game))
               (all-maybes (remove-if-not
                            (lambda (gc) (equal :maybe
                                                (game-confirm-confirm-type gc)))
@@ -2561,8 +2559,9 @@
 (defun www-game-detail-page (&key player league)
   (let* ((game-id (last1 (path-segments *request*)))
          (game (get-game game-id))
+         (game-confirms (if game (get-game-confirms game-id)))
          (player-gc (if game
-                      (or (game-confirm-for game player)
+                      (or (game-confirm-for player game-confirms)
                           (make-game-confirm
                             :player player
                             :confirm-type :no-response))))
@@ -2574,8 +2573,8 @@
         (www-not-found-page :player player :league league)
         (let* ((chat (get-chat game))
                (player-confirms '())
-               (all-confirmed (confirmed-players game))
-               (all-unconfirmed (unconfirmed-players game))
+               (all-confirmed (confirmed-players game-confirms))
+               (all-unconfirmed (unconfirmed-players game-confirms game))
                (all-maybes (remove-if-not
                             (lambda (gc) (equal :maybe
                                                 (game-confirm-confirm-type gc)))
