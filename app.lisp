@@ -2561,12 +2561,11 @@
 (defun www-game-detail-page (&key player league)
   (let* ((game-id (last1 (path-segments *request*)))
          (game (get-game game-id))
-         (player-gc (if game (or (game-confirm-for game player)
-                                 (make-game-confirm
-                                  :player player
-                                  :confirm-type :no-response))))
-         (confirm-qp (get-parameter "confirm"))
-         (confirm-save-res (new-r :info "Confirmation not updated.."))
+         (player-gc (if game
+                      (or (game-confirm-for game player)
+                          (make-game-confirm
+                            :player player
+                            :confirm-type :no-response))))
          (show-confirm-inputs
            (and game
                 (not (string-equal "cancelled" (game-progress game)))
@@ -2591,15 +2590,6 @@
                                                      (game-confirm-confirm-type
                                                       gc)))
                                  all-unconfirmed)))
-          ;; Update player's confirmation status and reload game object, unless
-          ;; game is in final state
-          (when (and (non-empty? confirm-qp)
-                     (not (string-equal "final" (game-progress game))))
-            (setf confirm-save-res
-                  (save-game-confirm game player player confirm-qp))
-            (when (succeeded? confirm-save-res)
-              (setf game (r-data confirm-save-res))
-              (setf player-gc (game-confirm-for game player))))
           (standard-page
               (:title (sf "Game on ~A" (pretty-time (game-time game)))
                :player player
@@ -2753,21 +2743,6 @@
                                                    (game-confirm-confirm-type
                                                     player-gc))
                                      :value ct-id (esc ct-name)))))
-                (:span :id "confirm-type-status"
-                       (cond ((eq :success (r-level confirm-save-res))
-                              (htm
-                               (:i :class
-                                   (sf "fa fa-check ~(~A~)"
-                                       (r-level confirm-save-res))
-                                   :title
-                                   (esc (r-message confirm-save-res)))))
-                             ((failed? confirm-save-res)
-                              (htm
-                               (:i :class
-                                   (sf "fa fa-exclamation-circle ~(~A~)"
-                                        (r-level confirm-save-res))
-                                   :title
-                                   (esc (r-message confirm-save-res)))))))
                 (:div :id "reason-input-group"
                       (:textarea :id "reason-input"
                                  :maxlength game-confirm-reason-max-length
