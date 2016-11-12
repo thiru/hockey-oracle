@@ -3258,18 +3258,29 @@
         (progn
           (setf (return-code*) +http-not-found+)
           (json-result (new-r :error (sf "Game (id ~A) not found." game-id))))
-        (let* ((save-res (save-message-new player league game msg)))
+        (let* ((save-res (save-message-new player league game msg))
+               (post-time (local-time:now)))
           (if (succeeded? save-res)
               (send-email-to-players
-               (sf "New message from ~A"
-                   (escape-string (player-name player)))
+               (sf "New message in ~A"
+                   (escape-string (league-name league)))
                (lambda (p)
                  ;; Don't send email to player that wrote the message and those
                  ;; not interested in chat message notifications
                  (if (and (/= (player-id p) (player-id player))
                           (player-notify-on-player-chat? p))
-                     (sf '("~A<br />"
+                     (sf '("<p style='color:grey'>Posted by "
+                           "<a href='~(~A~)'>~A</a> on ~A:</p>"
+                           "<p>~A</p>"
                            "<p><a href='~(~A~)'>View full chat</a></p>")
+                         (build-url
+                           (sf "~A/players/~A/~A"
+                               (league-name league)
+                               (escape-string (player-name player))
+                               (player-id player))
+                           player)
+                         (escape-string (player-name player))
+                         (pretty-time post-time)
                          (escaped-html msg)
                          (build-url (sf "~A/games/~A#chat"
                                         (league-name league)
