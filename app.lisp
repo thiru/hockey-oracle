@@ -1299,12 +1299,7 @@
                               (lambda (gc) (equal :cant-play
                                                   (game-confirm-confirm-type
                                                    gc)))
-                              all-unconfirmed))
-              (all-no-response (remove-if-not
-                                (lambda (gc) (equal :no-response
-                                                    (game-confirm-confirm-type
-                                                     gc)))
-                                all-unconfirmed)))
+                              all-unconfirmed)))
          ;; Don't send email reminder to players that indicated they can't play
          (if (not (equal :cant-play confirm-type))
              (mkstr
@@ -1376,18 +1371,6 @@
                                   (player-name (game-confirm-player gc)))
                                  (player-position (game-confirm-player gc))))
                            all-cant-play))
-                  "")
-              (if (non-empty? all-no-response)
-                  (sf '("<strong>No response (~A)</strong>"
-                        "<ul>~{<li>~A</li>~}</ul>")
-                      (length all-no-response)
-                      (map 'list
-                           (lambda (gc)
-                             (sf "~A - <i>~A</i>"
-                                 (escape-string
-                                  (player-name (game-confirm-player gc)))
-                                 (player-position (game-confirm-player gc))))
-                           all-no-response))
                   "")))))
      league)))
 ;;; Email ------------------------------------------------------------------- END
