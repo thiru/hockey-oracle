@@ -3278,7 +3278,7 @@
                                (league-name league)
                                (escape-string (player-name player))
                                (player-id player))
-                           player)
+                           p)
                          (escape-string (player-name player))
                          (pretty-time post-time)
                          (escaped-html msg)
