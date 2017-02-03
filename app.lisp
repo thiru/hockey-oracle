@@ -3188,10 +3188,8 @@
                   (not (string-equal "cancelled" (game-progress game)))
                   (not (string-equal "final" (game-progress game))))
            (send-email-to-players
-             (sf "~A's status updated to ~(~A~)"
-                 (escape-string (player-name target-confirm-player))
-                 (getf confirm-types
-                       (find confirm-type confirm-types :test #'string-equal)))
+             (sf "Player status update in ~A"
+                 (league-name league))
              (lambda (player-to-email)
                (if (or (= (player-id player-to-email)
                           (player-id player))
