@@ -1074,7 +1074,7 @@
 
 (setf (html-mode) :HTML5)
 
-(defun create-acceptor (&key (port 9090) debug)
+(defun create-acceptor (&key (port 9091) debug)
   "Creates an 'easy-acceptor' which will listen on the specified port."
   (make-instance 'easy-acceptor
                  :port port
@@ -1086,7 +1086,7 @@
                                               *standard-output*
                                               "~/tbnl-message.log")))
 
-(defun start-server! (&key (port 9090) debug)
+(defun start-server! (&key (port 9091) debug)
   "Starts the web server.
    @param port:
      Specifies the port for the web server.
