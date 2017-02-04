@@ -4,4 +4,4 @@
 
 screen -S howeb -X stuff '(hockey-oracle:stop-server)^M'
 screen -S howeb -X stuff '(exit)^M'
-screen -S howeb -X stuff 'sbcl --load restart.lisp^M'
+screen -S howeb -X stuff 'ros run --load restart.lisp^M'
