@@ -1,5 +1,17 @@
 (in-package :hockey-oracle)
 
+;;; Optimise code for a production environment unless the respective development environment variable is set
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter *optimize-default*
+    (if (uiop/os:getenvp "LISP_DEV")
+      '(optimize (debug 3) (safety 3) (speed 0))
+      '(optimize (debug 0) (safety 1) (speed 3)))))
+
+(format t "~%Optimize levels: ~A~%" *optimize-default*)
+
+(declaim #.*optimize-default*)
+
 ;;; Utils
 (defun first1 (obj)
   "Gets the first item in OBJ if it's a list, otherwise OBJ is simply returned."
