@@ -2,21 +2,19 @@
  * ## Summary
  *
  * Global variables used throughout the website.
- * The colours defined here are based on a colour scheme from
- * [Design Seeds](http://www.design-seeds.com).
  *
  * */
 
 :root
 {
-  --brown: #4D464B;
-  --blue-lightest: #D1D5E9;
-  --blue-medium: #ACB3D4;
-  --blue-darkest: #7C84A9;
-  --green: #444D4E;
-  --orange: #D07866;
-  --beige: #E6E8DC;
+  --grey-dark: #555;
+  --grey-light: #F5F5F5;
+  --blue-dark: #001645;
+  --blue-light: #0F83BC;
+  --orange-dark: #FFAC0A;
+  --orange-light: #F55813;
 
-  /* Custom colours I added, and not part of original theme: */
-  --grey-light: #EFEFEF;
+  --content-width: 25px;
+  --max-page-width: 1200px;
+  --top-banner-height: 35px;
 }

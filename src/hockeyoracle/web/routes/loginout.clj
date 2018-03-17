@@ -76,6 +76,7 @@
         users (get-users)
         valid? (some-> users
                        (get (keyword username))
+                       (get :password)
                        (= password))]
     (if valid?
       (do

@@ -5,6 +5,7 @@
 (ns hockeyoracle.web.routes.template
   (:require
             [clojure.string :as string]
+            [clojure.pprint :refer [cl-format]]
             [hiccup.core :refer :all]
             [hiccup.page :refer :all]
 
@@ -73,8 +74,6 @@
        ;; CSS
        [:link {:href (str "/css/main.css?v=" (:version @app/config))
                :rel "stylesheet"}]
-       [:link {:href (str "/css/template.css?v=" (:version @app/config))
-               :rel "stylesheet"}]
        [:link {:href "https://code.cdn.mozilla.net/fonts/fira.css"
                :rel "stylesheet"}]
        (if (non-empty? css-files)
@@ -93,27 +92,61 @@
 
        ;; Scripts (domain)
        [:script {:src (str "/js/utils.js?v=" (:version @app/config))}]
+       [:script {:src (str "/js/utils/ui.js?v=" (:version @app/config))}]
        [:script {:src (str "/js/main.js?v=" (:version @app/config))}]
        (if (non-empty? script-files)
          (for [sf script-files]
            [:script {:src (str sf "?v=" (:version @app/config))}]))]
+
+      ;; HTML Body
       [:body
-        [:header#site-header
-          [:div#site-name
-            [:a {:href "/" :title "Go home"} "Hockey Oracle"]]
-          [:div#account-links
-            (if (and user (not= "/logout" (-> req :uri)))
-              [:span
-                [:a#account-link
-                  {:href "/todo" :title "View account details"}
-                  user]
-                "&nbsp;"
-                [:a {:href "/logout" :title "Logout"}
-                  [:i.fas.fa-sign-out-alt]]])
-            (if (and (nil? user) (not= "/login" (-> req :uri)))
-              [:span
-                [:a#login-link {:href "/login"}
-                  [:i.fas.fa-sign-in-alt]
-                  "&nbsp;Login"]])]]
+        [:div#overlay "&nbsp;"]
+        [:div#top-shade]
+
+        ;; Header
+        [:header#top-heading
+          [:div#top-right-heading
+            (when (non-empty? league)
+              [:a {:href (cl-format "/~(~A~)" (:tricode league))
+                   :title (str (:name league))}
+                  (str (:name league))]
+              [:span " - "])
+            (when (non-empty? user)
+              [:a {:href (if (non-empty? league)
+                            (cl-format "/~(~A~)/users/me"
+                                       (:tricode league))
+                            "/users/me")}
+                  (str (:name user))]
+              [:a {:href "/logout"
+                   :title "Log out"}
+                  [:i.fa.fa-sign-out-alt]])
+            (when (empty? user)
+              [:a {:href "javascript:void(0)"
+                   :onclick "page.showLogin()"}
+                "Log in"])]
+          [:a {:href "/"}
+            [:img {:alt "logo"
+                   :class "logo"
+                   :src "/images/banner.jpg"}]
+            [:span {:class "title"}
+              "Hockey Oracle"]]]
+
+        ;[:header#site-header
+          ;[:div#site-name
+            ;[:a {:href "/" :title "Go home"} "Hockey Oracle"]]
+          ;[:div#account-links
+            ;(if (and user (not= "/logout" (-> req :uri)))
+              ;[:span
+                ;[:a#account-link
+                  ;{:href "/todo" :title "View account details"}
+                  ;user
+                ;"&nbsp;"
+                ;[:a {:href "/logout" :title "Logout"}
+                  ;[:i.fas.fa-sign-out-alt]]
+            ;(if (and (nil? user) (not= "/login" (-> req :uri)))
+              ;[:span
+                ;[:a#login-link {:href "/login"}
+                  ;[:i.fas.fa-sign-in-alt]
+                  ;"&nbsp;Login"]]]
         [:nav]
         [:main {:id (gen-main-id title)} content]])))

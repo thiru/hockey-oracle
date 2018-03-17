@@ -18,21 +18,21 @@ page.dialogs = [];
 
 $(document).ready(function() {
     page.init();
-    if (get("user-detail-page"))
+    if (UI.get("user-detail-page"))
         page.initUserDetailPage();
-    if (get("manage-league-page"))
+    if (UI.get("manage-league-page"))
         page.initManageLeaguePage();
-    if (get("schedule-page"))
+    if (UI.get("schedule-page"))
         page.initSchedulePage();
-    if (get("game-detail-page"))
+    if (UI.get("game-detail-page"))
         page.initGameDetailPage();
-    if (get("player-list-page"))
+    if (UI.get("player-list-page"))
         page.initGameDetailPage();
 });
 
 page.init = function() {
-    page.userId = parseInt(get("root").dataset.user);
-    page.leagueName = get("root").dataset.league;
+    page.userId = parseInt(UI.get("root").dataset.user);
+    page.leagueName = UI.get("root").dataset.league;
 
     page.toggleMainMenu = function() {
         $("#ham-menu-group").toggleClass("hidden");
@@ -59,7 +59,7 @@ page.init = function() {
     };
 
     page.parseTime = function(eleId) {
-        var strTime = get(eleId).value;
+        var strTime = UI.get(eleId).value;
         var parsedTime = moment(strTime,
                                 page.inputTimeFmts,
                                 /*strictMode*/ false);
@@ -71,8 +71,8 @@ page.init = function() {
     };
 
     page.parseDateTime = function(dateEleId, timeEleId) {
-        var rawDate = get(dateEleId).value;
-        var rawTime = get(timeEleId).value;
+        var rawDate = UI.get(dateEleId).value;
+        var rawTime = UI.get(timeEleId).value;
 
         var parsedDate = moment(rawDate,
                                 page.inputDateFmts,
@@ -114,8 +114,8 @@ page.init = function() {
         $("#login-result").attr("class", "").html("");
 
         var result = null;
-        var email = get("login-email-address").value;
-        var pwd = get("login-pwd").value;
+        var email = UI.get("login-email-address").value;
+        var pwd = UI.get("login-pwd").value;
 
         if (isBlank(email))
             result = Result.error("No email address provided.");
@@ -171,7 +171,7 @@ page.init = function() {
         $("#login-result").attr("class", "").html("");
 
         var result = null;
-        var email = get("login-email-address").value;
+        var email = UI.get("login-email-address").value;
 
         if (isBlank(email))
             result = Result.error("No email address provided.");
@@ -213,17 +213,17 @@ page.init = function() {
         $("#save-result").attr("class", "").html("");
 
         var player = {};
-        player.id = get("save-btn").dataset.playerId;
-        player.resetToken = get("save-btn").dataset.resetToken;
+        player.id = UI.get("save-btn").dataset.playerId;
+        player.resetToken = UI.get("save-btn").dataset.resetToken;
 
-        player.pwd = get("pwd-new").value;
+        player.pwd = UI.get("pwd-new").value;
         if (isBlank(player.pwd)) {
             showResult($("#save-result"),
                        Result.error("Password can't be blank."));
             return;
         }
 
-        var newPwdRepeat = get("pwd-new-repeat").value;
+        var newPwdRepeat = UI.get("pwd-new-repeat").value;
         if (player.pwd !== newPwdRepeat) {
             showResult($("#save-result"),
                        Result.error("Passwords don't match."));
@@ -287,9 +287,9 @@ page.initUserDetailPage = function() {
         player.leagueName = page.leagueName;
 
         // Get player id
-        player.id = get("player-name-edit").dataset.playerId;
+        player.id = UI.get("player-name-edit").dataset.playerId;
 
-        // Get player name
+        // UI.Get player name
         player.name = $("#player-name-edit").val().trim();
         if (isBlank(player.name)) {
             alert("Name can't be blank.");
@@ -301,23 +301,23 @@ page.initUserDetailPage = function() {
         player.email = $("#player-email-edit").val().trim();
 
         // Get active status
-        if (get("player-active-edit"))
-            player.active = get("player-active-edit").checked;
+        if (UI.get("player-active-edit"))
+            player.active = UI.get("player-active-edit").checked;
         else
             player.active = false;
 
         // Get notification options
         player.notifyOnPlayerStatusChange =
-            get("notify-on-player-status-change-edit").checked;
+            UI.get("notify-on-player-status-change-edit").checked;
         player.notifyOnPlayerChat =
-            get("notify-on-player-chat-edit").checked;
+            UI.get("notify-on-player-chat-edit").checked;
 
         // Get player position
         player.position = $("#player-pos-edit :selected").val();
 
-        var newPwd = get("pwd-new").value;
+        var newPwd = UI.get("pwd-new").value;
         if (!isBlank(newPwd)) {
-            var newPwdRepeat = get("pwd-new-repeat").value;
+            var newPwdRepeat = UI.get("pwd-new-repeat").value;
             if (newPwd !== newPwdRepeat) {
                 $("#save-result").empty();
                 alert("New passwords don't match.");
@@ -325,8 +325,8 @@ page.initUserDetailPage = function() {
             }
 
             var currPwd = "";
-            if (get("pwd-curr") !== null) {
-                currPwd = get("pwd-curr").value;
+            if (UI.get("pwd-curr") !== null) {
+                currPwd = UI.get("pwd-curr").value;
                 if (isBlank(currPwd)) {
                     $("#save-result").empty();
                     alert("Original password not provided.");
@@ -393,9 +393,9 @@ page.initUserDetailPage = function() {
 page.initManageLeaguePage = function() {
     page.save = function() {
         var league = {
-            sendAutomatedEmails: get("send-automated-emails").checked,
+            sendAutomatedEmails: UI.get("send-automated-emails").checked,
             gameReminderDayOffset: parseInt(
-                get("email-reminder-day-offset").value)
+                UI.get("email-reminder-day-offset").value)
         };
 
         if (isNaN(league.gameReminderDayOffset) ||
@@ -462,9 +462,9 @@ page.initSchedulePage = function() {
 
     page.openGameEditor = function() {
         page.openDialog("#new-game-dialog");
-        get("date-picker").focus();
-        get("date-picker").value = moment().add(1, "day").format("YYYY-MM-DD");
-        get("time-picker").value = moment().format("h:00 a");
+        UI.get("date-picker").focus();
+        UI.get("date-picker").value = moment().add(1, "day").format("YYYY-MM-DD");
+        UI.get("time-picker").value = moment().format("h:00 a");
         page.updateRelTime();
     };
 
@@ -588,7 +588,7 @@ page.initGameDetailPage = function() {
         $("#email-reminder-btn").prop("disabled", true);
         showLoading("#quick-crud-res", "Emailing...");
 
-        var gameId = parseInt(get("game-info-edit").dataset.game);
+        var gameId = parseInt(UI.get("game-info-edit").dataset.game);
         var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
         $.post(url, { sendEmailReminder: true })
             .done(function (result) {
@@ -623,7 +623,7 @@ page.initGameDetailPage = function() {
         $(".crud-btn").prop("disabled", true);
         showLoading("#quick-crud-res");
 
-        var gameId = parseInt(get("game-info-edit").dataset.game);
+        var gameId = parseInt(UI.get("game-info-edit").dataset.game);
         var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
         $.post(url, { deleteGame: true })
             .done(function (result) {
@@ -669,7 +669,7 @@ page.initGameDetailPage = function() {
         $("#edit-actions .button").prop("disabled", true);
         showLoading("#save-res");
 
-        var gameId = parseInt(get("game-info-edit").dataset.game);
+        var gameId = parseInt(UI.get("game-info-edit").dataset.game);
         var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
         $.post(url, gameInfo)
             .done(function (result) {
@@ -795,7 +795,7 @@ page.initGameDetailPage = function() {
         $("#reason-input-info")
             .html("<i class='fa fa-spinner fa-pulse'></i> Updating...");
 
-        var gameId = parseInt(get("game-info-edit").dataset.game);
+        var gameId = parseInt(UI.get("game-info-edit").dataset.game);
         var url = "/" + page.leagueName.toLowerCase() + "/api/games/" + gameId;
         $.post(url, { targetPlayerId: targetPlayerId,
                       confirmType: confirmType, reason: reason})
@@ -1219,7 +1219,7 @@ page.initGameDetailPage = function() {
             .show()
             .html("<i class='fa fa-spinner fa-pulse'></i> Saving...");
 
-        var gameId = parseInt(get("game-info-edit").dataset.game);
+        var gameId = parseInt(UI.get("game-info-edit").dataset.game);
         var url = "/" + page.leagueName.toLowerCase() + "/api/games/chat/new";
 
         $.post(url, { gameId: gameId, msg: chatMsg})

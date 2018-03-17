@@ -1,6 +1,11 @@
-/*******************************
-            Global
-*******************************/
+/*
+ * ## Summary
+ *
+ * Common styles used throughout the website.
+ *
+ * */
+
+@import 'vars.css';
 
 *
 {
@@ -9,12 +14,18 @@
   text-rendering: optimizeLegibility;
 }
 
-body
+body, html
 {
   background: #FFF;
-  color: #555; /* VAR COMMON-TEXT-COLOUR */
+  color: var(--grey-dark);
   margin: 0;
   padding: 0;
+}
+
+main
+{
+  margin: 0 auto;
+  max-width: var(--max-page-width);
 }
 
 @media screen and (max-width: 480px) {
@@ -30,14 +41,9 @@ h2, h3, h4, h5, h6
   margin-bottom: 0.5rem;
 }
 
-header.blue-heading > *
-{
-    display: inline;
-}
-
 a
 {
-  color: #001645; /* VAR DARK-BLUE-HEADING */
+  color: var(--blue-dark);
   font-weight: bold;
   text-decoration: none;
 }
@@ -50,7 +56,7 @@ a.disabled
 }
 a:focus
 {
-  color: #FFAC0A; /* VAR FOCUSED-COLOUR */
+  color: var(--orange-dark);
 }
 a:hover
 {
@@ -88,7 +94,7 @@ img
 
 .active
 {
-  color: #0F83BC; /* VAR BLUE-HEADING */
+  color: var(--blue-light);
 }
 
 .full-width
@@ -115,12 +121,12 @@ img
 
 .underlined-heading
 {
-    border-bottom: solid 2px #F55813; /* ORANGE-HIGHLIGHT */
+    border-bottom: solid 2px var(--orange-light);
 }
 
 .blue-heading
 {
-  background: #0F83BC; /* VAR BLUE-HEADING */
+  background: var(--blue-light);
   color: white;
   margin: 1em 0 0 0;
   padding: 0.3em;
@@ -149,7 +155,7 @@ img
 }
 .data-list li:nth-child(even)
 {
-  background: #F5F5F5; /* var LIGHT-GREY */
+  background: var(--grey-light);
 }
 .data-list li:hover
 {
@@ -177,7 +183,7 @@ img
 }
 .simple-list li:nth-child(odd)
 {
-  background: #F5F5F5; /* var LIGHT-GREY */
+  background: var(--grey-light);
 }
 .simple-list li:last-child
 {
@@ -197,13 +203,13 @@ img
 }
 .clear-button:hover
 {
-    background: #F5F5F5; /* var LIGHT-GREY */
+    background: var(--grey-light);
 }
 
 .button
 {
   display: inline-block;
-  background: #F55813; /* ORANGE-HIGHLIGHT */
+  background: var(--orange-light);
   border: none;
   border-radius: 0.2em;
   box-shadow: 1px 1px 2px #888;
@@ -217,13 +223,13 @@ img
 }
 .button:hover
 {
-  box-shadow: 3px 3px 5px #555;
+  box-shadow: 3px 3px 5px var(--grey-dark);
   text-decoration: none;
 }
 .button:focus, .button:active
 {
-  background: #FFAC0A; /* VAR FOCUSED-COLOUR */
-  color: #555;
+  background: var(--orange-dark);
+  color: var(--grey-dark);
 }
 .button:disabled
 {
@@ -270,24 +276,18 @@ img
        Site-wide Layout
 *******************************/
 
-main
-{
-  margin: 0 auto;
-  max-width: 1200px; /* VAR MAX-PAGE-WIDTH */
-}
-
 #top-shade
 {
-  background-color: #04080D; /* VAR TOP-SHADE */
+  background-color: #04080D;
   position: absolute;
-  height: 35px; /* VAR TOP-BANNER-HEIGHT */
+  height: var(--top-banner-height);
   width: 100%;
 }
 #top-heading
 {
   color: white;
   font-weight: bold;
-  height: 35px; /* VAR TOP-BANNER-HEIGHT */
+  height: var(--top-banner-height);
   position: relative;
   overflow: hidden;
   max-width: 1200px;
@@ -299,7 +299,7 @@ main
 }
 #top-heading .logo
 {
-  height: 35px; /* VAR TOP-BANNER-HEIGHT */
+  height: var(--top-banner-height);
 }
 #top-heading .title
 {
@@ -322,15 +322,15 @@ main
 
 nav
 {
-    max-width: 1200px; /* VAR MAX-PAGE-WIDTH */
+    max-width: var(--max-page-width);
     margin: 0 auto 1em auto;
     overflow: hidden; /* Prevent elements from collapsing their height when
                          they only contain floated elements: */
-    padding: 0.3em 25px 0 25px; /* VAR CONTENT-WIDTH */
+    padding: 0.3em var(--content-width) 0 var(--content-width);
 }
 nav .nav-items
 {
-    border-bottom: solid 1px #001645;
+    border-bottom: solid 1px var(--blue-dark);
     margin: 0;
     overflow: hidden;
     padding: 0;
@@ -357,7 +357,7 @@ nav .nav-items li:last-child
 
 #ham-menu-group
 {
-    border: solid 0.2em #F5F5F5; /* var LIGHT-GREY */
+    border: solid 0.2em var(--grey-light);
 }
 #ham-menu-group li
 {
@@ -374,7 +374,7 @@ nav .nav-items li:last-child
 
 main
 {
-  padding: 0 25px; /* VAR CONTENT-WIDTH */
+  padding: 0 var(--content-width);
 }
 
 #overlay
@@ -414,25 +414,12 @@ main
 }
 .dialog header
 {
-  background: #0F83BC; /* VAR BLUE-HEADING */
+  background: var(--blue-light);
   border-radius: 5px 5px 0 0;
   color: white;
   font-weight: bold;
   margin: 0 0 1em 0;
   padding: 0.5em 1em 0.5em 1em;
-}
-
-/*******************************
-         Log in dialog
-*******************************/
-
-#login-dialog
-{
-    padding: 1em;
-}
-#login-dialog .dialog-content
-{
-    max-width: 400px;
 }
 
 /*******************************
@@ -466,17 +453,17 @@ main
 
 #league-list-page .button
 {
-  background: #001645; /* VAR DARK-BLUE-HEADING */
+  background: var(--blue-dark);
   font-size: 2em;
   padding: 1em 0;
 }
 #league-list-page .button:focus, #league-list-page .button:active
 {
-  background: #0F83BC; /* VAR BLUE-HEADING */
+  background: var(--blue-light);
 }
 
 /*******************************
-         Schedul page
+         Schedule page
 *******************************/
 
 #schedule-page #edit-controls
@@ -644,7 +631,7 @@ main
 
 #game-detail-page .team-heading
 {
-  background: #0F83BC; /* VAR BLUE-HEADING */
+  background: var(--blue-light);
   color: white;
   margin: 0 0 0.5em 0;
   padding: 0.3em;
