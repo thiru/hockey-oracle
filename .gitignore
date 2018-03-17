@@ -1,1 +1,8 @@
-*.fasl
+.cpcache
+.lein-repl-history
+.nrepl-history
+.nrepl-port
+project.clj
+users.edn
+out/
+target/

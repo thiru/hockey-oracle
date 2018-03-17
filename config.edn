@@ -1,0 +1,7 @@
+{:name "Hockey Oracle"
+ :version "2.0-alpha"
+ :description "A management tool for amateur hockey leagues"
+ :app-mode :dev
+ :log-level :debug
+ :web-server-port 8023
+ :nrepl-port 8024}
