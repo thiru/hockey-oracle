@@ -13,4 +13,5 @@
 
            [hockeyoracle.app :as app]
            [hockeyoracle.main :refer :all]
+           [hockeyoracle.core.db :as db]
            [hockeyoracle.web.server :as server]))

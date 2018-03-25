@@ -15,11 +15,12 @@
     ;; Clojure on JVM:
     [org.clojure/clojure "1.9.0"]
 
-    ;; Core Domain:
-    [clj-http "3.7.0"]
-
     ;; Date/time library:
     [clojure.java-time "0.3.1"]
+
+    ;; Database access:
+    [org.clojure/java.jdbc "0.7.5"]
+    [org.postgresql/postgresql "42.2.2"]
 
     ;; #### Web Server
 
@@ -106,6 +107,7 @@
          '[thiru.reporting :refer :all]
          '[thiru.utils :refer :all]
          '[hockeyoracle.main :as cli]
+         '[hockeyoracle.core.db :as db]
          '[hockeyoracle.web.server :as server])
 
 ;; ### Boot Tasks
