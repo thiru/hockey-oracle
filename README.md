@@ -15,6 +15,14 @@ Current features:
 
 Please note that this an **alpha** version of the app with limited functionality.
 
+## Prerequisites
+
+### Postgresql
+
+* Install the necessary extensions:
+
+    create extension hstore;
+
 ## Development
 
 ### Prerequisites

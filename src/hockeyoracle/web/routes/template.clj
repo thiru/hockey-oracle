@@ -16,14 +16,58 @@
             [hockeyoracle.app :as app]))
 
 (defn gen-main-id
-  "Generate a safe string to be used as the `main` HTML element id.
+  "Generate a safe string to be used as the `main` HTML element's id.
   
-  The main intention being to use it to target page-specific CSS styles."
+  The primary intention is to use the id to target page-specific CSS styles."
   [page-title]
   (-> page-title
       (string/replace #"[^\w\d\s']+" "-")
       (string/lower-case)
       (str "-page")))
+
+(defn build-top-header
+  "TODO"
+  [user league]
+  (html
+    ;; Dark background of top header that spans entire horizontal space
+    [:div#top-heading-shade]
+
+    ;; Actual header content
+    [:header#top-heading
+      [:div#top-right-heading
+
+        ;; Show league name (if applicable)
+        (when (non-empty? league)
+          [:a {:href (cl-format "/~(~A~)" (:tricode league))
+               :title (str (:name league))}
+              (str (:name league))]
+          [:span " - "])
+
+        ;; Show log in/out links as appropriate
+        (if (empty? user)
+          ;; Log in:
+          [:a {:href "/login"} "Log in"]
+          ;; Log out:
+          [:span
+            ;; User name:
+            [:a {:href (if (non-empty? league)
+                          (cl-format "/~(~A~)/users/me"
+                                     (:tricode league))
+                          "/users/me")}
+                (:name user)]
+            "&nbsp;"
+            ;; Log out icon:
+            [:a {:href "/logout"
+                 :title "Log out"}
+                [:i.fa.fa-sign-out-alt]]])]
+
+      ;; Logo & Site Name
+      [:a {:href "/"}
+        [:img {:alt "logo"
+               :class "logo"
+               :src "/images/banner.jpg"}]
+        [:span {:class "title"}
+          "Hockey Oracle"]]]))
 
 (defn template-page
   "Common template used by all pages on the site.
@@ -98,55 +142,15 @@
          (for [sf script-files]
            [:script {:src (str sf "?v=" (:version @app/config))}]))]
 
-      ;; HTML Body
       [:body
+        ;; Used for modal dialogs
         [:div#overlay "&nbsp;"]
-        [:div#top-shade]
 
-        ;; Header
-        [:header#top-heading
-          [:div#top-right-heading
-            (when (non-empty? league)
-              [:a {:href (cl-format "/~(~A~)" (:tricode league))
-                   :title (str (:name league))}
-                  (str (:name league))]
-              [:span " - "])
-            (when (non-empty? user)
-              [:a {:href (if (non-empty? league)
-                            (cl-format "/~(~A~)/users/me"
-                                       (:tricode league))
-                            "/users/me")}
-                  (str (:name user))]
-              [:a {:href "/logout"
-                   :title "Log out"}
-                  [:i.fa.fa-sign-out-alt]])
-            (when (empty? user)
-              [:a {:href "javascript:void(0)"
-                   :onclick "page.showLogin()"}
-                "Log in"])]
-          [:a {:href "/"}
-            [:img {:alt "logo"
-                   :class "logo"
-                   :src "/images/banner.jpg"}]
-            [:span {:class "title"}
-              "Hockey Oracle"]]]
+        ;; Main top header
+        (build-top-header user league)
 
-        ;[:header#site-header
-          ;[:div#site-name
-            ;[:a {:href "/" :title "Go home"} "Hockey Oracle"]]
-          ;[:div#account-links
-            ;(if (and user (not= "/logout" (-> req :uri)))
-              ;[:span
-                ;[:a#account-link
-                  ;{:href "/todo" :title "View account details"}
-                  ;user
-                ;"&nbsp;"
-                ;[:a {:href "/logout" :title "Logout"}
-                  ;[:i.fas.fa-sign-out-alt]]
-            ;(if (and (nil? user) (not= "/login" (-> req :uri)))
-              ;[:span
-                ;[:a#login-link {:href "/login"}
-                  ;[:i.fas.fa-sign-in-alt]
-                  ;"&nbsp;Login"]]]
+        ;; Main navigation
         [:nav]
+
+        ;; Page content
         [:main {:id (gen-main-id title)} content]])))

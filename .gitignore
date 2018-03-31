@@ -1,6 +1,5 @@
+.*history
 .cpcache
-.lein-repl-history
-.nrepl-history
 .nrepl-port
 project.clj
 users.edn

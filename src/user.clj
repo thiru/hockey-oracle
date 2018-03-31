@@ -5,6 +5,7 @@
 (ns user
  (:require
            [clojure.string :as string]
+           [clojure.pprint :refer :all]
 
            [thiru.logging :refer :all]
            [thiru.repl :as repl]

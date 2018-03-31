@@ -76,7 +76,7 @@
               req
               "Login"
               [:div#login-successful {:data-go-back-to-url go-back-to-url}
-                [:h1 (str "Welcome, " (:name user) "!")]
+                [:h1 (str "Welcome " (:name user) "!")]
                 [:p 
                  [:i.fas.fa-cog.fa-spin]
                  " We're logging you in now..."]]
@@ -100,10 +100,14 @@
   (if-let [user (-> req :session :user)]
     (log :info (str "User '" (:name user) "' logged out")))
   (-> (template-page
-        req
+        ;; Pre-emptively nullify the session so the template page doesn't show
+        ;; any user-specific elements. This is necessary even though we nullify
+        ;; the session further down this threading macro, which is done too
+        ;; late for the template page to see it.
+        (assoc req :session nil)
         "Logged Out"
         [:div
-          [:h2 "You've been successfully logged out"]
+          [:h2 "You were successfully logged out"]
           [:a.button {:href "/"} "Go back to the home page"]])
       (hr/ok)
       (hr/content-type "text/html")

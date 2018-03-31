@@ -103,6 +103,7 @@
 ;; following Boot tasks
 (require
          '[clojure.java.shell :as shell]
+         '[clojure.pprint :refer :all]
          '[thiru.logging :refer :all]
          '[thiru.reporting :refer :all]
          '[thiru.utils :refer :all]

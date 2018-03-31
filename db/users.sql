@@ -1,3 +1,4 @@
+-- DROP TABLE public.users;
 -- DROP SEQUENCE public.users_id_seq;
 
 CREATE SEQUENCE public.users_id_seq
@@ -13,8 +14,14 @@ CREATE TABLE public.users (
   is_admin boolean NOT NULL DEFAULT false,
   password text NOT NULL DEFAULT '',
   salt text NOT NULL DEFAULT '',
-  is_active boolean NOT NULL DEFAULT true,
-  CONSTRAINT users_pk PRIMARY KEY (id)
+  leagues int4[] NOT NULL DEFAULT '{}',
+  inactive_leagues int4[] NOT NULL DEFAULT '{}',
+  created_on timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
+  created_by text NOT NULL DEFAULT '',
+  modified_on timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
+  modified_by text NOT NULL DEFAULT '',
+  CONSTRAINT users_pk PRIMARY KEY (id),
+	CONSTRAINT users_un UNIQUE (email)
 )
 WITH (
   OIDS=FALSE
