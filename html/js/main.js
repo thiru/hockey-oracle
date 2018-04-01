@@ -34,10 +34,6 @@ page.init = function() {
     page.userId = parseInt(UI.get("root").dataset.user);
     page.leagueName = UI.get("root").dataset.league;
 
-    page.toggleMainMenu = function() {
-        $("#ham-menu-group").toggleClass("hidden");
-    };
-
     $(document).keyup(function(event) {
         if (event.keyCode === 27) // Escape key
             page.closeAllDialogs();
@@ -103,13 +99,6 @@ page.init = function() {
         return dateAndTime;
     };
 
-    page.showLogin = function() {
-        page.openDialog("#login-dialog");
-        $("#login-email-address").focus().select();
-    };
-    page.closeLogin = function() {
-        page.closeDialog("#login-dialog");
-    };
     page.login = function() {
         $("#login-result").attr("class", "").html("");
 

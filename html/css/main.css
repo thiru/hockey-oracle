@@ -330,7 +330,6 @@ nav
 }
 nav .nav-items
 {
-    border-bottom: solid 1px var(--blue-dark);
     margin: 0;
     overflow: hidden;
     padding: 0;
@@ -353,23 +352,6 @@ nav .nav-items li:last-child
   {
       display: none;
   }
-}
-
-#ham-menu-group
-{
-    border: solid 0.2em var(--grey-light);
-}
-#ham-menu-group li
-{
-    padding: 0.3em;
-}
-#ham-menu-group li > *
-{
-    display: block;
-}
-#ham-menu-group a:hover
-{
-  text-decoration: none;
 }
 
 main

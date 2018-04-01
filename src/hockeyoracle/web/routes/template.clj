@@ -5,7 +5,6 @@
 (ns hockeyoracle.web.routes.template
   (:require
             [clojure.string :as string]
-            [clojure.pprint :refer [cl-format]]
             [hiccup.core :refer :all]
             [hiccup.page :refer :all]
 
@@ -26,7 +25,7 @@
       (str "-page")))
 
 (defn build-top-header
-  "TODO"
+  "Build HTML fragment for site-wide top header."
   [user league]
   (html
     ;; Dark background of top header that spans entire horizontal space
@@ -38,7 +37,7 @@
 
         ;; Show league name (if applicable)
         (when (non-empty? league)
-          [:a {:href (cl-format "/~(~A~)" (:tricode league))
+          [:a {:href (str "/" (string/lower-case (:tricode league)))
                :title (str (:name league))}
               (str (:name league))]
           [:span " - "])
@@ -51,8 +50,9 @@
           [:span
             ;; User name:
             [:a {:href (if (non-empty? league)
-                          (cl-format "/~(~A~)/users/me"
-                                     (:tricode league))
+                          (str "/"
+                               (string/lower-case (:tricode league))
+                               "/users/me")
                           "/users/me")}
                 (:name user)]
             "&nbsp;"
@@ -68,6 +68,38 @@
                :src "/images/banner.jpg"}]
         [:span {:class "title"}
           "Hockey Oracle"]]]))
+
+(defn build-main-nav
+  "Build HTML fragment for site-wide navigation."
+  [user league]
+  (html
+    [:nav
+      [:ul.nav-items
+        (if (non-empty? league)
+          (list
+            ;; Schedule
+            [:li
+              [:a {:href (str "/"
+                              (string/lower-case (:tricode league))
+                              "/games/schedule")}
+                "Schedule"]]
+            ;; Scores
+            [:li
+              [:a {:href (str "/"
+                              (string/lower-case (:tricode league))
+                              "/games/scores")}
+                "Scores"]]
+            ;; Players
+            [:li
+              [:a {:href (str "/"
+                              (string/lower-case (:tricode league))
+                              "/players")}
+                "Players"]]))
+        ;; About
+        [:li
+          [:a {:href "/about"
+               :title "About Hockey Oracle"}
+            [:i.fa.fa-info-circle]]]]]))
 
 (defn template-page
   "Common template used by all pages on the site.
@@ -150,7 +182,7 @@
         (build-top-header user league)
 
         ;; Main navigation
-        [:nav]
+        (build-main-nav user league)
 
         ;; Page content
         [:main {:id (gen-main-id title)} content]])))
