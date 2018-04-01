@@ -12,17 +12,19 @@
 
             [hockeyoracle.app :as app]))
 
+;; ## General Database Stuff
+
 (def pg-db
   "Database connection spec."
   (:db-spec @app/config))
 
-;;; The following two protocol extensions support converting Postgresql array
-;;; columns to and from Clojure vectors.
-;;;
-;;; This was taken from: https://stackoverflow.com/a/25786990.
-;;;
-;;; It might be worth just using the author's library at some point:
-;;; https://github.com/remodoy/clj-postgresql.
+;; The following two protocol extensions support converting Postgresql array
+;; columns to and from Clojure vectors.
+;;
+;; This was taken from: https://stackoverflow.com/a/25786990.
+;;
+;; It might be worth just using the author's library at some point:
+;; https://github.com/remodoy/clj-postgresql.
 
 (extend-protocol clojure.java.jdbc/ISQLParameter
   clojure.lang.IPersistentVector
@@ -40,6 +42,40 @@
   (result-set-read-column [val _ _]
     (into [] (.getArray val))))
 
+;; ## Leagues
+
+(defn get-leagues
+  "Gets all leagues."
+  []
+  (jdbc/query pg-db ["SELECT * FROM leagues"]))
+
+(defn get-league
+  "Get the league with the specified column criteria.
+  
+  
+  * `columns`
+    * A map of column names and values
+    * Only one column is currently supported
+  
+  Name and tricode columns are matched without case sensitivity."
+  [columns]
+  (first
+    (cond
+      (:id columns)
+      (jdbc/query pg-db ["SELECT * FROM leagues WHERE id = ? LIMIT 1"
+                         (:id columns)])
+      
+      (:name columns)
+      (jdbc/query pg-db ["SELECT * FROM leagues WHERE lower(name) = ? LIMIT 1"
+                         (string/lower-case (:name columns))])
+      
+      (:tricode columns)
+      (jdbc/query pg-db [(str "SELECT * FROM leagues "
+                              "WHERE lower(tricode) = ? LIMIT 1")
+                         (string/lower-case (:tricode columns))]))))
+
+;; ## Users
+
 (defn get-users
   "Gets all users."
   []
@@ -48,18 +84,22 @@
 (defn get-user
   "Get the user with the specified criteria.
   
-  TODO"
-  [criteria]
+  * `columns`
+    * A map of column names and values
+    * Only one column is currently supported
+  
+  Name and email are matched without case sensitivity."
+  [columns]
   (first
     (cond
-      (:id criteria)
-      (jdbc/query pg-db ["SELECT * FROM users where id = ? LIMIT 1"
-                         (:id criteria)])
+      (:id columns)
+      (jdbc/query pg-db ["SELECT * FROM users WHERE id = ? LIMIT 1"
+                         (:id columns)])
       
-      (:name criteria)
-      (jdbc/query pg-db ["SELECT * FROM users where lower(name) = ? LIMIT 1"
-                         (string/lower-case (:name criteria))])
+      (:name columns)
+      (jdbc/query pg-db ["SELECT * FROM users WHERE lower(name) = ? LIMIT 1"
+                         (string/lower-case (:name columns))])
 
-      (:email criteria)
-      (jdbc/query pg-db ["SELECT * FROM users where lower(email) = ? LIMIT 1"
-                         (string/lower-case (:email criteria))]))))
+      (:email columns)
+      (jdbc/query pg-db ["SELECT * FROM users WHERE lower(email) = ? LIMIT 1"
+                         (string/lower-case (:email columns))]))))
