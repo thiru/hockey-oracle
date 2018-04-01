@@ -122,7 +122,7 @@
       {:lang "en"
        :id "root"
        :data-user (if (non-empty? user) (:id user))
-       :data-league (if (non-empty? league) (:name league))}
+       :data-league (if (non-empty? league) (:tricode league))}
       [:head
    
        ;; Meta

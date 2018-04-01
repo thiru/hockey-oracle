@@ -16,7 +16,8 @@ CREATE TABLE public.leagues (
   created_by text NOT NULL DEFAULT '',
   modified_on timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
   modified_by text NOT NULL DEFAULT '',
-  CONSTRAINT leagues_pk PRIMARY KEY (id)
+  CONSTRAINT leagues_pk PRIMARY KEY (id),
+	CONSTRAINT leagues_un UNIQUE (tricode)
 )
 WITH (
   OIDS=FALSE
