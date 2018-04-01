@@ -45,9 +45,20 @@
 ;; ## Leagues
 
 (defn get-leagues
-  "Gets all leagues."
-  []
-  (jdbc/query pg-db ["SELECT * FROM leagues"]))
+  "Gets leagues.
+  
+  * `ids`
+    * A list of league ids
+    * If this parameter is not specified, all leagues are retrieved"
+  ([]
+   (jdbc/query pg-db ["SELECT * FROM leagues"]))
+  ;; TODO: spec to ensure this is a list of integers
+  ([ids]
+   (if (< 0 (count ids))
+     (jdbc/query pg-db [(str "SELECT * FROM leagues 
+                             WHERE id IN ("
+                             (string/join ", " ids)
+                             ")")]))))
 
 (defn get-league
   "Get the league with the specified column criteria.

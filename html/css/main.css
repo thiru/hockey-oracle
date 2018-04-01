@@ -430,16 +430,16 @@ main
 }
 
 /*******************************
-      League list page
+      Home page
 *******************************/
 
-#league-list-page .button
+#home-page .button
 {
   background: var(--blue-dark);
   font-size: 2em;
   padding: 1em 0;
 }
-#league-list-page .button:focus, #league-list-page .button:active
+#home-page .button:focus, #home-page .button:active
 {
   background: var(--blue-light);
 }
