@@ -42,6 +42,7 @@
   Basically, all pages require authentication except the login/out pages."
   [req]
   (or (-> req :session :user)
+      (= "/about" (-> req :uri))
       (= "/login" (-> req :uri))
       (= "/logout" (-> req :uri))))
 
