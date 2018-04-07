@@ -2,6 +2,7 @@ UI.ready(function() {
   var loginSuccessEl = UI.get('login-successful');
   if (loginSuccessEl)
     Page.goBackTo(loginSuccessEl.dataset.goBackToUrl);
+  UI.get('email').focus();
 });
 
 var Page = {
