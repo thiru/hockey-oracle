@@ -17,6 +17,7 @@
             [thiru.reporting :refer :all]
             [thiru.utils :refer :all]
 
+            [hockeyoracle.web.routes.about :refer :all]
             [hockeyoracle.web.routes.error-404 :refer :all]
             [hockeyoracle.web.routes.error-500 :refer :all]
             [hockeyoracle.web.routes.home :refer :all]
@@ -25,6 +26,7 @@
 
 (defroutes all-routes
   (GET "/" req (get-home-page req))
+  (GET "/about" req (get-about-page req))
   (GET "/login" req (get-login-page req))
   (POST "/login" req (post-login-page req))
   (GET "/logout" req (get-logout-page req))

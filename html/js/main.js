@@ -11,6 +11,7 @@ var page= {};
 page.dateFmt = "ddd MMM D";
 page.timeFmt = "h:mm a";
 page.dateAndTimeFmt = "ddd MMM D, h:mm a";
+page.longDateAndTimeFmt = "ddd MMMM Do YYYY, h:mm a";
 page.inputDateFmts = ["MMM D YYYY", "MMMM D YYYY", "YYYY MM DD"];
 page.inputTimeFmts = ["h:mm a", "HH:mm"];
 
@@ -38,6 +39,17 @@ page.init = function() {
         if (event.keyCode === 27) // Escape key
             page.closeAllDialogs();
     });
+
+    // Show date/time in relative local time, given UTC
+    page.utcToLocalRelTime = function() {
+        $(".utc-time").each(function(idx, el) {
+          var time = moment(el.innerText);
+          el.innerText = time.fromNow();
+          el.title = time.format(page.longDateAndTimeFmt);
+        });
+    };
+
+    page.utcToLocalRelTime();
 
     page.openDialog = function(jqId) {
         $("#overlay").show();
