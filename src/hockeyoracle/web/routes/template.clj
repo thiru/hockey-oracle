@@ -148,9 +148,9 @@
        [:link {:href "/images/favicon.ico" :rel "icon"}]
   
        ;; CSS
+       [:link {:href (str "/deps/fira/fira.css?v=" (:version @app/config))
+               :rel "stylesheet"}] 
        [:link {:href (str "/css/main.css?v=" (:version @app/config))
-               :rel "stylesheet"}]
-       [:link {:href "https://code.cdn.mozilla.net/fonts/fira.css"
                :rel "stylesheet"}]
        (if (non-empty? css-files)
          (for [cf css-files]
