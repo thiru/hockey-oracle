@@ -14,13 +14,11 @@
             [thiru.utils :refer :all]
 
             [hockeyoracle.app :as app]
-            [hockeyoracle.core.db :as db]
             [hockeyoracle.web.routes.template :refer :all]))
 
 (defn get-about-page
   "About page."
   [req]
-  ;; Otherwise show list of leagues (if any)
   (template-page
     req
     "About"

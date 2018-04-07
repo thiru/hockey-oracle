@@ -41,7 +41,8 @@
 (defn authorized?
   "Determine whether the current request is authenticated.
   
-  Basically, all pages require authentication except the login/out pages."
+  Basically, all pages require authentication except the about page and
+  login/out pages."
   [req]
   (or (-> req :session :user)
       (= "/about" (-> req :uri))
