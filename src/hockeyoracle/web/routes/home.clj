@@ -37,10 +37,10 @@
             [:div
               [:h2 "We couldn't find the league you belong to."]
               [:h2 "Please contact your league's manager."]])
-          ;; Redirect
+          ;; Otherwise, redirect to the schedule page
           (hr/temporary-redirect (str "/" 
                                       (string/lower-case (:tricode league))
-                                      "/games/schedule"))))
+                                      "/schedule"))))
 
       ;; Otherwise show list of leagues (if any)
       (template-page
@@ -62,6 +62,6 @@
                   [:a.button.wide-button
                     {:href (str "/"
                                 (string/lower-case (:tricode league))
-                                "/games/schedule")
+                                "/schedule")
                      :title (:tricode league)}
                     (:name league)]])]])))))

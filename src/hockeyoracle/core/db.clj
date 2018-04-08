@@ -36,11 +36,20 @@
                            (apply str (rest type-name)))]
         (.setObject stmt i (.createArrayOf conn elem-type (to-array v)))
         (.setObject stmt i v)))))
-
 (extend-protocol clojure.java.jdbc/IResultSetReadColumn
   java.sql.Array
   (result-set-read-column [val _ _]
     (into [] (.getArray val))))
+
+;; Read timestamps as plain strings.
+;; I'm going this route because JDBC seems to double "correct" the UTC time
+;; given by Postgres. So for e.g. if 13:00 (UTC) is stored in the database,
+;; JDBC returns a `java.sql.Timstamp` with 19:00. At least, this way I have
+;; full control on how the time is interpreted (local, UTC, etc.).
+(extend-protocol clojure.java.jdbc/IResultSetReadColumn
+  java.sql.Timestamp
+  (result-set-read-column [val _ _]
+    (str val)))
 
 ;; ## Leagues
 
@@ -63,7 +72,6 @@
 (defn get-league
   "Get the league with the specified column criteria.
   
-  
   * `columns`
     * A map of column names and values
     * Only one column is currently supported
@@ -84,6 +92,28 @@
       (jdbc/query pg-db [(str "SELECT * FROM leagues "
                               "WHERE lower(tricode) = ? LIMIT 1")
                          (string/lower-case (:tricode columns))]))))
+
+;; ## Games
+
+(defn get-games
+  "Get games with the specified criteria.
+  
+  * `league-id`
+    * The id of the league the games belong to
+  * `progress`
+    * An optional list of progress states to filter by
+    * These must be one of: new, underway, final, cancelled"
+  [league-id & {:keys [progress]}]
+  (if (empty? progress)
+    (jdbc/query pg-db ["SELECT * FROM games WHERE league_id = ?"
+                       league-id]
+                      {:identifiers #(.replace % \_ \-)})
+    (jdbc/query pg-db [(str "SELECT * FROM games "
+                            "WHERE league_id = ? "
+                            "  AND progress = ANY(?)")
+                       league-id
+                       progress]
+                      {:identifiers #(.replace % \_ \-)})))
 
 ;; ## Users
 

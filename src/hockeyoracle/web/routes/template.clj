@@ -36,11 +36,12 @@
       [:div#top-right-heading
 
         ;; Show league name (if applicable)
-        (when (non-empty? league)
-          [:a {:href (str "/" (string/lower-case (:tricode league)))
-               :title (str (:name league))}
-              (str (:name league))]
-          [:span " - "])
+        (if (non-empty? league)
+          [:span
+            [:a {:href (str "/" (string/lower-case (:tricode league)))
+                 :title (str (:name league))}
+              (:tricode league)]
+            [:span " - "]])
 
         ;; Show log in/out links as appropriate
         (if (empty? user)
@@ -81,13 +82,13 @@
             [:li
               [:a {:href (str "/"
                               (string/lower-case (:tricode league))
-                              "/games/schedule")}
+                              "/schedule")}
                 "Schedule"]]
             ;; Scores
             [:li
               [:a {:href (str "/"
                               (string/lower-case (:tricode league))
-                              "/games/scores")}
+                              "/scores")}
                 "Scores"]]
             ;; Players
             [:li

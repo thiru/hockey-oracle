@@ -22,6 +22,7 @@
             [hockeyoracle.web.routes.error-500 :refer :all]
             [hockeyoracle.web.routes.home :refer :all]
             [hockeyoracle.web.routes.loginout :refer :all]
+            [hockeyoracle.web.routes.schedule :refer :all]
             [hockeyoracle.web.routes.test :refer :all]))
 
 (defroutes all-routes
@@ -30,6 +31,7 @@
   (GET "/login" req (get-login-page req))
   (POST "/login" req (post-login-page req))
   (GET "/logout" req (get-logout-page req))
+  (GET "/:league/schedule" [league :as req] (get-schedule-page req league))
   (context "/test" req
     (GET "/" [] (get-test-root-page req))
     (GET "/req-map" [] template)

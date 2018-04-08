@@ -450,15 +450,12 @@ page.initManageLeaguePage = function() {
 
 // Schedule Page
 page.initSchedulePage = function() {
-    // Show relative times for next 5 games
-    var count = 5;
-    $("#schedule-list .game-item").each(function() {
-        if (count <= 0) return false;
-
-        var gameTimeStamp = $(this).find(".game-time").text().trim();
-        var gameTimeRel = moment(gameTimeStamp, page.dateAndTimeFmt).fromNow();
-        $(this).find(".game-rel-time").text("(" + gameTimeRel + ")");
-        count--;
+    // Show date/time in relative local time, given UTC
+    $("#schedule-list .game-time").each(function(idx, el) {
+        var time = moment.utc(el.innerText).local();
+        el.innerHTML = time.format(page.dateAndTimeFmt) +
+                       " (" + time.fromNow() + ")";
+        el.title = time.format(page.longDateAndTimeFmt);
     });
 
     page.openGameEditor = function() {
