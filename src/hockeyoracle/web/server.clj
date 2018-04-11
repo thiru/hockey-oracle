@@ -17,9 +17,10 @@
             [hockeyoracle.app :as app]
             [hockeyoracle.web.handler :as handler]))
 
-(def instance
-  "Contains the web server instance, the main handler (`site`) and other
-  properties to support restarting."
+;;; Contains the web server instance, the main handler (`site`) and other
+;;; properties to support restarting."
+;;;
+(defonce instance
   (atom {:dev? true
          :site nil
          :port (:web-server-port @app/config)
