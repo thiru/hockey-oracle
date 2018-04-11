@@ -59,11 +59,11 @@
        summary string returned
     *  We generate the options summary with `clojure.tools.cli/parsed-opts`"
   [options-summary]
-  (->> [(str "asdbwebapi " (:version @app/config))
+  (->> [(str "hockeyoracle " (:version @app/config))
         ""
         (:description @app/config)
         ""
-        "Usage: asdbwebapi [options] command"
+        "Usage: hockeyoracle [options] command"
         ""
         "Options:"
         options-summary
