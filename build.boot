@@ -12,15 +12,20 @@
   "Clojure library dependencies used by this project."
   '[;; #### Core Domain
 
-    ;; Clojure on JVM:
-    [org.clojure/clojure "1.9.0"]
+    ;; ##### Database
+
+    ;; Generic JDBC wrapper:
+    [org.clojure/java.jdbc "0.7.5"]
+    ;; Postresql (Java) JDBC driver:
+    [org.postgresql/postgresql "42.2.2"]
+    ;; Conveniences around JDBC and Clojure:
+    [clj-postgresql "0.7.0"]
 
     ;; Date/time library:
     [clojure.java-time "0.3.1"]
 
-    ;; Database access:
-    [org.clojure/java.jdbc "0.7.5"]
-    [org.postgresql/postgresql "42.2.2"]
+    ;; Converts between different string case conventions:
+    [camel-snake-kebab "0.4.0"]
 
     ;; #### Web Server
 
@@ -38,6 +43,8 @@
     [compojure "1.6.0"]
     ;; Generate HTML from clojure data structures:
     [hiccup "1.0.5"]
+    ;; JSON encoding/decoding:
+    [cheshire "5.8.0"]
     ;; Better exception reporting middleware:
     [prone "1.1.4"]
     ;; Security library:
@@ -76,7 +83,11 @@
     ;; ANSI colours for terminal:
     [clansi "1.0.0"]
     ;; Literate programming-ish documentation
-    [lein-marginalia "0.9.1"]])
+    [lein-marginalia "0.9.1"]
+    ;; Namespace change tracker:
+    [ns-tracker "0.3.1"]
+    ;; File-system watcher:
+    [hawk "0.2.11"]])
 
 ;; ### Boot Environment
 ;;

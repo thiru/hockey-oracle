@@ -1,16 +1,27 @@
-{:paths ["src" "resources"]
+{:aliases
+  {:rebel {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.2"}}
+           :main-opts  ["-m" "rebel-readline.main"]}}
+ :paths ["src" "resources"]
  :deps
  {;; #### Core Domain
 
   ;; Clojure on JVM:
   org.clojure/clojure {:mvn/version "1.9.0"}
 
+  ;; ##### Database
+
+  ;; Generic JDBC wrapper:
+  org.clojure/java.jdbc {:mvn/version "0.7.5"}
+  ;; Postresql (Java) JDBC driver:
+  org.postgresql/postgresql {:mvn/version "42.2.2"}
+  ;; Conveniences around JDBC and Clojure:
+  clj-postgresql {:mvn/version "0.7.0"}
+
   ;; Date/time library:
   clojure.java-time {:mvn/version "0.3.1"}
 
-  ;; Database access:
-  org.clojure/java.jdbc {:mvn/version "0.7.5"}
-  org.postgresql/postgresql {:mvn/version "42.2.2"}
+  ;; Converts between different string case conventions:
+  camel-snake-kebab {:mvn/version "0.4.0"}
 
   ;; #### Web Server
 
@@ -28,6 +39,8 @@
   compojure {:mvn/version "1.6.0"}
   ;; Generate HTML from clojure data structures:
   hiccup {:mvn/version "1.0.5"}
+  ;; JSON encoding/decoding:
+  cheshire {:mvn/version "5.8.0"}
   ;; Better exception reporting middleware:
   prone {:mvn/version "1.1.4"}
   ;; Security library:
@@ -66,4 +79,8 @@
   ;; ANSI colours for terminal:
   clansi {:mvn/version "1.0.0"}
   ;; Literate programming-ish documentation:
-  lein-marginalia {:mvn/version "0.9.1"}}}
+  lein-marginalia {:mvn/version "0.9.1"}
+  ;; Namespace change tracker:
+  ns-tracker {:mvn/version "0.3.1"}
+  ;; File-system watcher:
+  hawk {:mvn/version "0.2.11"}}}
