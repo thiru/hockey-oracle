@@ -1,16 +1,9 @@
 /*
 DROP TABLE public.leagues;
-DROP SEQUENCE public.leagues_id_seq;
 */
 
-CREATE SEQUENCE public.leagues_id_seq
-INCREMENT BY 1
-MINVALUE 1
-MAXVALUE 9223372036854775807
-START 1;
-
 CREATE TABLE public.leagues (
-  id int4 NOT NULL DEFAULT nextval('leagues_id_seq'::regclass),
+  id SERIAL NOT NULL,
   name text NOT NULL,
   tricode text NOT NULL DEFAULT '',
   is_active boolean NOT NULL DEFAULT true,

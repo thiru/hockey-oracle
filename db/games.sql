@@ -1,16 +1,9 @@
 /*
 DROP TABLE public.games;
-DROP SEQUENCE public.games_id_seq;
 */
 
-CREATE SEQUENCE public.games_id_seq
-INCREMENT BY 1
-MINVALUE 1
-MAXVALUE 9223372036854775807
-START 1;
-
 CREATE TABLE public.games (
-  id int4 NOT NULL DEFAULT nextval('games_id_seq'::regclass),
+  id SERIAL NOT NULL,
   league_id int4 NOT NULL,
   progress text NOT NULL DEFAULT 'new',
   notes text NOT NULL DEFAULT '',
