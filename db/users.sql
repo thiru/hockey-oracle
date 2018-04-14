@@ -1,5 +1,11 @@
--- DROP TABLE public.users;
--- DROP SEQUENCE public.users_id_seq;
+/*
+DROP TABLE public.users;
+DROP SEQUENCE public.users_id_seq;
+
+-- The following must be run once on a database in order to support
+-- `gen_random_uuid()`:
+CREATE EXTENSION pgcrypto;
+*/
 
 CREATE SEQUENCE public.users_id_seq
 INCREMENT BY 1
@@ -14,14 +20,16 @@ CREATE TABLE public.users (
   is_admin boolean NOT NULL DEFAULT false,
   password text NOT NULL DEFAULT '',
   salt text NOT NULL DEFAULT '',
-  league_ids int4[] NOT NULL DEFAULT '{}',
-  inactive_league_ids int4[] NOT NULL DEFAULT '{}',
+  auto_auth text NOT NULL DEFAULT gen_random_uuid(),
+  leagues jsonb NOT NULL DEFAULT '{}',
+  position text NOT NULL DEFAULT '',
+  email_opts jsonb NOT NULL DEFAULT '{"game-chats":true}',
   created_on timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
   created_by text NOT NULL DEFAULT '',
   modified_on timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
   modified_by text NOT NULL DEFAULT '',
   CONSTRAINT users_pk PRIMARY KEY (id),
-	CONSTRAINT users_un UNIQUE (email)
+  CONSTRAINT users_un UNIQUE (email)
 )
 WITH (
   OIDS=FALSE

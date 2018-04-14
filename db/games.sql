@@ -1,5 +1,7 @@
--- DROP TABLE public.games;
--- DROP SEQUENCE public.games_id_seq;
+/*
+DROP TABLE public.games;
+DROP SEQUENCE public.games_id_seq;
+*/
 
 CREATE SEQUENCE public.games_id_seq
 INCREMENT BY 1
