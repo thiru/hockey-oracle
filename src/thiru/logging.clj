@@ -110,8 +110,7 @@
                             (or level :info))
           colour (colour-for-level effective-level)]
       (if print-level-prefix
-        (print (style (str (string/upper-case (name effective-level))
-                           ": ")
+        (print (style (str (string/upper-case (name effective-level)))
                       colour)))
-      (println (style obj-to-print colour))))
+      (println ":" (style obj-to-print))))
   obj)
