@@ -4,6 +4,7 @@
 ;;
 (ns hockeyoracle.core.db
   (:require
+            [clj-postgresql.core :as pg]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as string]
 
@@ -14,32 +15,15 @@
 
 ;; ## General Database Stuff
 
-(def pg-db
-  "Database connection spec."
-  (:db-spec @app/config))
+(def conn-pool
+  "Database connection pool.
 
-;; The following two protocol extensions support converting Postgresql array
-;; columns to and from Clojure vectors.
-;;
-;; This was taken from: https://stackoverflow.com/a/25786990.
-;;
-;; It might be worth just using the author's library at some point:
-;; https://github.com/remodoy/clj-postgresql.
-
-(extend-protocol clojure.java.jdbc/ISQLParameter
-  clojure.lang.IPersistentVector
-  (set-parameter [v ^java.sql.PreparedStatement stmt ^long i]
-    (let [conn (.getConnection stmt)
-          meta (.getParameterMetaData stmt)
-          type-name (.getParameterTypeName meta i)]
-      (if-let [elem-type (when (= (first type-name) \_)
-                           (apply str (rest type-name)))]
-        (.setObject stmt i (.createArrayOf conn elem-type (to-array v)))
-        (.setObject stmt i v)))))
-(extend-protocol clojure.java.jdbc/IResultSetReadColumn
-  java.sql.Array
-  (result-set-read-column [val _ _]
-    (into [] (.getArray val))))
+  We delay the connection pool intialization to prevent this from happening at
+  compile-time (as the *clj-postgresql* library recommends)."
+  (delay (pg/pool :host (-> @app/config :db-spec :host)
+                  :dbname (-> @app/config :db-spec :dbname)
+                  :user (-> @app/config :db-spec :user)
+                  :password (-> @app/config :db-spec :password))))
 
 ;; Read timestamps as plain strings.
 ;; I'm going this route because JDBC seems to double "correct" the UTC time
@@ -60,14 +44,15 @@
     * A list of league ids
     * If this parameter is not specified, all leagues are retrieved"
   ([]
-   (jdbc/query pg-db ["SELECT * FROM leagues"]))
+   (jdbc/query @conn-pool ["SELECT * FROM leagues"]))
   ;; TODO: spec to ensure this is a list of integers
   ([ids]
    (if (< 0 (count ids))
-     (jdbc/query pg-db [(str "SELECT * FROM leagues 
-                             WHERE id IN ("
-                             (string/join ", " ids)
-                             ")")]))))
+     (jdbc/query @conn-pool
+                 [(str "SELECT * FROM leagues "
+                       "WHERE id IN ("
+                       (string/join ", " ids)
+                       ")")]))))
 
 (defn get-league
   "Get the league with the specified column criteria.
@@ -81,17 +66,21 @@
   (first
     (cond
       (:id columns)
-      (jdbc/query pg-db ["SELECT * FROM leagues WHERE id = ? LIMIT 1"
-                         (:id columns)])
+      (jdbc/query @conn-pool
+                  ["SELECT * FROM leagues WHERE id = ? LIMIT 1"
+                   (:id columns)])
       
       (:name columns)
-      (jdbc/query pg-db ["SELECT * FROM leagues WHERE lower(name) = ? LIMIT 1"
-                         (string/lower-case (:name columns))])
+      (jdbc/query @conn-pool
+                  [(str "SELECT * FROM leagues "
+                        "WHERE lower(name) = ? LIMIT 1")
+                   (string/lower-case (:name columns))])
       
       (:tricode columns)
-      (jdbc/query pg-db [(str "SELECT * FROM leagues "
-                              "WHERE lower(tricode) = ? LIMIT 1")
-                         (string/lower-case (:tricode columns))]))))
+      (jdbc/query @conn-pool
+                  [(str "SELECT * FROM leagues "
+                        "WHERE lower(tricode) = ? LIMIT 1")
+                   (string/lower-case (:tricode columns))]))))
 
 ;; ## Games
 
@@ -105,22 +94,24 @@
     * These must be one of: new, underway, final, cancelled"
   [league-id & {:keys [progress]}]
   (if (empty? progress)
-    (jdbc/query pg-db ["SELECT * FROM games WHERE league_id = ?"
-                       league-id]
-                      {:identifiers #(.replace % \_ \-)})
-    (jdbc/query pg-db [(str "SELECT * FROM games "
-                            "WHERE league_id = ? "
-                            "  AND progress = ANY(?)")
-                       league-id
-                       progress]
-                      {:identifiers #(.replace % \_ \-)})))
+    (jdbc/query @conn-pool
+                ["SELECT * FROM games WHERE league_id = ?"
+                 league-id]
+                {:identifiers #(.replace % \_ \-)})
+    (jdbc/query @conn-pool
+                [(str "SELECT * FROM games "
+                      "WHERE league_id = ? "
+                      "  AND progress = ANY(?)")
+                 league-id
+                 progress]
+                {:identifiers #(.replace % \_ \-)})))
 
 ;; ## Users
 
 (defn get-users
   "Gets all users."
   []
-  (jdbc/query pg-db ["SELECT * FROM users"]))
+  (jdbc/query @conn-pool ["SELECT * FROM users"]))
 
 (defn get-user
   "Get the user with the specified criteria.
@@ -134,13 +125,16 @@
   (first
     (cond
       (:id columns)
-      (jdbc/query pg-db ["SELECT * FROM users WHERE id = ? LIMIT 1"
-                         (:id columns)])
+      (jdbc/query @conn-pool
+                  ["SELECT * FROM users WHERE id = ? LIMIT 1"
+                   (:id columns)])
       
       (:name columns)
-      (jdbc/query pg-db ["SELECT * FROM users WHERE lower(name) = ? LIMIT 1"
-                         (string/lower-case (:name columns))])
+      (jdbc/query @conn-pool
+                  ["SELECT * FROM users WHERE lower(name) = ? LIMIT 1"
+                   (string/lower-case (:name columns))])
 
       (:email columns)
-      (jdbc/query pg-db ["SELECT * FROM users WHERE lower(email) = ? LIMIT 1"
-                         (string/lower-case (:email columns))]))))
+      (jdbc/query @conn-pool
+                  ["SELECT * FROM users WHERE lower(email) = ? LIMIT 1"
+                   (string/lower-case (:email columns))]))))

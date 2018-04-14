@@ -5,8 +5,7 @@
  :log-level :debug
  :web-server-port 8023
  :nrepl-port 8024
- :db-spec {:dbtype "postgresql"
-           :dbname "hockeyoracle"
+ :db-spec {:dbname "hockeyoracle"
            :host "127.0.0.1"
            :user "thiru"
-           :password "thiru"}}
+           :password ""}}
