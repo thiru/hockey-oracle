@@ -14,6 +14,7 @@
 
             [hockeyoracle.app :as app]
             [hockeyoracle.web.routes.template :refer :all]))
+
 (defn get-test-root-page
   "General/misc test page."
   [req]

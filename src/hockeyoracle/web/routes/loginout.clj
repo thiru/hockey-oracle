@@ -22,43 +22,45 @@
 (defn get-login-page
   "The login page."
   [req & {:keys [failed-attempt? username password]}]
-  (template-page
-    req
-    "Login"
-    (if-let [user (-> req :session :user)]
-      [:div
-        [:h2 (str "Hey " (:name user) ",")]
-        [:p "It looks like you're already logged in."]
-        [:p "Would you like to "
-          [:a {:href "/logout"} "log out"]
-          "?"]]
-      [:div
-        [:h1 "Please log in to continue"]
-        [:form {:action (if (-> req :params :go-back-to)
-                          (str "/login?go-back-to="
-                               (-> req :params :go-back-to))
-                          "/login")
-                :method "post"}
-          [:p
-            [:input#email.full-width
-              {:name "username"
-               :placeholder "Username or email address"
-               :title "Username or email address"
-               :type "text"
-               :value username}]]
-          [:p
-            [:input#password.full-width
-              {:name "password"
-               :placeholder "Password"
-               :title "Password"
-               :type "password"
-               :value password}]]
-          (if failed-attempt?
-            [:p.error "Invalid username or password"])
-          [:p
-            [:button.button.full-width "Login"]]]])
-    :script-files ["/js/pages/loginout.js"]
-    :css-files ["/css/pages/loginout.css"]))
+  (let [user (db/get-user {:id (-> req :session :user-id)})]
+    (template-page
+      req
+      "Login"
+      (if (non-empty? user)
+        [:div
+          [:h2 (str "Hey " (:name user) ",")]
+          [:p "It looks like you're already logged in."]
+          [:p "Would you like to "
+            [:a {:href "/logout"} "log out"]
+            "?"]]
+        [:div
+          [:h1 "Please log in to continue"]
+          [:form {:action (if (-> req :params :go-back-to)
+                            (str "/login?go-back-to="
+                                 (-> req :params :go-back-to))
+                            "/login")
+                  :method "post"}
+            [:p
+              [:input#email.full-width
+                {:name "username"
+                 :placeholder "Username or email address"
+                 :title "Username or email address"
+                 :type "text"
+                 :value username}]]
+            [:p
+              [:input#password.full-width
+                {:name "password"
+                 :placeholder "Password"
+                 :title "Password"
+                 :type "password"
+                 :value password}]]
+            (if failed-attempt?
+              [:p.error "Invalid username or password"])
+            [:p
+              [:button.button.full-width "Login"]]]])
+      :user user
+      :script-files ["/js/pages/loginout.js"]
+      :css-files ["/css/pages/loginout.css"])))
 
 (defn post-login-page
   "Handle user login attempt."
@@ -80,11 +82,12 @@
                 [:p 
                  [:i.fas.fa-cog.fa-spin]
                  " We're logging you in now..."]]
+              :user user
               :script-files ["/js/pages/loginout.js"]
               :css-files ["/css/pages/loginout.css"])
             (hr/ok)
             (hr/content-type "text/html")
-            (assoc :session {:user user})))
+            (assoc :session {:user-id (-> user :id)})))
       (do
         (log :warning (str "User '" username "' failed login"))
         (-> (get-login-page
@@ -97,7 +100,7 @@
 
 (defn get-logout-page
   [req]
-  (if-let [user (-> req :session :user)]
+  (if-let [user (db/get-user {:id (-> req :session :user-id)})]
     (log :info (str "User '" (:name user) "' logged out")))
   (-> (template-page
         ;; Pre-emptively nullify the session so the template page doesn't show

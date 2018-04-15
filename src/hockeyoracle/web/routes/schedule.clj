@@ -57,13 +57,14 @@
                     [:span.game-time (:game-time game)]]
                   [:span.clear-fix]]])]])]
 
+    :user user
     :league league))
 
 (defn get-schedule-page
   "Game schedule page."
   [req league-tricode]
   (let [league (db/get-league {:tricode league-tricode})
-        user (-> req :session :user)]
+        user (db/get-user {:id (-> req :session :user-id)})]
 
     (cond (empty? league)
           ;; League not found!

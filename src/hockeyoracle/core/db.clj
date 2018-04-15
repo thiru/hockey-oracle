@@ -39,7 +39,7 @@
 
 (defn get-leagues
   "Gets leagues.
-  
+
   * `ids`
     * A list of league ids
     * If this parameter is not specified, all leagues are retrieved"
@@ -56,11 +56,11 @@
 
 (defn get-league
   "Get the league with the specified column criteria.
-  
+
   * `columns`
     * A map of column names and values
     * Only one column is currently supported
-  
+
   Name and tricode columns are matched without case sensitivity."
   [columns]
   (first
@@ -69,13 +69,13 @@
       (jdbc/query @conn-pool
                   ["SELECT * FROM leagues WHERE id = ? LIMIT 1"
                    (:id columns)])
-      
+
       (:name columns)
       (jdbc/query @conn-pool
                   [(str "SELECT * FROM leagues "
                         "WHERE lower(name) = ? LIMIT 1")
                    (string/lower-case (:name columns))])
-      
+
       (:tricode columns)
       (jdbc/query @conn-pool
                   [(str "SELECT * FROM leagues "
@@ -86,7 +86,7 @@
 
 (defn get-games
   "Get games with the specified criteria.
-  
+
   * `league-id`
     * The id of the league the games belong to
   * `progress`
@@ -115,26 +115,26 @@
 
 (defn get-user
   "Get the user with the specified criteria.
-  
+
   * `columns`
     * A map of column names and values
     * Only one column is currently supported
-  
+
   Name and email are matched without case sensitivity."
   [columns]
   (first
     (cond
-      (:id columns)
+      (pos-int? (:id columns))
       (jdbc/query @conn-pool
                   ["SELECT * FROM users WHERE id = ? LIMIT 1"
                    (:id columns)])
-      
-      (:name columns)
+
+      (not (string/blank? (:name columns)))
       (jdbc/query @conn-pool
                   ["SELECT * FROM users WHERE lower(name) = ? LIMIT 1"
                    (string/lower-case (:name columns))])
 
-      (:email columns)
+      (not (string/blank? (:email columns)))
       (jdbc/query @conn-pool
                   ["SELECT * FROM users WHERE lower(email) = ? LIMIT 1"
                    (string/lower-case (:email columns))]))))

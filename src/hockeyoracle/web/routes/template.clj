@@ -12,7 +12,8 @@
             [thiru.logging :refer :all]
             [thiru.reporting :refer :all]
 
-            [hockeyoracle.app :as app]))
+            [hockeyoracle.app :as app]
+            [hockeyoracle.core.db :as db]))
 
 (defn gen-main-id
   "Generate a safe string to be used as the `main` HTML element's id.
@@ -111,14 +112,18 @@
     * The title of the page
   * `content`
     * Hiccup structure containing the body of the page
+  * `user`
+    * The currently logged in user (if any)
   * `league`
     * The current league (if any)
   * `css-files`
     * An optional list of CSS files to include
   * `script-files`
     * An optional list of Javascript files to include"
-  [req title content & {:keys [league css-files script-files]}]
-  (let [user (-> req :session :user)]
+  [req title content & {:keys [user league css-files script-files]}]
+  (let [user (if (empty? user)
+               (db/get-user {:id (-> req :session :user-id)})
+               user)]
     (html5
       {:lang "en"
        :id "root"

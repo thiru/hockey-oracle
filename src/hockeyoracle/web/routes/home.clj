@@ -23,7 +23,7 @@
   List available leagues if the logged in user belongs to more than one,
   otherwise redirect to the league's schedule page."
   [req]
-  (let [user (-> req :session :user)]
+  (let [user (db/get-user {:id (-> req :session :user-id)})]
     ;; Redirect to the league's schedule page if user only belongs to one
     ;; league
     (if (= 1 (count (:league_ids user)))
@@ -36,7 +36,8 @@
             "Home"
             [:div
               [:h2 "We couldn't find the league you belong to."]
-              [:h2 "Please contact your league's manager."]])
+              [:h2 "Please contact your league's manager."]]
+            :user user)
           ;; Otherwise, redirect to the schedule page
           (hr/temporary-redirect (str "/" 
                                       (string/lower-case (:tricode league))
@@ -64,4 +65,5 @@
                                 (string/lower-case (:tricode league))
                                 "/schedule")
                      :title (:tricode league)}
-                    (:name league)]])]])))))
+                    (:name league)]])]])
+        :user user))))
